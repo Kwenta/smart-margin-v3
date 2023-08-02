@@ -1,4 +1,4 @@
-name: test
+name: coverage
 
 on: [push]
 
@@ -10,7 +10,6 @@ jobs:
         strategy:
             fail-fast: true
 
-        name: Smart Margin v3
         runs-on: ubuntu-latest
         steps:
             - uses: actions/checkout@v3
@@ -22,13 +21,14 @@ jobs:
               with:
                   version: nightly
 
-            - name: Build Project
+            - name: Report Coverage
               run: |
-                  forge --version
-                  forge build --sizes
-              id: build
+                  forge coverage --report lcov
 
-            - name: Test Project
-              run: |
-                  forge test -vvv
-              id: test
+            - name: Upload Coverage Report
+              uses: codecov/codecov-action@v3
+              with:
+                  files: ./lcov.info
+                  name: codecov-unit
+                  fail_ci_if_error: true
+                  verbose: true

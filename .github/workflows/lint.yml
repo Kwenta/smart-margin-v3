@@ -1,4 +1,4 @@
-name: test
+name: lint
 
 on: [push]
 
@@ -10,7 +10,6 @@ jobs:
         strategy:
             fail-fast: true
 
-        name: Smart Margin v3
         runs-on: ubuntu-latest
         steps:
             - uses: actions/checkout@v3
@@ -22,13 +21,5 @@ jobs:
               with:
                   version: nightly
 
-            - name: Build Project
-              run: |
-                  forge --version
-                  forge build --sizes
-              id: build
-
-            - name: Test Project
-              run: |
-                  forge test -vvv
-              id: test
+            - name: Lint Check
+              run: forge fmt --check
