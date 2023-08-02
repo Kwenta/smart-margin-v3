@@ -19,4 +19,11 @@
 ```
 
 ## Deployment Addresses
-See `deployments/` folder
+> See `deployments/` folder
+1. Optimism deployments found in `deployments/Optimism/`
+2. Optimism Goerli deployments found in `deployments/OptimismGoerli/`
+
+## Audits
+> See `audits/` folder
+1. Internal audits found in `audits/internal/`
+2. External audits found in `audits/external/`
