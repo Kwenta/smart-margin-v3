@@ -12,6 +12,7 @@
 8. 🪲 prefix -> commits related to fixing bugs
 9. 🚀 prefix -> commits related to deployments/scripts
 10. ⚙️ prefix -> commits related to configuration files
+11. 📸 prefix -> commits related to adding/updating gas-snapshots
 
 ### Pull Request Description Standards
 
