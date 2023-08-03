@@ -1,24 +1,43 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 pragma solidity 0.8.18;
 
-import {Dispatcher} from "src/base/Dispatcher.sol";
+import {Events} from "src/libraries/Events.sol";
+import {Multicallable} from "src/utils/Multicallable.sol";
 
-contract MarginEngine is Dispatcher {
-    function execute(bytes calldata commands, bytes[] calldata inputs) external {
-        uint256 numCommands = commands.length;
-        
-        assert(inputs.length == numCommands);
+contract MarginEngine is Events, Multicallable {
+    function createAccount(uint256 _desiredAccountId) external {
+        emit AccountCreated(_desiredAccountId);
+    }
 
-        for (uint256 index = 0; index < numCommands; ) {
-            bytes1 command = commands[index];
+    function depositMargin(
+        uint256 accountId,
+        address marginType,
+        uint256 amount
+    ) external {
+        emit MarginDeposited(accountId, marginType, amount);
+    }
 
-            bytes calldata input = inputs[index];
+    function withdrawMargin(
+        uint256 accountId,
+        address marginType,
+        uint256 amount
+    ) external {
+        emit MarginWithdrawn(accountId, marginType, amount);
+    }
 
-            _dispatch(command, input);
+    function depositCollateral(
+        uint256 accountId,
+        address marginType,
+        uint256 amount
+    ) external {
+        emit CollateralDeposited(accountId, marginType, amount);
+    }
 
-            unchecked {
-                ++index;
-            }
-        }
+    function withdrawCollateral(
+        uint256 accountId,
+        address marginType,
+        uint256 amount
+    ) external {
+        emit CollateralWithdrawn(accountId, marginType, amount);
     }
 }
