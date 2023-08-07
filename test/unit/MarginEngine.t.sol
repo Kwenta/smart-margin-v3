@@ -8,6 +8,8 @@ contract MarginEngineTest is Test, MarginEngine {
     MarginEngine marginEngine;
 
     function setUp() public {
+        vm.rollFork(13_006_356);
+
         marginEngine = new MarginEngine();
     }
 }
