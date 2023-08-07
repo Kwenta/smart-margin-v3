@@ -1,0 +1,24 @@
+{
+  "name": "@kwenta/smart-margin-v3",
+  "version": "1.0.0",
+  "license": "GPL-3.0-or-later",
+  "homepage": "https://github.com/Kwenta/smart-margin-v3#readme",
+  "scripts": {
+    "compile": "forge build",
+    "test": "forge test --fork-url $(grep OPTIMISM_GOERLI_RPC_URL .env | cut -d '=' -f2) --etherscan-api-key $(grep ETHERSCAN_API_KEY .env | cut -d '=' -f2) --gas-report -vvv",
+    "format": "forge fmt",
+    "coverage": "forge coverage --fork-url $(grep OPTIMISM_GOERLI_RPC_URL .env | cut -d '=' -f2)",
+    "coverage:generate-lcov": "forge coverage --fork-url $(grep OPTIMISM_GOERLI_RPC_URL .env | cut -d '=' -f2) --report lcov",
+    "analysis:slither": "slither .",
+    "gas-snapshot": "forge snapshot --fork-url $(grep OPTIMISM_GOERLI_RPC_URL .env | cut -d '=' -f2)"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Kwenta/smart-margin-v3"
+  },
+  "bugs": {
+    "url": "https://github.com/Kwenta/smart-margin-v3/issues"
+  },
+  "devDependencies": {},
+  "dependencies": {}
+}
