@@ -71,11 +71,20 @@ contract Auth {
                              CREATE ACCOUNT
     //////////////////////////////////////////////////////////////*/
 
-    function createAccount() external {
-        uint128 accountId = PERPS_MARKET_PROXY.createAccount();
+    function createAccount() external returns (uint128 accountId) {
+        accountId = PERPS_MARKET_PROXY.createAccount();
 
         ownerByAccountId[accountId] = msg.sender;
         accountIdsByOwner[msg.sender].push(accountId);
+    }
+
+    function onERC721Received(address, address, uint256, bytes memory)
+        external
+        pure
+        returns (bytes4)
+    {
+        return
+            bytes4(keccak256("onERC721Received(address,address,uint256,bytes)"));
     }
 
     /*//////////////////////////////////////////////////////////////
