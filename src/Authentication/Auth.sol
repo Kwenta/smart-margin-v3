@@ -15,13 +15,13 @@ contract Auth {
                                  STATE
     //////////////////////////////////////////////////////////////*/
 
-    mapping(uint128 accountId => address accountOwner) public ownerByAccountId;
-    mapping(uint128 accountId => address[] delegates) public
+    mapping(uint128 accountId => address accountOwner) internal ownerByAccountId;
+    mapping(uint128 accountId => address[] delegates) internal
         delegatesByAccountId;
 
-    mapping(address accountOwner => uint128[] accountIds) public
+    mapping(address accountOwner => uint128[] accountIds) internal
         accountIdsByOwner;
-    mapping(address delegate => uint128[] accountIds) public
+    mapping(address delegate => uint128[] accountIds) internal
         accountIdsByDelegate;
 
     /*//////////////////////////////////////////////////////////////
@@ -29,7 +29,6 @@ contract Auth {
     //////////////////////////////////////////////////////////////*/
 
     error OnlyAccountOwner(uint128 accountId, address owner);
-    error OnlyAccountDelegateOrOwner(uint128 accountId, address delegate);
 
     /*//////////////////////////////////////////////////////////////
                               CONSTRUCTOR
@@ -43,21 +42,25 @@ contract Auth {
                                  VIEWS
     //////////////////////////////////////////////////////////////*/
 
-    function isCallerAccountOwner(uint128 accountId)
+    function isActorAccountOwner(address actor, uint128 accountId)
         public
         view
         returns (bool)
     {
-        return ownerByAccountId[accountId] == msg.sender;
+        return ownerByAccountId[accountId] == actor;
     }
 
-    function isCallerDelegate(uint128 accountId) public view returns (bool) {
+    function isActorDelegate(address actor, uint128 accountId)
+        public
+        view
+        returns (bool)
+    {
         address[] memory delegates = delegatesByAccountId[accountId];
 
         uint256 delegatesLength = delegates.length;
 
         for (uint256 i = 0; i < delegatesLength;) {
-            if (delegates[i] == msg.sender) return true;
+            if (delegates[i] == actor) return true;
 
             unchecked {
                 ++i;
@@ -65,6 +68,38 @@ contract Auth {
         }
 
         return false;
+    }
+
+    function getOwnerByAccountId(uint128 accountId)
+        external
+        view
+        returns (address)
+    {
+        return ownerByAccountId[accountId];
+    }
+
+    function getDelegatesByAccountId(uint128 accountId)
+        external
+        view
+        returns (address[] memory)
+    {
+        return delegatesByAccountId[accountId];
+    }
+
+    function getAccountIdsByOwner(address accountOwner)
+        external
+        view
+        returns (uint128[] memory)
+    {
+        return accountIdsByOwner[accountOwner];
+    }
+
+    function getAccountIdsByDelegate(address delegate)
+        external
+        view
+        returns (uint128[] memory)
+    {
+        return accountIdsByDelegate[delegate];
     }
 
     /*//////////////////////////////////////////////////////////////
@@ -92,13 +127,16 @@ contract Auth {
     //////////////////////////////////////////////////////////////*/
 
     function transferOwnership(uint128 accountId, address newOwner) external {
-        if (!isCallerAccountOwner(accountId)) {
+        assert(newOwner != address(0));
+
+        if (ownerByAccountId[accountId] != msg.sender) {
             revert OnlyAccountOwner(accountId, msg.sender);
         }
 
         _removeAccountIdFromAccountIdsByOwner(accountId);
 
         ownerByAccountId[accountId] = newOwner;
+        accountIdsByOwner[newOwner].push(accountId);
     }
 
     function _removeAccountIdFromAccountIdsByOwner(uint128 accountId)
@@ -128,9 +166,11 @@ contract Auth {
 
     function addDelegate(uint128 accountId, address delegate) external {
         assert(delegate != address(0));
-        if (!isCallerAccountOwner(accountId)) {
+
+        if (ownerByAccountId[accountId] != msg.sender) {
             revert OnlyAccountOwner(accountId, msg.sender);
         }
+
         delegatesByAccountId[accountId].push(delegate);
         accountIdsByDelegate[delegate].push(accountId);
     }
@@ -140,7 +180,7 @@ contract Auth {
     //////////////////////////////////////////////////////////////*/
 
     function removeDelegate(uint128 accountId, address delegate) external {
-        if (!isCallerAccountOwner(accountId)) {
+        if (ownerByAccountId[accountId] != msg.sender) {
             revert OnlyAccountOwner(accountId, msg.sender);
         }
 
