@@ -31,6 +31,22 @@ contract Auth {
     error OnlyAccountOwner(uint128 accountId, address owner);
 
     /*//////////////////////////////////////////////////////////////
+                               MODIFIERS
+    //////////////////////////////////////////////////////////////*/
+
+    modifier onlyAccountOwner(uint128 _accountId) {
+        _onlyAccountOwner(_accountId);
+
+        _;
+    }
+
+    function _onlyAccountOwner(uint128 _accountId) internal view {
+        if (ownerByAccountId[_accountId] != msg.sender) {
+            revert OnlyAccountOwner(_accountId, msg.sender);
+        }
+    }
+
+    /*//////////////////////////////////////////////////////////////
                               CONSTRUCTOR
     //////////////////////////////////////////////////////////////*/
 
@@ -42,25 +58,25 @@ contract Auth {
                                  VIEWS
     //////////////////////////////////////////////////////////////*/
 
-    function isActorAccountOwner(address actor, uint128 accountId)
+    function isActorAccountOwner(address _actor, uint128 _accountId)
         public
         view
         returns (bool)
     {
-        return ownerByAccountId[accountId] == actor;
+        return ownerByAccountId[_accountId] == _actor;
     }
 
-    function isActorDelegate(address actor, uint128 accountId)
+    function isActorDelegate(address _actor, uint128 _accountId)
         public
         view
         returns (bool)
     {
-        address[] memory delegates = delegatesByAccountId[accountId];
+        address[] memory delegates = delegatesByAccountId[_accountId];
 
         uint256 delegatesLength = delegates.length;
 
         for (uint256 i = 0; i < delegatesLength;) {
-            if (delegates[i] == actor) return true;
+            if (delegates[i] == _actor) return true;
 
             unchecked {
                 ++i;
@@ -70,36 +86,36 @@ contract Auth {
         return false;
     }
 
-    function getOwnerByAccountId(uint128 accountId)
+    function getOwnerByAccountId(uint128 _accountId)
         external
         view
         returns (address)
     {
-        return ownerByAccountId[accountId];
+        return ownerByAccountId[_accountId];
     }
 
-    function getDelegatesByAccountId(uint128 accountId)
+    function getDelegatesByAccountId(uint128 _accountId)
         external
         view
         returns (address[] memory)
     {
-        return delegatesByAccountId[accountId];
+        return delegatesByAccountId[_accountId];
     }
 
-    function getAccountIdsByOwner(address accountOwner)
+    function getAccountIdsByOwner(address _accountOwner)
         external
         view
         returns (uint128[] memory)
     {
-        return accountIdsByOwner[accountOwner];
+        return accountIdsByOwner[_accountOwner];
     }
 
-    function getAccountIdsByDelegate(address delegate)
+    function getAccountIdsByDelegate(address _delegate)
         external
         view
         returns (uint128[] memory)
     {
-        return accountIdsByDelegate[delegate];
+        return accountIdsByDelegate[_delegate];
     }
 
     /*//////////////////////////////////////////////////////////////
@@ -126,20 +142,19 @@ contract Auth {
                            TRANSFER OWNERSHIP
     //////////////////////////////////////////////////////////////*/
 
-    function transferOwnership(uint128 accountId, address newOwner) external {
-        assert(newOwner != address(0));
+    function transferOwnership(uint128 _accountId, address _newOwner)
+        external
+        onlyAccountOwner(_accountId)
+    {
+        assert(_newOwner != address(0));
 
-        if (ownerByAccountId[accountId] != msg.sender) {
-            revert OnlyAccountOwner(accountId, msg.sender);
-        }
+        _removeAccountIdFromAccountIdsByOwner(_accountId);
 
-        _removeAccountIdFromAccountIdsByOwner(accountId);
-
-        ownerByAccountId[accountId] = newOwner;
-        accountIdsByOwner[newOwner].push(accountId);
+        ownerByAccountId[_accountId] = _newOwner;
+        accountIdsByOwner[_newOwner].push(_accountId);
     }
 
-    function _removeAccountIdFromAccountIdsByOwner(uint128 accountId)
+    function _removeAccountIdFromAccountIdsByOwner(uint128 _accountId)
         internal
     {
         uint128[] memory accountIds = accountIdsByOwner[msg.sender];
@@ -147,7 +162,7 @@ contract Auth {
         uint256 accountIdsLength = accountIds.length;
 
         for (uint256 i = 0; i < accountIdsLength;) {
-            if (accountIds[i] == accountId) {
+            if (accountIds[i] == _accountId) {
                 accountIds[i] = accountIds[accountIdsLength - 1];
                 accountIdsByOwner[msg.sender] = accountIds;
                 accountIdsByOwner[msg.sender].pop();
@@ -164,43 +179,41 @@ contract Auth {
                               ADD DELEGATE
     //////////////////////////////////////////////////////////////*/
 
-    function addDelegate(uint128 accountId, address delegate) external {
-        assert(delegate != address(0));
+    function addDelegate(uint128 _accountId, address _delegate)
+        external
+        onlyAccountOwner(_accountId)
+    {
+        assert(_delegate != address(0));
 
-        if (ownerByAccountId[accountId] != msg.sender) {
-            revert OnlyAccountOwner(accountId, msg.sender);
-        }
-
-        delegatesByAccountId[accountId].push(delegate);
-        accountIdsByDelegate[delegate].push(accountId);
+        delegatesByAccountId[_accountId].push(_delegate);
+        accountIdsByDelegate[_delegate].push(_accountId);
     }
 
     /*//////////////////////////////////////////////////////////////
                             REMOVE DELEGATE
     //////////////////////////////////////////////////////////////*/
 
-    function removeDelegate(uint128 accountId, address delegate) external {
-        if (ownerByAccountId[accountId] != msg.sender) {
-            revert OnlyAccountOwner(accountId, msg.sender);
-        }
-
-        _removeDelegateFromDelegatesByAccountId(accountId, delegate);
-        _removeDelegateFromAccountIdsByDelegate(accountId, delegate);
+    function removeDelegate(uint128 _accountId, address _delegate)
+        external
+        onlyAccountOwner(_accountId)
+    {
+        _removeDelegateFromDelegatesByAccountId(_accountId, _delegate);
+        _removeDelegateFromAccountIdsByDelegate(_accountId, _delegate);
     }
 
     function _removeDelegateFromDelegatesByAccountId(
-        uint128 accountId,
-        address delegate
+        uint128 _accountId,
+        address _delegate
     ) internal {
-        address[] memory delegates = delegatesByAccountId[accountId];
+        address[] memory delegates = delegatesByAccountId[_accountId];
 
         uint256 delegatesLength = delegates.length;
 
         for (uint256 i = 0; i < delegatesLength;) {
-            if (delegates[i] == delegate) {
+            if (delegates[i] == _delegate) {
                 delegates[i] = delegates[delegatesLength - 1];
-                delegatesByAccountId[accountId] = delegates;
-                delegatesByAccountId[accountId].pop();
+                delegatesByAccountId[_accountId] = delegates;
+                delegatesByAccountId[_accountId].pop();
                 return;
             }
 
@@ -211,18 +224,18 @@ contract Auth {
     }
 
     function _removeDelegateFromAccountIdsByDelegate(
-        uint128 accountId,
-        address delegate
+        uint128 _accountId,
+        address _delegate
     ) internal {
-        uint128[] memory accountIds = accountIdsByDelegate[delegate];
+        uint128[] memory accountIds = accountIdsByDelegate[_delegate];
 
         uint256 accountIdsLength = accountIds.length;
 
         for (uint256 i = 0; i < accountIdsLength;) {
-            if (accountIds[i] == accountId) {
+            if (accountIds[i] == _accountId) {
                 accountIds[i] = accountIds[accountIdsLength - 1];
-                accountIdsByDelegate[delegate] = accountIds;
-                accountIdsByDelegate[delegate].pop();
+                accountIdsByDelegate[_delegate] = accountIds;
+                accountIdsByDelegate[_delegate].pop();
                 return;
             }
 
