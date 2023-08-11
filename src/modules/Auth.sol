@@ -1,15 +1,18 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 pragma solidity 0.8.18;
 
-import {IAccountModule} from
-    "lib/synthetix-v3/protocol/synthetix/contracts/interfaces/IAccountModule.sol";
+import {ERC721Receiver} from "src/tokens/ERC721Receiver.sol";
+import {IPerpsMarketProxy} from "src/interfaces/synthetix/IPerpsMarketProxy.sol";
 
-contract Auth {
+contract Auth is ERC721Receiver {
     /*//////////////////////////////////////////////////////////////
-                               IMMUTABLES
+                          CONSTANTS/IMMUTABLES
     //////////////////////////////////////////////////////////////*/
 
-    IAccountModule internal immutable PERPS_MARKET_PROXY;
+    /// @notice ADMIN's have permission to do everything except for transferring account ownership
+    bytes32 internal constant _ADMIN_PERMISSION = "ADMIN";
+
+    IPerpsMarketProxy internal immutable PERPS_MARKET_PROXY;
 
     /*//////////////////////////////////////////////////////////////
                                  STATE
@@ -29,6 +32,7 @@ contract Auth {
     //////////////////////////////////////////////////////////////*/
 
     error OnlyAccountOwner(uint128 accountId, address owner);
+    error OnlyAccountTokenProxy(address tokenProxy);
 
     /*//////////////////////////////////////////////////////////////
                                MODIFIERS
@@ -51,7 +55,7 @@ contract Auth {
     //////////////////////////////////////////////////////////////*/
 
     constructor(address _perpsMarketProxy) {
-        PERPS_MARKET_PROXY = IAccountModule(_perpsMarketProxy);
+        PERPS_MARKET_PROXY = IPerpsMarketProxy(_perpsMarketProxy);
     }
 
     /*//////////////////////////////////////////////////////////////
@@ -122,20 +126,20 @@ contract Auth {
                              CREATE ACCOUNT
     //////////////////////////////////////////////////////////////*/
 
-    function createAccount() external returns (uint128 accountId) {
+    function createAccount(address _actor)
+        external
+        returns (uint128 accountId)
+    {
         accountId = PERPS_MARKET_PROXY.createAccount();
 
-        ownerByAccountId[accountId] = msg.sender;
-        accountIdsByOwner[msg.sender].push(accountId);
-    }
+        PERPS_MARKET_PROXY.grantPermission({
+            accountId: accountId,
+            permission: _ADMIN_PERMISSION,
+            user: msg.sender
+        });
 
-    function onERC721Received(address, address, uint256, bytes memory)
-        external
-        pure
-        returns (bytes4)
-    {
-        return
-            bytes4(keccak256("onERC721Received(address,address,uint256,bytes)"));
+        ownerByAccountId[accountId] = _actor;
+        accountIdsByOwner[_actor].push(accountId);
     }
 
     /*//////////////////////////////////////////////////////////////
