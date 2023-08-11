@@ -19,11 +19,16 @@ contract Auth is ERC721Receiver {
     //////////////////////////////////////////////////////////////*/
 
     mapping(uint128 accountId => address accountOwner) internal ownerByAccountId;
+
     mapping(uint128 accountId => address[] delegates) internal
         delegatesByAccountId;
 
+    mapping(uint128 accountId => mapping(address delegate => bool isDelegate))
+        internal isDelegateByAccountId;
+
     mapping(address accountOwner => uint128[] accountIds) internal
         accountIdsByOwner;
+
     mapping(address delegate => uint128[] accountIds) internal
         accountIdsByDelegate;
 
@@ -75,19 +80,7 @@ contract Auth is ERC721Receiver {
         view
         returns (bool)
     {
-        address[] memory delegates = delegatesByAccountId[_accountId];
-
-        uint256 delegatesLength = delegates.length;
-
-        for (uint256 i = 0; i < delegatesLength;) {
-            if (delegates[i] == _actor) return true;
-
-            unchecked {
-                ++i;
-            }
-        }
-
-        return false;
+        return isDelegateByAccountId[_accountId][_actor];
     }
 
     function getOwnerByAccountId(uint128 _accountId)
@@ -189,6 +182,8 @@ contract Auth is ERC721Receiver {
     {
         assert(_delegate != address(0));
 
+        isDelegateByAccountId[_accountId][_delegate] = true;
+
         delegatesByAccountId[_accountId].push(_delegate);
         accountIdsByDelegate[_delegate].push(_accountId);
     }
@@ -201,6 +196,8 @@ contract Auth is ERC721Receiver {
         external
         onlyAccountOwner(_accountId)
     {
+        isDelegateByAccountId[_accountId][_delegate] = false;
+
         _removeDelegateFromDelegatesByAccountId(_accountId, _delegate);
         _removeDelegateFromAccountIdsByDelegate(_accountId, _delegate);
     }
