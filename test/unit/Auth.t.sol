@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 pragma solidity 0.8.18;
 
-import {Auth} from "src/authentication/Auth.sol";
+import {Auth} from "src/modules/Auth.sol";
 import {OPTIMISM_GOERLI_PERPS_MARKET_PROXY} from
     "script/utils/parameters/OptimismGoerliParameters.sol";
 import {Test} from "lib/forge-std/src/Test.sol";
@@ -10,7 +10,7 @@ contract AuthenticationTest is Test {
     Auth auth;
 
     function setUp() public {
-        vm.rollFork(13_006_356);
+        vm.rollFork(13_149_245);
 
         auth = new Auth(OPTIMISM_GOERLI_PERPS_MARKET_PROXY);
     }
@@ -18,7 +18,7 @@ contract AuthenticationTest is Test {
 
 contract CreateAccount is AuthenticationTest {
     function test_CreateAccount() public {
-        uint128 accountId = auth.createAccount();
+        uint128 accountId = auth.createAccount(address(this));
         assert(accountId != 0);
     }
 }
@@ -30,7 +30,7 @@ contract AccountOwnership is AuthenticationTest {
     function test_isActorAccountOwner() public {
         vm.startPrank(owner);
 
-        uint128 accountId = auth.createAccount();
+        uint128 accountId = auth.createAccount(owner);
 
         bool isOwner = auth.isActorAccountOwner(owner, accountId);
         assertTrue(isOwner);
@@ -40,14 +40,14 @@ contract AccountOwnership is AuthenticationTest {
 
     function test_getOwnerByAccountId() public {
         vm.prank(owner);
-        uint128 accountId = auth.createAccount();
+        uint128 accountId = auth.createAccount(owner);
 
         assertEq(auth.getOwnerByAccountId(accountId), owner);
     }
 
     function test_accountIdsByOwner() public {
         vm.prank(owner);
-        uint128 accountId = auth.createAccount();
+        uint128 accountId = auth.createAccount(owner);
 
         uint128[] memory accountIds = auth.getAccountIdsByOwner(owner);
         assertEq(accountIds.length, 1);
@@ -59,7 +59,7 @@ contract AccountOwnership is AuthenticationTest {
 
         vm.startPrank(owner);
 
-        uint128 accountId = auth.createAccount();
+        uint128 accountId = auth.createAccount(owner);
 
         auth.transferOwnership(accountId, newOwner);
 
@@ -76,7 +76,7 @@ contract AccountOwnership is AuthenticationTest {
     function test_transferOwnership_OnlyOwner() public {
         vm.prank(owner);
 
-        uint128 accountId = auth.createAccount();
+        uint128 accountId = auth.createAccount(owner);
 
         vm.prank(badActor);
 
@@ -93,7 +93,7 @@ contract AccountOwnership is AuthenticationTest {
 
         vm.startPrank(owner);
 
-        uint128 accountId = auth.createAccount();
+        uint128 accountId = auth.createAccount(owner);
 
         auth.transferOwnership(accountId, newOwner);
 
@@ -107,7 +107,7 @@ contract AccountOwnership is AuthenticationTest {
 
         vm.startPrank(owner);
 
-        uint128 accountId = auth.createAccount();
+        uint128 accountId = auth.createAccount(owner);
 
         auth.transferOwnership(accountId, newOwner);
 
@@ -137,7 +137,7 @@ contract Delegation is AuthenticationTest {
     function test_isActorDelegate() public {
         vm.startPrank(owner);
 
-        accountId1 = auth.createAccount();
+        accountId1 = auth.createAccount(owner);
 
         auth.addDelegate(accountId1, delegate1);
         auth.addDelegate(accountId1, delegate2);
@@ -160,7 +160,7 @@ contract Delegation is AuthenticationTest {
     function test_isActorDelegate_OnlyOwner() public {
         vm.prank(owner);
 
-        accountId1 = auth.createAccount();
+        accountId1 = auth.createAccount(owner);
 
         vm.prank(badActor);
 
@@ -176,7 +176,7 @@ contract Delegation is AuthenticationTest {
     function test_getDelegatesByAccountId() public {
         vm.startPrank(owner);
 
-        accountId1 = auth.createAccount();
+        accountId1 = auth.createAccount(owner);
 
         auth.addDelegate(accountId1, delegate1);
         auth.addDelegate(accountId1, delegate2);
@@ -196,9 +196,9 @@ contract Delegation is AuthenticationTest {
     function test_getAccountIdsByDelegate() public {
         vm.startPrank(owner);
 
-        accountId1 = auth.createAccount();
-        accountId2 = auth.createAccount();
-        accountId3 = auth.createAccount();
+        accountId1 = auth.createAccount(owner);
+        accountId2 = auth.createAccount(owner);
+        accountId3 = auth.createAccount(owner);
 
         auth.addDelegate(accountId1, delegate1);
         auth.addDelegate(accountId2, delegate1);
@@ -218,7 +218,7 @@ contract Delegation is AuthenticationTest {
     function test_removeDelegate() public {
         vm.startPrank(owner);
 
-        accountId1 = auth.createAccount();
+        accountId1 = auth.createAccount(owner);
 
         auth.addDelegate(accountId1, delegate1);
         auth.addDelegate(accountId1, delegate2);
@@ -243,7 +243,7 @@ contract Delegation is AuthenticationTest {
     function test_removeDelegate_OnlyOwner() public {
         vm.startPrank(owner);
 
-        accountId1 = auth.createAccount();
+        accountId1 = auth.createAccount(owner);
 
         auth.addDelegate(accountId1, delegate1);
 
@@ -263,7 +263,7 @@ contract Delegation is AuthenticationTest {
     function test_removeDelegate_delegatesByAccountId() public {
         vm.startPrank(owner);
 
-        accountId1 = auth.createAccount();
+        accountId1 = auth.createAccount(owner);
 
         auth.addDelegate(accountId1, delegate1);
         auth.addDelegate(accountId1, delegate2);
@@ -284,9 +284,9 @@ contract Delegation is AuthenticationTest {
     function test_removeDelegate_accountIdsByDelegate() public {
         vm.startPrank(owner);
 
-        accountId1 = auth.createAccount();
-        accountId2 = auth.createAccount();
-        accountId3 = auth.createAccount();
+        accountId1 = auth.createAccount(owner);
+        accountId2 = auth.createAccount(owner);
+        accountId3 = auth.createAccount(owner);
 
         auth.addDelegate(accountId1, delegate1);
         auth.addDelegate(accountId2, delegate1);
@@ -307,7 +307,7 @@ contract Delegation is AuthenticationTest {
     function test_removeDelegate_All_Delegates() public {
         vm.startPrank(owner);
 
-        accountId1 = auth.createAccount();
+        accountId1 = auth.createAccount(owner);
 
         auth.addDelegate(accountId1, delegate1);
         auth.addDelegate(accountId1, delegate2);
@@ -350,9 +350,9 @@ contract Delegation is AuthenticationTest {
     function test_removeDelegate_From_AccountIds() public {
         vm.startPrank(owner);
 
-        accountId1 = auth.createAccount();
-        accountId2 = auth.createAccount();
-        accountId3 = auth.createAccount();
+        accountId1 = auth.createAccount(owner);
+        accountId2 = auth.createAccount(owner);
+        accountId3 = auth.createAccount(owner);
 
         auth.addDelegate(accountId1, delegate1);
         auth.addDelegate(accountId2, delegate1);
@@ -395,7 +395,7 @@ contract Delegation is AuthenticationTest {
     function test_removeDelegate_None_Existent() public {
         vm.startPrank(owner);
 
-        accountId1 = auth.createAccount();
+        accountId1 = auth.createAccount(owner);
 
         assertFalse(auth.isActorDelegate(delegate1, accountId1));
 
@@ -410,7 +410,7 @@ contract Delegation is AuthenticationTest {
     function test_removeDelegate_Twice() public {
         vm.startPrank(owner);
 
-        accountId1 = auth.createAccount();
+        accountId1 = auth.createAccount(owner);
 
         auth.addDelegate(accountId1, delegate1);
 
