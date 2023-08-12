@@ -29,5 +29,5 @@ jobs:
 
             - name: Test Project
               run: |
-                forge test --fork-url ${{ secrets.GOERLI_RPC_URL }} --etherscan-api-key ${{ secrets.ETHERSCAN_API_KEY }} -vvv
+                forge test --fork-url ${{ secrets.OPTIMISM_GOERLI_RPC_URL }} --etherscan-api-key ${{ secrets.ETHERSCAN_API_KEY }} -vvv
               id: test
