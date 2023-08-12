@@ -1,4 +1,4 @@
-# 🧱 Smart Margin v3 (SMv3)
+# 🧱 Smart Margin v3
 
 [![Github Actions][gha-badge]][gha] 
 [![Foundry][foundry-badge]][foundry] 
@@ -14,8 +14,30 @@
 ## Overview
 
 ## Contracts
-
+> to run: `tree src/`
 ```
+src/
+├── MarginEngine.sol
+├── interfaces
+│   ├── IAuth.sol
+│   ├── IMarginEngine.sol
+│   ├── synthetix
+│   │   ├── IPerpsMarketProxy.sol
+│   │   └── ISpotMarketProxy.sol
+│   └── tokens
+│       └── IERC20.sol
+├── libraries
+│   ├── Int128Lib.sol
+│   └── Int256Lib.sol
+├── modules
+│   ├── Auth.sol
+│   ├── OrderBook.sol
+│   └── Stats.sol
+├── tokens
+│   └── ERC721Receiver.sol
+└── utils
+    ├── Multicallable.sol
+    └── Ownable.sol
 ```
 
 ## Tests
