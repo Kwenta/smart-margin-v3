@@ -10,6 +10,9 @@ import {ISpotMarketProxy} from "src/interfaces/synthetix/ISpotMarketProxy.sol";
 import {Multicallable} from "src/utils/Multicallable.sol";
 import {Stats} from "src/modules/Stats.sol";
 
+/// @custom:todo add docs
+/// @custom:todo create interface once well tested and stable
+
 /// @title Kwenta Smart Margin v3: Margin Engine
 /// @notice Responsible for interacting with Synthetix v3 Perps Market
 /// @author JaredBorders (jaredborders@pm.me)

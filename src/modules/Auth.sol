@@ -4,7 +4,7 @@ pragma solidity 0.8.18;
 import {ERC721Receiver} from "src/tokens/ERC721Receiver.sol";
 import {IPerpsMarketProxy} from "src/interfaces/synthetix/IPerpsMarketProxy.sol";
 
-/// @custom:todo create interface and move relevant "stuff" there
+/// @custom:todo create interface once well tested and stable
 /// @custom:todo add events
 /// @custom:todo unit test events
 /// @custom:todo further unit test all functions (fuzz, etc.)
