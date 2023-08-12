@@ -101,7 +101,7 @@ contract MarginEngine is Multicallable, ERC721Receiver {
     //////////////////////////////////////////////////////////////*/
 
     function commitOrder(
-        uint128 _marketId,
+        uint128 _perpsMarketId,
         uint128 _accountId,
         int128 _sizeDelta,
         uint128 _settlementStrategyId,
@@ -115,7 +115,7 @@ contract MarginEngine is Multicallable, ERC721Receiver {
 
         (, uint256 fees) = PERPS_MARKET_PROXY.commitOrder(
             IPerpsMarketProxy.OrderCommitmentRequest({
-                marketId: _marketId,
+                marketId: _perpsMarketId,
                 accountId: _accountId,
                 sizeDelta: _sizeDelta,
                 settlementStrategyId: _settlementStrategyId,
