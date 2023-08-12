@@ -164,8 +164,21 @@ contract Multicallable is MarginEngineTest {
         );
 
         bytes[] memory data = new bytes[](2);
-        data[0] = abi.encodeWithSelector(MarginEngine.depositCollateral.selector, accountId, SUSD_SPOT_MARKET_ID, int256(AMOUNT));
-        data[1] = abi.encodeWithSelector(MarginEngine.commitOrder.selector, SETH_PERPS_MARKET_ID, accountId, 1 ether, 0, type(uint256).max, REFERRER);
+        data[0] = abi.encodeWithSelector(
+            MarginEngine.depositCollateral.selector,
+            accountId,
+            SUSD_SPOT_MARKET_ID,
+            int256(AMOUNT)
+        );
+        data[1] = abi.encodeWithSelector(
+            MarginEngine.commitOrder.selector,
+            SETH_PERPS_MARKET_ID,
+            accountId,
+            1 ether,
+            0,
+            type(uint256).max,
+            REFERRER
+        );
 
         marginEngine.multicall(data);
     }

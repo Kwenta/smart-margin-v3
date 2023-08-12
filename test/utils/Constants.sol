@@ -2,10 +2,11 @@
 pragma solidity 0.8.18;
 
 contract Constants {
-    uint256 public constant GOERLI_BLOCK_NUMBER = 13076019;
+    uint256 public constant GOERLI_BLOCK_NUMBER = 13_076_019;
 
     address public constant OWNER = address(0x01);
-    address public constant REFERRER = 0x0a2578598C6Db6bc1C1FCE8aDcB1f52122940e05;
+    address public constant REFERRER =
+        0x0a2578598C6Db6bc1C1FCE8aDcB1f52122940e05;
 
     address public constant MOCK_MARGIN_ENGINE = address(0xE1);
 
