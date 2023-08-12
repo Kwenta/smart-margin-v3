@@ -1,4 +1,4 @@
-# foundry-scaffold
+# 🧱 Smart Margin v3 (SMv3)
 
 [![Github Actions][gha-badge]][gha] 
 [![Foundry][foundry-badge]][foundry] 
@@ -16,6 +16,28 @@
 ## Contracts
 
 ```
+```
+
+## Tests
+
+1. Follow the [Foundry guide to working on an existing project](https://book.getfoundry.sh/projects/working-on-an-existing-project.html)
+
+2. Build project
+
+```
+npm run compile
+```
+
+3. Execute both unit and integration tests (both run in forked environments)
+
+```
+npm run test
+```
+
+4. Run specific test
+
+```
+forge test --fork-url $(grep OPTIMISM_GOERLI_RPC_URL .env | cut -d '=' -f2) --match-test TEST_NAME -vvv
 ```
 
 ## Deployment Addresses
