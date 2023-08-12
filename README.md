@@ -1,5 +1,16 @@
 # 🧱 Smart Margin v3
 
+## TODO
+- [ ] search `@custom:todo` and handle them all!!!
+- [ ] Add more details to README
+- [ ] Sort all imports in alphabetical order
+- [ ] Add title, description, and author to all SMv3 contracts
+- [ ] Split up tests into unit and integration tests (some in unit are more integration)
+- [ ] Write invariant tests for Auth.sol
+- [ ] Write invariant tests for OrderBook.sol
+- [ ] Trim fat (unused code) from all interfaces (e.g. IPerpsMarketProxy.sol)
+- [ ] Look into easier way to shift tests from Goerli Optimism to Optimism
+
 [![Github Actions][gha-badge]][gha] 
 [![Foundry][foundry-badge]][foundry] 
 [![License: MIT][license-badge]][license]
