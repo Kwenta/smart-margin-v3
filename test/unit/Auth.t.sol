@@ -13,7 +13,7 @@ contract AuthTest is Test, Constants {
     Auth auth;
 
     function setUp() public {
-        vm.rollFork(13_149_245);
+        vm.rollFork(GOERLI_BLOCK_NUMBER);
 
         auth = new Auth(OPTIMISM_GOERLI_PERPS_MARKET_PROXY);
     }

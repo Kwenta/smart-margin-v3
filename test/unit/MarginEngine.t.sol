@@ -30,7 +30,7 @@ contract MarginEngineTest is Test, Constants {
     uint128 accountId;
 
     function setUp() public {
-        vm.rollFork(13_149_245);
+        vm.rollFork(GOERLI_BLOCK_NUMBER);
 
         sUSDHelper = new SUSDHelper();
         perpsMarketProxy = IPerpsMarketProxy(OPTIMISM_GOERLI_PERPS_MARKET_PROXY);
@@ -70,9 +70,11 @@ contract CollateralManagement is MarginEngineTest {
             address(marginEngine), type(uint256).max
         );
 
-        marginEngine.depositCollateral(
-            accountId, SUSD_MARKET_ID, int256(AMOUNT)
-        );
+        marginEngine.depositCollateral({
+            _accountId: accountId,
+            _synthMarketId: SUSD_SPOT_MARKET_ID,
+            _amount: int256(AMOUNT)
+        });
 
         vm.stopPrank();
 
@@ -87,14 +89,16 @@ contract CollateralManagement is MarginEngineTest {
             address(marginEngine), type(uint256).max
         );
 
-        marginEngine.depositCollateral(
-            accountId, SUSD_MARKET_ID, int256(AMOUNT)
-        );
+        marginEngine.depositCollateral({
+            _accountId: accountId,
+            _synthMarketId: SUSD_SPOT_MARKET_ID,
+            _amount: int256(AMOUNT)
+        });
 
         vm.stopPrank();
 
         uint256 collateralAmountOfSynth =
-            perpsMarketProxy.getCollateralAmount(accountId, SUSD_MARKET_ID);
+            perpsMarketProxy.getCollateralAmount(accountId, SUSD_SPOT_MARKET_ID);
         assertEq(collateralAmountOfSynth, AMOUNT);
     }
 
@@ -105,9 +109,11 @@ contract CollateralManagement is MarginEngineTest {
             address(marginEngine), type(uint256).max
         );
 
-        marginEngine.depositCollateral(
-            accountId, SUSD_MARKET_ID, int256(AMOUNT)
-        );
+        marginEngine.depositCollateral({
+            _accountId: accountId,
+            _synthMarketId: SUSD_SPOT_MARKET_ID,
+            _amount: int256(AMOUNT)
+        });
 
         vm.stopPrank();
 
@@ -115,8 +121,52 @@ contract CollateralManagement is MarginEngineTest {
             perpsMarketProxy.totalCollateralValue(accountId);
         assertEq(totalCollateralValue, AMOUNT);
     }
+
+    /// @custom:todo test withdrawCollateral
 }
 
-contract AsyncOrderManagement is MarginEngineTest {}
+contract AsyncOrderManagement is MarginEngineTest {
+    function test_commitOrder() public {
+        vm.startPrank(ACTOR);
 
-contract Multicallable is MarginEngineTest {}
+        IERC20(OPTIMISM_GOERLI_SUSD_PROXY).approve(
+            address(marginEngine), type(uint256).max
+        );
+
+        marginEngine.depositCollateral({
+            _accountId: accountId,
+            _synthMarketId: SUSD_SPOT_MARKET_ID,
+            _amount: int256(AMOUNT)
+        });
+
+        marginEngine.commitOrder({
+            _perpsMarketId: SETH_PERPS_MARKET_ID,
+            _accountId: accountId,
+            _sizeDelta: 1 ether,
+            _settlementStrategyId: 0, // @custom:todo what is this?
+            _acceptablePrice: type(uint256).max,
+            _referrer: REFERRER
+        });
+    }
+
+    /// @cutsoom:todo test commitOrder: Market that does not exist
+    /// @custom:todo test commitOrder: Market that is paused
+    /// @custom:todo test commitOrder: Account does not have enough collateral/margin
+    /// @custom:todo test commitOrder: Position size exceeds max leverage
+}
+
+contract Multicallable is MarginEngineTest {
+    function test_multicall_depositCollateral_commitOrder() public {
+        vm.startPrank(ACTOR);
+
+        IERC20(OPTIMISM_GOERLI_SUSD_PROXY).approve(
+            address(marginEngine), type(uint256).max
+        );
+
+        bytes[] memory data = new bytes[](2);
+        data[0] = abi.encodeWithSelector(MarginEngine.depositCollateral.selector, accountId, SUSD_SPOT_MARKET_ID, int256(AMOUNT));
+        data[1] = abi.encodeWithSelector(MarginEngine.commitOrder.selector, SETH_PERPS_MARKET_ID, accountId, 1 ether, 0, type(uint256).max, REFERRER);
+
+        marginEngine.multicall(data);
+    }
+}
