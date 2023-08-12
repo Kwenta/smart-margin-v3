@@ -3,11 +3,11 @@ pragma solidity 0.8.18;
 
 import {Ownable} from "src/utils/Ownable.sol";
 
-/// @custom:todo add more stats?
-/// @custom:todo unit test
+/// @custom:todo add more stats? (e.g. conditional orders placed, etc)
 
 /// @title Kwenta Smart Margin v3: Stats Module
 /// @notice Responsible for recording stats for accounts trading on verified margin engines
+/// @dev Given the purpose of this contract, events are never emitted when updating stats
 /// @author JaredBorders (jaredborders@pm.me)
 contract Stats is Ownable {
     /// @notice stats for an account
@@ -21,7 +21,7 @@ contract Stats is Ownable {
     }
 
     /// @notice mapping that stores stats for an account
-    mapping(uint128 accountId => AccountStats) public accountStats;
+    mapping(uint128 accountId => AccountStats) internal accountStats;
 
     /// @notice mapping that stores margin engine registration status
     mapping(address marginEngine => bool status) public registeredMarginEngines;
@@ -34,6 +34,16 @@ contract Stats is Ownable {
     /// @dev _owner will be Kwenta pDAO multisig
     constructor(address _owner) {
         _initializeOwner(_owner);
+    }
+
+    /// @notice get the stats for an account
+    /// @param _accountId the account to get stats for
+    function getAccountStats(uint128 _accountId)
+        external
+        view
+        returns (AccountStats memory)
+    {
+        return accountStats[_accountId];
     }
 
     /// @notice register a margin engine
