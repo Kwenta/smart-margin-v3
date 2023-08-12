@@ -34,6 +34,16 @@ interface IPerpsMarketProxy {
         address user
     ) external;
 
+    /// @notice Returns `true` if `user` has been granted `permission` for account `accountId`.
+    /// @param accountId The id of the account whose permission is being queried.
+    /// @param permission The bytes32 identifier of the permission.
+    /// @param user The target address whose permission is being queried.
+    /// @return hasPermission A boolean with the response of the query.
+    function hasPermission(uint128 accountId, bytes32 permission, address user)
+        external
+        view
+        returns (bool hasPermission);
+
     /*//////////////////////////////////////////////////////////////
                            ASYNC ORDER MODULE
     //////////////////////////////////////////////////////////////*/

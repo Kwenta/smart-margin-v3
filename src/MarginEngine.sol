@@ -8,7 +8,11 @@ import {Int256Lib} from "src/libraries/INT256Lib.sol";
 import {Int128Lib} from "src/libraries/INT128Lib.sol";
 import {ISpotMarketProxy} from "src/interfaces/synthetix/ISpotMarketProxy.sol";
 import {Multicallable} from "src/utils/Multicallable.sol";
+import {Stats} from "src/modules/Stats.sol";
 
+/// @title Kwenta Smart Margin v3: Margin Engine
+/// @notice Responsible for interacting with Synthetix v3 Perps Market
+/// @author JaredBorders (jaredborders@pm.me)
 contract MarginEngine is Multicallable, ERC721Receiver {
     using Int128Lib for int128;
     using Int256Lib for int256;
@@ -18,18 +22,12 @@ contract MarginEngine is Multicallable, ERC721Receiver {
     Auth public immutable AUTH;
     IPerpsMarketProxy public immutable PERPS_MARKET_PROXY;
     ISpotMarketProxy public immutable SPOT_MARKET_PROXY;
+    Stats public immutable STATS;
     IERC20 public immutable SUSD;
-
-    struct AccountStats {
-        uint256 totalFees;
-        uint128 totalVolume;
-        uint128 totalTrades;
-    }
-
-    mapping(uint128 accountId => AccountStats) public accountStats;
 
     constructor(
         address _auth,
+        address _stats,
         address _perpsMarketProxy,
         address _spotMarketProxy,
         address _sUSDProxy
@@ -37,15 +35,8 @@ contract MarginEngine is Multicallable, ERC721Receiver {
         AUTH = Auth(_auth);
         PERPS_MARKET_PROXY = IPerpsMarketProxy(_perpsMarketProxy);
         SPOT_MARKET_PROXY = ISpotMarketProxy(_spotMarketProxy);
+        STATS = Stats(_stats);
         SUSD = IERC20(_sUSDProxy);
-    }
-
-    /*//////////////////////////////////////////////////////////////
-                           ACCOUNT MANAGEMENT
-    //////////////////////////////////////////////////////////////*/
-
-    function createAccount() external returns (uint128 accountId) {
-        accountId = AUTH.createAccount({_actor: msg.sender});
     }
 
     /*//////////////////////////////////////////////////////////////
@@ -57,16 +48,20 @@ contract MarginEngine is Multicallable, ERC721Receiver {
         uint128 _synthMarketId,
         int256 _amount
     ) external {
-        assert(AUTH.isActorAccountOwner(msg.sender, _accountId));
+        assert(AUTH.isCallerAccountActor(msg.sender, _accountId));
+
+        /// @dev given the amount is positive, simply casting (int -> uint) is safe
         assert(_amount > 0);
 
         address synthAddress = _getSynthAddress(_synthMarketId);
 
         IERC20(synthAddress).transferFrom(
-            msg.sender, address(this), _amount.abs()
+            msg.sender, address(this), uint256(_amount)
         );
 
-        IERC20(synthAddress).approve(address(PERPS_MARKET_PROXY), _amount.abs());
+        IERC20(synthAddress).approve(
+            address(PERPS_MARKET_PROXY), uint256(_amount)
+        );
 
         PERPS_MARKET_PROXY.modifyCollateral(_accountId, _synthMarketId, _amount);
     }
@@ -76,7 +71,9 @@ contract MarginEngine is Multicallable, ERC721Receiver {
         uint128 _synthMarketId,
         int256 _amount
     ) external {
-        assert(AUTH.isActorAccountOwner(msg.sender, _accountId));
+        assert(AUTH.isCallerAccountActor(msg.sender, _accountId));
+
+        /// @dev given the amount is negative, simply casting (int -> uint) is unsafe, thus we use .abs()
         assert(_amount < 0);
 
         PERPS_MARKET_PROXY.modifyCollateral(_accountId, _synthMarketId, _amount);
@@ -112,8 +109,8 @@ contract MarginEngine is Multicallable, ERC721Receiver {
         address _referrer
     ) external {
         assert(
-            AUTH.isActorDelegate(msg.sender, _accountId)
-                || AUTH.isActorAccountOwner(msg.sender, _accountId)
+            AUTH.isCallerAccountDelegate(msg.sender, _accountId)
+                || AUTH.isCallerAccountActor(msg.sender, _accountId)
         );
 
         (, uint256 fees) = PERPS_MARKET_PROXY.commitOrder(
@@ -129,9 +126,10 @@ contract MarginEngine is Multicallable, ERC721Receiver {
         );
         /// @custom:todo who should receive the referrer fees?
 
-        /// @dev track account stats
-        accountStats[_accountId].totalFees += fees;
-        accountStats[_accountId].totalVolume += _sizeDelta.abs();
-        accountStats[_accountId].totalTrades++;
+        STATS.updateAccountStats({
+            _accountId: _accountId,
+            _fees: fees,
+            _volume: _sizeDelta.abs()
+        });
     }
 }
