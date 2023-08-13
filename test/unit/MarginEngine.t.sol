@@ -63,6 +63,29 @@ contract MarginEngineTest is Test, Constants {
 }
 
 contract CollateralManagement is MarginEngineTest {
+    function test_depositCollateral() public {
+        uint256 preBalance = IERC20(OPTIMISM_GOERLI_SUSD_PROXY).balanceOf(ACTOR);
+
+        vm.startPrank(ACTOR);
+
+        IERC20(OPTIMISM_GOERLI_SUSD_PROXY).approve(
+            address(marginEngine), type(uint256).max
+        );
+
+        marginEngine.depositCollateral({
+            _accountId: accountId,
+            _synthMarketId: SUSD_SPOT_MARKET_ID,
+            _amount: int256(AMOUNT)
+        });
+
+        vm.stopPrank();
+
+        uint256 postBalance =
+            IERC20(OPTIMISM_GOERLI_SUSD_PROXY).balanceOf(ACTOR);
+
+        assertEq(postBalance, preBalance - AMOUNT);
+    }
+
     function test_depositCollateral_availableMargin() public {
         vm.startPrank(ACTOR);
 
@@ -122,7 +145,111 @@ contract CollateralManagement is MarginEngineTest {
         assertEq(totalCollateralValue, AMOUNT);
     }
 
-    /// @custom:todo test withdrawCollateral
+    function test_withdrawCollateral() public {
+        uint256 preBalance = IERC20(OPTIMISM_GOERLI_SUSD_PROXY).balanceOf(ACTOR);
+
+        vm.startPrank(ACTOR);
+
+        IERC20(OPTIMISM_GOERLI_SUSD_PROXY).approve(
+            address(marginEngine), type(uint256).max
+        );
+
+        marginEngine.depositCollateral({
+            _accountId: accountId,
+            _synthMarketId: SUSD_SPOT_MARKET_ID,
+            _amount: int256(AMOUNT)
+        });
+
+        marginEngine.withdrawCollateral({
+            _accountId: accountId,
+            _synthMarketId: SUSD_SPOT_MARKET_ID,
+            _amount: -int256(AMOUNT)
+        });
+
+        vm.stopPrank();
+
+        uint256 postBalance =
+            IERC20(OPTIMISM_GOERLI_SUSD_PROXY).balanceOf(ACTOR);
+
+        assertEq(postBalance, preBalance);
+    }
+
+    function test_withdrawCollateral_availableMargin() public {
+        vm.startPrank(ACTOR);
+
+        IERC20(OPTIMISM_GOERLI_SUSD_PROXY).approve(
+            address(marginEngine), type(uint256).max
+        );
+
+        marginEngine.depositCollateral({
+            _accountId: accountId,
+            _synthMarketId: SUSD_SPOT_MARKET_ID,
+            _amount: int256(AMOUNT)
+        });
+
+        marginEngine.withdrawCollateral({
+            _accountId: accountId,
+            _synthMarketId: SUSD_SPOT_MARKET_ID,
+            _amount: -int256(AMOUNT)
+        });
+
+        vm.stopPrank();
+
+        int256 availableMargin = perpsMarketProxy.getAvailableMargin(accountId);
+        assertEq(availableMargin, 0);
+    }
+
+    function test_withdrawCollateral_collateralAmount() public {
+        vm.startPrank(ACTOR);
+
+        IERC20(OPTIMISM_GOERLI_SUSD_PROXY).approve(
+            address(marginEngine), type(uint256).max
+        );
+
+        marginEngine.depositCollateral({
+            _accountId: accountId,
+            _synthMarketId: SUSD_SPOT_MARKET_ID,
+            _amount: int256(AMOUNT)
+        });
+
+        marginEngine.withdrawCollateral({
+            _accountId: accountId,
+            _synthMarketId: SUSD_SPOT_MARKET_ID,
+            _amount: -int256(AMOUNT)
+        });
+
+        vm.stopPrank();
+
+        uint256 collateralAmountOfSynth =
+            perpsMarketProxy.getCollateralAmount(accountId, SUSD_SPOT_MARKET_ID);
+        assertEq(collateralAmountOfSynth, 0);
+    }
+
+    function test_withdrawCollateral_totalCollateralValue() public {
+        vm.startPrank(ACTOR);
+
+        IERC20(OPTIMISM_GOERLI_SUSD_PROXY).approve(
+            address(marginEngine), type(uint256).max
+        );
+
+        marginEngine.depositCollateral({
+            _accountId: accountId,
+            _synthMarketId: SUSD_SPOT_MARKET_ID,
+            _amount: int256(AMOUNT)
+        });
+
+        marginEngine.withdrawCollateral({
+            _accountId: accountId,
+            _synthMarketId: SUSD_SPOT_MARKET_ID,
+            _amount: -int256(AMOUNT)
+        });
+
+        vm.stopPrank();
+
+        uint256 totalCollateralValue =
+            perpsMarketProxy.totalCollateralValue(accountId);
+        assertEq(totalCollateralValue, 0);
+    }
 }
 
 contract AsyncOrderManagement is MarginEngineTest {
