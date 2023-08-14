@@ -1,32 +1,48 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 pragma solidity 0.8.18;
 
-import {Auth} from "src/modules/Auth.sol";
-import {Constants} from "test/utils/Constants.sol";
-import {MarginEngine} from "src/MarginEngine.sol";
-import {Stats} from "src/modules/Stats.sol";
-import {SUSDHelper, IERC20} from "test/utils/SUSDHelper.sol";
-import {
-    OPTIMISM_GOERLI_SPOT_MARKET_PROXY,
-    OPTIMISM_GOERLI_PERPS_MARKET_PROXY,
-    OPTIMISM_GOERLI_SUSD_PROXY
-} from "script/utils/parameters/OptimismGoerliParameters.sol";
+// foundry
 import {Test} from "lib/forge-std/src/Test.sol";
+
+// margin engine
+import {MarginEngine} from "src/MarginEngine.sol";
+
+// synthetix v3
+import {ICoreProxy} from "src/interfaces/synthetix/ICoreProxy.sol";
 import {IPerpsMarketProxy} from "src/interfaces/synthetix/IPerpsMarketProxy.sol";
 
-/// @custom:todo make sure tests are named correctly/consistently
+// modules
+import {Auth} from "src/modules/Auth.sol";
+import {Stats} from "src/modules/Stats.sol";
+
+// tokens
+import {IERC20, SUSDHelper} from "test/utils/SUSDHelper.sol";
+
+// constants
+import {Constants} from "test/utils/Constants.sol";
+import {
+    OPTIMISM_GOERLI_CORE_PROXY,
+    OPTIMISM_GOERLI_SPOT_MARKET_PROXY,
+    OPTIMISM_GOERLI_PERPS_MARKET_PROXY
+} from "script/utils/parameters/OptimismGoerliParameters.sol";
 
 contract MarginEngineTest is Test, Constants {
-    // SMv3 contracts
-    Auth auth;
+    // margin engine
     MarginEngine marginEngine;
+
+    // synthetix v3
+    ICoreProxy coreProxy;
+    IPerpsMarketProxy perpsMarketProxy;
+
+    // modules
+    Auth auth;
     Stats stats;
 
-    // external contracts
-    IPerpsMarketProxy perpsMarketProxy;
+    // tokens
+    IERC20 sUSD;
     SUSDHelper sUSDHelper;
 
-    // state variables
+    // test state
     uint128 accountId;
 
     function setUp() public {
@@ -34,17 +50,20 @@ contract MarginEngineTest is Test, Constants {
 
         sUSDHelper = new SUSDHelper();
         perpsMarketProxy = IPerpsMarketProxy(OPTIMISM_GOERLI_PERPS_MARKET_PROXY);
+        coreProxy = ICoreProxy(OPTIMISM_GOERLI_CORE_PROXY);
 
         auth = new Auth(OPTIMISM_GOERLI_PERPS_MARKET_PROXY);
 
         stats = new Stats(OWNER);
+
+        sUSD = IERC20(coreProxy.getUsdToken());
 
         marginEngine = new MarginEngine(
             address(auth),
             address(stats),
             OPTIMISM_GOERLI_PERPS_MARKET_PROXY, 
             OPTIMISM_GOERLI_SPOT_MARKET_PROXY,
-            OPTIMISM_GOERLI_SUSD_PROXY
+            address(sUSD)
         );
 
         vm.startPrank(OWNER);
@@ -64,15 +83,13 @@ contract MarginEngineTest is Test, Constants {
 
 contract CollateralManagement is MarginEngineTest {
     function test_depositCollateral() public {
-        uint256 preBalance = IERC20(OPTIMISM_GOERLI_SUSD_PROXY).balanceOf(ACTOR);
+        uint256 preBalance = sUSD.balanceOf(ACTOR);
 
         vm.startPrank(ACTOR);
 
-        IERC20(OPTIMISM_GOERLI_SUSD_PROXY).approve(
-            address(marginEngine), type(uint256).max
-        );
+        sUSD.approve(address(marginEngine), type(uint256).max);
 
-        marginEngine.depositCollateral({
+        marginEngine.modifyCollateral({
             _accountId: accountId,
             _synthMarketId: SUSD_SPOT_MARKET_ID,
             _amount: int256(AMOUNT)
@@ -80,8 +97,7 @@ contract CollateralManagement is MarginEngineTest {
 
         vm.stopPrank();
 
-        uint256 postBalance =
-            IERC20(OPTIMISM_GOERLI_SUSD_PROXY).balanceOf(ACTOR);
+        uint256 postBalance = sUSD.balanceOf(ACTOR);
 
         assertEq(postBalance, preBalance - AMOUNT);
     }
@@ -89,11 +105,9 @@ contract CollateralManagement is MarginEngineTest {
     function test_depositCollateral_availableMargin() public {
         vm.startPrank(ACTOR);
 
-        IERC20(OPTIMISM_GOERLI_SUSD_PROXY).approve(
-            address(marginEngine), type(uint256).max
-        );
+        sUSD.approve(address(marginEngine), type(uint256).max);
 
-        marginEngine.depositCollateral({
+        marginEngine.modifyCollateral({
             _accountId: accountId,
             _synthMarketId: SUSD_SPOT_MARKET_ID,
             _amount: int256(AMOUNT)
@@ -108,11 +122,9 @@ contract CollateralManagement is MarginEngineTest {
     function test_depositCollateral_collateralAmount() public {
         vm.startPrank(ACTOR);
 
-        IERC20(OPTIMISM_GOERLI_SUSD_PROXY).approve(
-            address(marginEngine), type(uint256).max
-        );
+        sUSD.approve(address(marginEngine), type(uint256).max);
 
-        marginEngine.depositCollateral({
+        marginEngine.modifyCollateral({
             _accountId: accountId,
             _synthMarketId: SUSD_SPOT_MARKET_ID,
             _amount: int256(AMOUNT)
@@ -128,11 +140,9 @@ contract CollateralManagement is MarginEngineTest {
     function test_depositCollateral_totalCollateralValue() public {
         vm.startPrank(ACTOR);
 
-        IERC20(OPTIMISM_GOERLI_SUSD_PROXY).approve(
-            address(marginEngine), type(uint256).max
-        );
+        sUSD.approve(address(marginEngine), type(uint256).max);
 
-        marginEngine.depositCollateral({
+        marginEngine.modifyCollateral({
             _accountId: accountId,
             _synthMarketId: SUSD_SPOT_MARKET_ID,
             _amount: int256(AMOUNT)
@@ -146,21 +156,19 @@ contract CollateralManagement is MarginEngineTest {
     }
 
     function test_withdrawCollateral() public {
-        uint256 preBalance = IERC20(OPTIMISM_GOERLI_SUSD_PROXY).balanceOf(ACTOR);
+        uint256 preBalance = sUSD.balanceOf(ACTOR);
 
         vm.startPrank(ACTOR);
 
-        IERC20(OPTIMISM_GOERLI_SUSD_PROXY).approve(
-            address(marginEngine), type(uint256).max
-        );
+        sUSD.approve(address(marginEngine), type(uint256).max);
 
-        marginEngine.depositCollateral({
+        marginEngine.modifyCollateral({
             _accountId: accountId,
             _synthMarketId: SUSD_SPOT_MARKET_ID,
             _amount: int256(AMOUNT)
         });
 
-        marginEngine.withdrawCollateral({
+        marginEngine.modifyCollateral({
             _accountId: accountId,
             _synthMarketId: SUSD_SPOT_MARKET_ID,
             _amount: -int256(AMOUNT)
@@ -168,8 +176,7 @@ contract CollateralManagement is MarginEngineTest {
 
         vm.stopPrank();
 
-        uint256 postBalance =
-            IERC20(OPTIMISM_GOERLI_SUSD_PROXY).balanceOf(ACTOR);
+        uint256 postBalance = sUSD.balanceOf(ACTOR);
 
         assertEq(postBalance, preBalance);
     }
@@ -177,17 +184,15 @@ contract CollateralManagement is MarginEngineTest {
     function test_withdrawCollateral_availableMargin() public {
         vm.startPrank(ACTOR);
 
-        IERC20(OPTIMISM_GOERLI_SUSD_PROXY).approve(
-            address(marginEngine), type(uint256).max
-        );
+        sUSD.approve(address(marginEngine), type(uint256).max);
 
-        marginEngine.depositCollateral({
+        marginEngine.modifyCollateral({
             _accountId: accountId,
             _synthMarketId: SUSD_SPOT_MARKET_ID,
             _amount: int256(AMOUNT)
         });
 
-        marginEngine.withdrawCollateral({
+        marginEngine.modifyCollateral({
             _accountId: accountId,
             _synthMarketId: SUSD_SPOT_MARKET_ID,
             _amount: -int256(AMOUNT)
@@ -202,17 +207,15 @@ contract CollateralManagement is MarginEngineTest {
     function test_withdrawCollateral_collateralAmount() public {
         vm.startPrank(ACTOR);
 
-        IERC20(OPTIMISM_GOERLI_SUSD_PROXY).approve(
-            address(marginEngine), type(uint256).max
-        );
+        sUSD.approve(address(marginEngine), type(uint256).max);
 
-        marginEngine.depositCollateral({
+        marginEngine.modifyCollateral({
             _accountId: accountId,
             _synthMarketId: SUSD_SPOT_MARKET_ID,
             _amount: int256(AMOUNT)
         });
 
-        marginEngine.withdrawCollateral({
+        marginEngine.modifyCollateral({
             _accountId: accountId,
             _synthMarketId: SUSD_SPOT_MARKET_ID,
             _amount: -int256(AMOUNT)
@@ -228,17 +231,15 @@ contract CollateralManagement is MarginEngineTest {
     function test_withdrawCollateral_totalCollateralValue() public {
         vm.startPrank(ACTOR);
 
-        IERC20(OPTIMISM_GOERLI_SUSD_PROXY).approve(
-            address(marginEngine), type(uint256).max
-        );
+        sUSD.approve(address(marginEngine), type(uint256).max);
 
-        marginEngine.depositCollateral({
+        marginEngine.modifyCollateral({
             _accountId: accountId,
             _synthMarketId: SUSD_SPOT_MARKET_ID,
             _amount: int256(AMOUNT)
         });
 
-        marginEngine.withdrawCollateral({
+        marginEngine.modifyCollateral({
             _accountId: accountId,
             _synthMarketId: SUSD_SPOT_MARKET_ID,
             _amount: -int256(AMOUNT)
@@ -256,11 +257,9 @@ contract AsyncOrderManagement is MarginEngineTest {
     function test_commitOrder() public {
         vm.startPrank(ACTOR);
 
-        IERC20(OPTIMISM_GOERLI_SUSD_PROXY).approve(
-            address(marginEngine), type(uint256).max
-        );
+        sUSD.approve(address(marginEngine), type(uint256).max);
 
-        marginEngine.depositCollateral({
+        marginEngine.modifyCollateral({
             _accountId: accountId,
             _synthMarketId: SUSD_SPOT_MARKET_ID,
             _amount: int256(AMOUNT)
@@ -286,13 +285,11 @@ contract Multicallable is MarginEngineTest {
     function test_multicall_depositCollateral_commitOrder() public {
         vm.startPrank(ACTOR);
 
-        IERC20(OPTIMISM_GOERLI_SUSD_PROXY).approve(
-            address(marginEngine), type(uint256).max
-        );
+        sUSD.approve(address(marginEngine), type(uint256).max);
 
         bytes[] memory data = new bytes[](2);
         data[0] = abi.encodeWithSelector(
-            MarginEngine.depositCollateral.selector,
+            MarginEngine.modifyCollateral.selector,
             accountId,
             SUSD_SPOT_MARKET_ID,
             int256(AMOUNT)

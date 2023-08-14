@@ -1,9 +1,14 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 pragma solidity 0.8.18;
 
-import {Constants} from "test/utils/Constants.sol";
-import {Stats, Ownable} from "src/modules/Stats.sol";
+// foundry
 import {Test} from "lib/forge-std/src/Test.sol";
+
+// modules
+import {Stats, Ownable} from "src/modules/Stats.sol";
+
+// constants
+import {Constants} from "test/utils/Constants.sol";
 
 contract StatsTest is Test, Constants {
     Stats stats;

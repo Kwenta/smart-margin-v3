@@ -1,15 +1,18 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 pragma solidity 0.8.18;
 
-import {Auth} from "src/modules/Auth.sol";
+// foundry
+import {Test} from "lib/forge-std/src/Test.sol";
+
+// modules
+import {Auth, AuthEvents, IAuth} from "src/modules/Auth.sol";
+
+// constants
 import {Constants} from "test/utils/Constants.sol";
 import {OPTIMISM_GOERLI_PERPS_MARKET_PROXY} from
     "script/utils/parameters/OptimismGoerliParameters.sol";
-import {Test} from "lib/forge-std/src/Test.sol";
 
-/// @custom:todo make sure tests are named correctly/consistently
-
-contract AuthTest is Test, Constants {
+contract AuthTest is Test, Constants, AuthEvents {
     Auth auth;
 
     function setUp() public {
@@ -29,9 +32,14 @@ contract AccountManagement is AuthTest {
     }
 
     function test_createAccount_event() public {
+        uint128 blockSpecificAccountIdExpected =
+            170_141_183_460_469_231_731_687_303_715_884_105_733;
+
         vm.prank(ACTOR);
 
-        /// @custom:todo create and test event
+        vm.expectEmit(true, true, true, true);
+
+        emit AccountCreated(blockSpecificAccountIdExpected, ACTOR);
 
         auth.createAccount();
     }
@@ -48,9 +56,14 @@ contract AccountManagement is AuthTest {
     }
 
     function test_createAccount_with_marginEngine_event() public {
+        uint128 blockSpecificAccountIdExpected =
+            170_141_183_460_469_231_731_687_303_715_884_105_733;
+
         vm.prank(ACTOR);
 
-        /// @custom:todo create and test event
+        vm.expectEmit(true, true, true, true);
+
+        emit AccountCreated(blockSpecificAccountIdExpected, ACTOR);
 
         accountId = auth.createAccount(MOCK_MARGIN_ENGINE);
     }
@@ -58,7 +71,7 @@ contract AccountManagement is AuthTest {
     function test_createAccount_with_marginEngine_notZeroAddress() public {
         vm.prank(ACTOR);
 
-        vm.expectRevert(abi.encodeWithSelector(Auth.ZeroAddress.selector));
+        vm.expectRevert(abi.encodeWithSelector(IAuth.ZeroAddress.selector));
 
         auth.createAccount(address(0));
     }
@@ -113,7 +126,9 @@ contract ActorManagement is AuthTest {
 
         vm.prank(ACTOR);
 
-        /// @custom:todo create and test event
+        vm.expectEmit(true, true, true, true);
+
+        emit AccountActorChanged(accountId, ACTOR, NEW_ACTOR);
 
         auth.changeAccountActor(accountId, NEW_ACTOR);
     }
@@ -127,7 +142,7 @@ contract ActorManagement is AuthTest {
 
         vm.expectRevert(
             abi.encodeWithSelector(
-                Auth.OnlyAccountActor.selector, accountId, ACTOR, BAD_ACTOR
+                IAuth.OnlyAccountActor.selector, accountId, ACTOR, BAD_ACTOR
             )
         );
 
@@ -141,7 +156,7 @@ contract ActorManagement is AuthTest {
 
         vm.prank(ACTOR);
 
-        vm.expectRevert(abi.encodeWithSelector(Auth.ZeroAddress.selector));
+        vm.expectRevert(abi.encodeWithSelector(IAuth.ZeroAddress.selector));
 
         auth.changeAccountActor(accountId, address(0));
     }
@@ -203,7 +218,9 @@ contract DelegateManagement is AuthTest {
 
         vm.prank(ACTOR);
 
-        /// @custom:todo create and test event
+        vm.expectEmit(true, true, true, true);
+
+        emit AccountDelegateAdded(accountId1, DELEGATE_1);
 
         auth.addDelegate(accountId1, DELEGATE_1);
     }
@@ -213,7 +230,7 @@ contract DelegateManagement is AuthTest {
 
         vm.expectRevert(
             abi.encodeWithSelector(
-                Auth.OnlyAccountActor.selector,
+                IAuth.OnlyAccountActor.selector,
                 accountId1,
                 address(0),
                 BAD_ACTOR
@@ -230,7 +247,7 @@ contract DelegateManagement is AuthTest {
 
         vm.prank(ACTOR);
 
-        vm.expectRevert(abi.encodeWithSelector(Auth.ZeroAddress.selector));
+        vm.expectRevert(abi.encodeWithSelector(IAuth.ZeroAddress.selector));
 
         auth.addDelegate(accountId1, address(0));
     }
@@ -334,9 +351,11 @@ contract DelegateManagement is AuthTest {
 
         auth.addDelegate(accountId1, DELEGATE_1);
 
-        /// @custom:todo create and test event
+        vm.expectEmit(true, true, true, true);
 
-        auth.removeDelegate(accountId1, DELEGATE_2);
+        emit AccountDelegateRemoved(accountId1, DELEGATE_1);
+
+        auth.removeDelegate(accountId1, DELEGATE_1);
 
         vm.stopPrank();
     }
@@ -346,7 +365,7 @@ contract DelegateManagement is AuthTest {
 
         vm.expectRevert(
             abi.encodeWithSelector(
-                Auth.OnlyAccountActor.selector,
+                IAuth.OnlyAccountActor.selector,
                 accountId1,
                 address(0),
                 BAD_ACTOR
@@ -546,7 +565,9 @@ contract MarginEngineManagement is AuthTest {
 
         accountId = auth.createAccount();
 
-        /// @custom:todo create and test event
+        vm.expectEmit(true, true, true, true);
+
+        emit MarginEngineRegistered(accountId, MOCK_MARGIN_ENGINE);
 
         auth.registerMarginEngine(accountId, MOCK_MARGIN_ENGINE);
 
@@ -558,7 +579,10 @@ contract MarginEngineManagement is AuthTest {
 
         vm.expectRevert(
             abi.encodeWithSelector(
-                Auth.OnlyAccountActor.selector, accountId, address(0), BAD_ACTOR
+                IAuth.OnlyAccountActor.selector,
+                accountId,
+                address(0),
+                BAD_ACTOR
             )
         );
 
@@ -572,7 +596,7 @@ contract MarginEngineManagement is AuthTest {
 
         vm.prank(ACTOR);
 
-        vm.expectRevert(abi.encodeWithSelector(Auth.ZeroAddress.selector));
+        vm.expectRevert(abi.encodeWithSelector(IAuth.ZeroAddress.selector));
 
         auth.registerMarginEngine(accountId, address(0));
     }
@@ -601,7 +625,9 @@ contract MarginEngineManagement is AuthTest {
 
         auth.registerMarginEngine(accountId, MOCK_MARGIN_ENGINE);
 
-        /// @custom:todo create and test event
+        vm.expectEmit(true, true, true, true);
+
+        emit MarginEngineUnregistered(accountId, MOCK_MARGIN_ENGINE);
 
         auth.unregisterMarginEngine(accountId, MOCK_MARGIN_ENGINE);
 
@@ -613,7 +639,10 @@ contract MarginEngineManagement is AuthTest {
 
         vm.expectRevert(
             abi.encodeWithSelector(
-                Auth.OnlyAccountActor.selector, accountId, address(0), BAD_ACTOR
+                IAuth.OnlyAccountActor.selector,
+                accountId,
+                address(0),
+                BAD_ACTOR
             )
         );
 
@@ -629,7 +658,7 @@ contract MarginEngineManagement is AuthTest {
 
         vm.expectRevert(
             abi.encodeWithSelector(
-                Auth.MarginEngineNotRegistered.selector,
+                IAuth.MarginEngineNotRegistered.selector,
                 accountId,
                 MOCK_MARGIN_ENGINE
             )
