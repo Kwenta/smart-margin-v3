@@ -1,17 +1,24 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 pragma solidity 0.8.18;
 
-import {Auth, ERC721Receiver} from "src/modules/Auth.sol";
-import {IERC20} from "src/interfaces/tokens/IERC20.sol";
+// synthetix v3
 import {IPerpsMarketProxy} from "src/interfaces/synthetix/IPerpsMarketProxy.sol";
-import {Int256Lib} from "src/libraries/Int256Lib.sol";
-import {Int128Lib} from "src/libraries/Int128Lib.sol";
 import {ISpotMarketProxy} from "src/interfaces/synthetix/ISpotMarketProxy.sol";
-import {Multicallable} from "src/utils/Multicallable.sol";
+
+// modules
+import {Auth} from "src/modules/Auth.sol";
 import {Stats} from "src/modules/Stats.sol";
 
-/// @custom:todo add docs
-/// @custom:todo create interface once well tested and stable
+// tokens
+import {ERC721Receiver} from "src/modules/Auth.sol";
+import {IERC20} from "src/interfaces/tokens/IERC20.sol";
+
+// utils
+import {Multicallable} from "src/utils/Multicallable.sol";
+
+// libraries
+import {Int128Lib} from "src/libraries/Int128Lib.sol";
+import {Int256Lib} from "src/libraries/Int256Lib.sol";
 
 /// @title Kwenta Smart Margin v3: Margin Engine
 /// @notice Responsible for interacting with Synthetix v3 Perps Market
@@ -27,6 +34,10 @@ contract MarginEngine is Multicallable, ERC721Receiver {
     ISpotMarketProxy public immutable SPOT_MARKET_PROXY;
     Stats public immutable STATS;
     IERC20 public immutable SUSD;
+
+    error ZeroAmount();
+    error ZeroAddress();
+    error Unauthorized();
 
     constructor(
         address _auth,
@@ -46,44 +57,36 @@ contract MarginEngine is Multicallable, ERC721Receiver {
                          COLLATERAL MANAGEMENT
     //////////////////////////////////////////////////////////////*/
 
-    function depositCollateral(
+    function modifyCollateral(
         uint128 _accountId,
         uint128 _synthMarketId,
         int256 _amount
     ) external {
-        assert(AUTH.isCallerAccountActor(msg.sender, _accountId));
+        if (_amount == 0) revert ZeroAmount();
 
-        /// @dev given the amount is positive, simply casting (int -> uint) is safe
-        assert(_amount > 0);
+        IERC20 synth = IERC20(_getSynthAddress(_synthMarketId));
 
-        address synthAddress = _getSynthAddress(_synthMarketId);
+        if (_amount > 0) {
+            // @dev given the amount is positive, simply casting (int -> uint) is safe
+            synth.transferFrom(msg.sender, address(this), uint256(_amount));
 
-        IERC20(synthAddress).transferFrom(
-            msg.sender, address(this), uint256(_amount)
-        );
+            synth.approve(address(PERPS_MARKET_PROXY), uint256(_amount));
 
-        IERC20(synthAddress).approve(
-            address(PERPS_MARKET_PROXY), uint256(_amount)
-        );
+            PERPS_MARKET_PROXY.modifyCollateral(
+                _accountId, _synthMarketId, _amount
+            );
+        } else {
+            if (!AUTH.isCallerAccountActor(msg.sender, _accountId)) {
+                revert Unauthorized();
+            }
 
-        PERPS_MARKET_PROXY.modifyCollateral(_accountId, _synthMarketId, _amount);
-    }
+            /// @dev given the amount is negative, simply casting (int -> uint) is unsafe, thus we use .abs()
+            PERPS_MARKET_PROXY.modifyCollateral(
+                _accountId, _synthMarketId, _amount
+            );
 
-    function withdrawCollateral(
-        uint128 _accountId,
-        uint128 _synthMarketId,
-        int256 _amount
-    ) external {
-        assert(AUTH.isCallerAccountActor(msg.sender, _accountId));
-
-        /// @dev given the amount is negative, simply casting (int -> uint) is unsafe, thus we use .abs()
-        assert(_amount < 0);
-
-        PERPS_MARKET_PROXY.modifyCollateral(_accountId, _synthMarketId, _amount);
-
-        address synthAddress = _getSynthAddress(_synthMarketId);
-
-        IERC20(synthAddress).transfer(msg.sender, _amount.abs());
+            synth.transfer(msg.sender, _amount.abs());
+        }
     }
 
     function _getSynthAddress(uint128 _synthMarketId)
@@ -91,12 +94,12 @@ contract MarginEngine is Multicallable, ERC721Receiver {
         view
         returns (address synthAddress)
     {
-        /// @dev synthMarketId of 0 internally represents sUSD in SNXv3 system (see SNXv3 PerpsAccountModule)
-        /// but getSynth(0) will not return sUSD address so it must be handled separately 🙃
+        /// @dev "0" synthMarketId represents sUSD in Synthetix v3
         synthAddress = _synthMarketId == 0
             ? address(SUSD)
             : SPOT_MARKET_PROXY.getSynth(_synthMarketId);
-        assert(synthAddress != address(0));
+
+        if (synthAddress == address(0)) revert ZeroAddress();
     }
 
     /*//////////////////////////////////////////////////////////////
@@ -111,28 +114,30 @@ contract MarginEngine is Multicallable, ERC721Receiver {
         uint256 _acceptablePrice,
         address _referrer
     ) external {
-        assert(
-            AUTH.isCallerAccountDelegate(msg.sender, _accountId)
-                || AUTH.isCallerAccountActor(msg.sender, _accountId)
-        );
+        if (
+            AUTH.isCallerAccountActor(msg.sender, _accountId)
+                || AUTH.isCallerAccountDelegate(msg.sender, _accountId)
+        ) {
+            (, uint256 fees) = PERPS_MARKET_PROXY.commitOrder(
+                IPerpsMarketProxy.OrderCommitmentRequest({
+                    marketId: _perpsMarketId,
+                    accountId: _accountId,
+                    sizeDelta: _sizeDelta,
+                    settlementStrategyId: _settlementStrategyId,
+                    acceptablePrice: _acceptablePrice,
+                    trackingCode: TRACKING_CODE,
+                    referrer: _referrer
+                })
+            );
+            /// @custom:todo who should receive the referrer fees?
 
-        (, uint256 fees) = PERPS_MARKET_PROXY.commitOrder(
-            IPerpsMarketProxy.OrderCommitmentRequest({
-                marketId: _perpsMarketId,
-                accountId: _accountId,
-                sizeDelta: _sizeDelta,
-                settlementStrategyId: _settlementStrategyId,
-                acceptablePrice: _acceptablePrice,
-                trackingCode: TRACKING_CODE,
-                referrer: _referrer
-            })
-        );
-        /// @custom:todo who should receive the referrer fees?
-
-        STATS.updateAccountStats({
-            _accountId: _accountId,
-            _fees: fees,
-            _volume: _sizeDelta.abs()
-        });
+            STATS.updateAccountStats({
+                _accountId: _accountId,
+                _fees: fees,
+                _volume: _sizeDelta.abs()
+            });
+        } else {
+            revert Unauthorized();
+        }
     }
 }

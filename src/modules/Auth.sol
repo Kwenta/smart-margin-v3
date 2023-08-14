@@ -1,19 +1,20 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 pragma solidity 0.8.18;
 
-import {ERC721Receiver} from "src/tokens/ERC721Receiver.sol";
+// auth
+import {AuthEvents} from "src/events/modules/AuthEvents.sol";
+import {IAuth} from "src/interfaces/modules/IAuth.sol";
+
+// synthetix v3
 import {IPerpsMarketProxy} from "src/interfaces/synthetix/IPerpsMarketProxy.sol";
 
-/// @custom:todo create interface once well tested and stable
-/// @custom:todo add events
-/// @custom:todo unit test events
-/// @custom:todo further unit test all functions (fuzz, etc.)
-/// @custom:todo review all for-loops and optimize where possible
+// tokens
+import {ERC721Receiver} from "src/tokens/ERC721Receiver.sol";
 
 /// @title Kwenta Smart Margin v3: Authentication Module
 /// @notice Responsible for managing accounts and permissions
 /// @author JaredBorders (jaredborders@pm.me)
-contract Auth is ERC721Receiver {
+contract Auth is IAuth, AuthEvents, ERC721Receiver {
     /*//////////////////////////////////////////////////////////////
                           CONSTANTS/IMMUTABLES
     //////////////////////////////////////////////////////////////*/
@@ -47,28 +48,6 @@ contract Auth is ERC721Receiver {
     /// @notice mapping stores the accounts a given delegate is a delegate for
     mapping(address delegate => uint128[] accountIds) internal
         accountIdsByDelegate;
-
-    /*//////////////////////////////////////////////////////////////
-                                 ERRORS
-    //////////////////////////////////////////////////////////////*/
-
-    /// @notice thrown when the caller is not the permissioned account actor
-    /// @param accountId the account to check the actor for
-    /// @param accountActor the actor for the account
-    /// @param caller the caller of the function
-    /// @notice this error is thrown when caller != accountActor
-    error OnlyAccountActor(
-        uint128 accountId, address accountActor, address caller
-    );
-
-    /// @notice thrown when the margin engine is not registered with the account
-    /// and the account actor attempts to unregister it
-    /// @param accountId the account to unregister the margin engine from
-    /// @param marginEngine the margin engine to unregister
-    error MarginEngineNotRegistered(uint128 accountId, address marginEngine);
-
-    /// @notice thrown when provided address is inappropriate zero address
-    error ZeroAddress();
 
     /*//////////////////////////////////////////////////////////////
                                MODIFIERS
@@ -120,6 +99,7 @@ contract Auth is ERC721Receiver {
                                  VIEWS
     //////////////////////////////////////////////////////////////*/
 
+    /// @inheritdoc IAuth
     function isCallerAccountActor(address _caller, uint128 _accountId)
         public
         view
@@ -128,6 +108,7 @@ contract Auth is ERC721Receiver {
         return actorByAccountId[_accountId] == _caller;
     }
 
+    /// @inheritdoc IAuth
     function getActorByAccountId(uint128 _accountId)
         external
         view
@@ -136,6 +117,7 @@ contract Auth is ERC721Receiver {
         return actorByAccountId[_accountId];
     }
 
+    /// @inheritdoc IAuth
     function getAccountIdsByActor(address _accountActor)
         external
         view
@@ -144,6 +126,7 @@ contract Auth is ERC721Receiver {
         return accountIdsByActor[_accountActor];
     }
 
+    /// @inheritdoc IAuth
     function isCallerAccountDelegate(address _caller, uint128 _accountId)
         public
         view
@@ -152,6 +135,7 @@ contract Auth is ERC721Receiver {
         return isDelegateByAccountId[_accountId][_caller];
     }
 
+    /// @inheritdoc IAuth
     function getDelegatesByAccountId(uint128 _accountId)
         external
         view
@@ -160,6 +144,7 @@ contract Auth is ERC721Receiver {
         return delegatesByAccountId[_accountId];
     }
 
+    /// @inheritdoc IAuth
     function getAccountIdsByDelegate(address _delegate)
         external
         view
@@ -168,6 +153,7 @@ contract Auth is ERC721Receiver {
         return accountIdsByDelegate[_delegate];
     }
 
+    /// @inheritdoc IAuth
     function hasAccountRegisteredMarginEngine(
         uint128 _accountId,
         address _marginEngine
@@ -183,8 +169,7 @@ contract Auth is ERC721Receiver {
                            ACCOUNT MANAGEMENT
     //////////////////////////////////////////////////////////////*/
 
-    /// @notice create a Synthetix v3 perps market account
-    /// @return accountId the id of the created account
+    /// @inheritdoc IAuth
     function createAccount() external returns (uint128 accountId) {
         /// @dev this auth contract will ALWAYS be the actual owner of the account
         accountId = PERPS_MARKET_PROXY.createAccount();
@@ -192,12 +177,11 @@ contract Auth is ERC721Receiver {
         /// @dev caller will be the account actor
         actorByAccountId[accountId] = msg.sender;
         accountIdsByActor[msg.sender].push(accountId);
+
+        emit AccountCreated(accountId, msg.sender);
     }
 
-    /// @notice create a Synthetix v3 perps market account
-    /// and register a margin engine with the account
-    /// @param _marginEngine the margin engine to register
-    /// @return accountId the id of the created account
+    /// @inheritdoc IAuth
     function createAccount(address _marginEngine)
         external
         notZeroAddress(_marginEngine)
@@ -215,15 +199,15 @@ contract Auth is ERC721Receiver {
         /// @dev caller will be the account actor
         actorByAccountId[accountId] = msg.sender;
         accountIdsByActor[msg.sender].push(accountId);
+
+        emit AccountCreated(accountId, msg.sender);
     }
 
     /*//////////////////////////////////////////////////////////////
                             ACTOR MANAGEMENT
     //////////////////////////////////////////////////////////////*/
 
-    /// @notice change the actor for an account
-    /// @notice the caller must be the current actor for the account
-    /// @param _accountId the account to change the actor for
+    /// @inheritdoc IAuth
     function changeAccountActor(uint128 _accountId, address _newActor)
         external
         onlyAccountActor(_accountId)
@@ -235,10 +219,10 @@ contract Auth is ERC721Receiver {
         // add new actor
         actorByAccountId[_accountId] = _newActor;
         accountIdsByActor[_newActor].push(_accountId);
+
+        emit AccountActorChanged(_accountId, msg.sender, _newActor);
     }
 
-    /// @notice remove account from accountIdsByActor mapping
-    /// @param _accountId the account to remove
     function _removeAccountIdFromAccountIdsByActor(uint128 _accountId)
         internal
     {
@@ -264,10 +248,7 @@ contract Auth is ERC721Receiver {
                           DELEGATE MANAGEMENT
     //////////////////////////////////////////////////////////////*/
 
-    /// @notice add a delegate to an account
-    /// @notice the caller must be the account actor
-    /// @param _accountId the account to add the delegate to
-    /// @param _delegate the delegate to add
+    /// @inheritdoc IAuth
     function addDelegate(uint128 _accountId, address _delegate)
         external
         onlyAccountActor(_accountId)
@@ -277,12 +258,11 @@ contract Auth is ERC721Receiver {
 
         delegatesByAccountId[_accountId].push(_delegate);
         accountIdsByDelegate[_delegate].push(_accountId);
+
+        emit AccountDelegateAdded(_accountId, _delegate);
     }
 
-    /// @notice remove a delegate from an account
-    /// @notice the caller must be the account actor
-    /// @param _accountId the account to remove the delegate from
-    /// @param _delegate the delegate to remove
+    /// @inheritdoc IAuth
     function removeDelegate(uint128 _accountId, address _delegate)
         external
         onlyAccountActor(_accountId)
@@ -291,11 +271,10 @@ contract Auth is ERC721Receiver {
 
         _removeDelegateFromDelegatesByAccountId(_accountId, _delegate);
         _removeDelegateFromAccountIdsByDelegate(_accountId, _delegate);
+
+        emit AccountDelegateRemoved(_accountId, _delegate);
     }
 
-    /// @notice remove a delegate from delegatesByAccountId mapping
-    /// @param _accountId the account to remove the delegate from
-    /// @param _delegate the delegate to remove
     function _removeDelegateFromDelegatesByAccountId(
         uint128 _accountId,
         address _delegate
@@ -318,9 +297,6 @@ contract Auth is ERC721Receiver {
         }
     }
 
-    /// @notice remove a delegate from accountIdsByDelegate mapping
-    /// @param _accountId the account to remove the delegate from
-    /// @param _delegate the delegate to remove
     function _removeDelegateFromAccountIdsByDelegate(
         uint128 _accountId,
         address _delegate
@@ -347,11 +323,7 @@ contract Auth is ERC721Receiver {
                         MARGIN ENGINE MANAGEMENT
     //////////////////////////////////////////////////////////////*/
 
-    /// @notice register a margin engine with an account
-    /// @dev registering allows an actor or delegate associated
-    /// with an account to trade via the margin engine
-    /// @param _accountId the account to register the margin engine to
-    /// @param _marginEngine the margin engine to register
+    /// @inheritdoc IAuth
     function registerMarginEngine(uint128 _accountId, address _marginEngine)
         external
         onlyAccountActor(_accountId)
@@ -362,13 +334,11 @@ contract Auth is ERC721Receiver {
             permission: _ADMIN_PERMISSION,
             user: _marginEngine
         });
+
+        emit MarginEngineRegistered(_accountId, _marginEngine);
     }
 
-    /// @notice unregister a margin engine from an account
-    /// @dev unregistering prevents an actor or delegate associated
-    /// with an account from trading via the margin engine
-    /// @param _accountId the account to unregister the margin engine from
-    /// @param _marginEngine the margin engine to unregister
+    /// @inheritdoc IAuth
     function unregisterMarginEngine(uint128 _accountId, address _marginEngine)
         external
         onlyAccountActor(_accountId)
@@ -385,5 +355,7 @@ contract Auth is ERC721Receiver {
                 marginEngine: _marginEngine
             });
         }
+
+        emit MarginEngineUnregistered(_accountId, _marginEngine);
     }
 }
