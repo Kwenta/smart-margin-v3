@@ -2,8 +2,8 @@
 pragma solidity 0.8.18;
 
 // auth
-import {AuthEvents} from "src/events/modules/AuthEvents.sol";
 import {IAuth} from "src/interfaces/modules/IAuth.sol";
+import {AuthEvents} from "src/events/modules/AuthEvents.sol";
 
 // synthetix v3
 import {IPerpsMarketProxy} from "src/interfaces/synthetix/IPerpsMarketProxy.sol";

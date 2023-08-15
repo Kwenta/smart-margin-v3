@@ -1,6 +1,9 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 pragma solidity 0.8.18;
 
+/// @title Kwenta Smart Margin v3: Authentication Module Events
+/// @notice Defines all events emitted by the Authentication Module
+/// @author JaredBorders (jaredborders@pm.me)
 contract AuthEvents {
     /// @notice emitted when an account is created
     /// @param accountId the id of the created account

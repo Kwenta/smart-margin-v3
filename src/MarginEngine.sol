@@ -1,6 +1,10 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 pragma solidity 0.8.18;
 
+// margin engine
+import {IMarginEngine} from "src/interfaces/IMarginEngine.sol";
+import {MarginEngineEvents} from "src/events/MarginEngineEvents.sol";
+
 // synthetix v3
 import {IPerpsMarketProxy} from "src/interfaces/synthetix/IPerpsMarketProxy.sol";
 import {ISpotMarketProxy} from "src/interfaces/synthetix/ISpotMarketProxy.sol";
@@ -23,22 +27,55 @@ import {Int256Lib} from "src/libraries/Int256Lib.sol";
 /// @title Kwenta Smart Margin v3: Margin Engine
 /// @notice Responsible for interacting with Synthetix v3 Perps Market
 /// @author JaredBorders (jaredborders@pm.me)
-contract MarginEngine is Multicallable, ERC721Receiver {
+contract MarginEngine is
+    IMarginEngine,
+    MarginEngineEvents,
+    Multicallable,
+    ERC721Receiver
+{
     using Int128Lib for int128;
     using Int256Lib for int256;
 
+    /*//////////////////////////////////////////////////////////////
+                          CONSTANTS/IMMUTABLES
+    //////////////////////////////////////////////////////////////*/
     bytes32 internal constant TRACKING_CODE = "KWENTA";
 
-    Auth public immutable AUTH;
+    /// @custom:todo who should receive the referrer fees?
+    address internal constant REFERRER =
+        0xe826d43961a87fBE71C91d9B73F7ef9b16721C07;
+
+    // synthetix v3
+
+    /// @notice Synthetix v3 Perps Market Proxy used to interact with the Perps Market
     IPerpsMarketProxy public immutable PERPS_MARKET_PROXY;
+
+    /// @notice Synthetix v3 Spot Market Proxy used to interact with the Spot Market
     ISpotMarketProxy public immutable SPOT_MARKET_PROXY;
+
+    // modules
+
+    /// @notice Kwenta Auth module used to authorize system actors
+    Auth public immutable AUTH;
+
+    /// @notice Kwenta Stats module used to record trading stats
     Stats public immutable STATS;
+
+    // tokens
+
+    /// @notice Synthetix v3 sUSD token most commonly used as collateral
     IERC20 public immutable SUSD;
 
-    error ZeroAmount();
-    error ZeroAddress();
-    error Unauthorized();
+    /*//////////////////////////////////////////////////////////////
+                              CONSTRUCTOR
+    //////////////////////////////////////////////////////////////*/
 
+    /// @notice initializes the Margin Engine
+    /// @param _auth Kwenta Auth module used to authorize system actors
+    /// @param _stats Kwenta Stats module used to record trading stats
+    /// @param _perpsMarketProxy Synthetix v3 Perps Market Proxy used to interact with the Perps Market
+    /// @param _spotMarketProxy Synthetix v3 Spot Market Proxy used to interact with the Spot Market
+    /// @param _sUSDProxy Synthetix v3 sUSD token most commonly used as collateral
     constructor(
         address _auth,
         address _stats,
@@ -57,6 +94,7 @@ contract MarginEngine is Multicallable, ERC721Receiver {
                          COLLATERAL MANAGEMENT
     //////////////////////////////////////////////////////////////*/
 
+    /// @inheritdoc IMarginEngine
     function modifyCollateral(
         uint128 _accountId,
         uint128 _synthMarketId,
@@ -106,13 +144,13 @@ contract MarginEngine is Multicallable, ERC721Receiver {
                          ASYNC ORDER MANAGEMENT
     //////////////////////////////////////////////////////////////*/
 
+    /// @inheritdoc IMarginEngine
     function commitOrder(
         uint128 _perpsMarketId,
         uint128 _accountId,
         int128 _sizeDelta,
         uint128 _settlementStrategyId,
-        uint256 _acceptablePrice,
-        address _referrer
+        uint256 _acceptablePrice
     ) external {
         if (
             AUTH.isCallerAccountActor(msg.sender, _accountId)
@@ -126,7 +164,7 @@ contract MarginEngine is Multicallable, ERC721Receiver {
                     settlementStrategyId: _settlementStrategyId,
                     acceptablePrice: _acceptablePrice,
                     trackingCode: TRACKING_CODE,
-                    referrer: _referrer
+                    referrer: REFERRER
                 })
             );
             /// @custom:todo who should receive the referrer fees?

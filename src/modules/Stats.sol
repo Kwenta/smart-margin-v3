@@ -8,7 +8,6 @@ import {Ownable} from "src/utils/Ownable.sol";
 
 /// @title Kwenta Smart Margin v3: Stats Module
 /// @notice Responsible for recording stats for accounts trading on verified margin engines
-/// @dev Given the purpose of this contract, events are never emitted when updating stats
 /// @author JaredBorders (jaredborders@pm.me)
 contract Stats is Ownable {
     /// @notice stats for an account

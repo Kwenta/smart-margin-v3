@@ -10,6 +10,14 @@ interface IPerpsMarketProxy {
     /// Emits a {AccountCreated} event.
     function createAccount() external returns (uint128 accountId);
 
+    /// @notice Returns the address that owns a given account, as recorded by the system.
+    /// @param accountId The account id whose owner is being retrieved.
+    /// @return owner The owner of the given account id.
+    function getAccountOwner(uint128 accountId)
+        external
+        view
+        returns (address owner);
+
     /// @notice Grants `permission` to `user` for account `accountId`.
     /// @param accountId The id of the account that granted the permission.
     /// @param permission The bytes32 identifier of the permission.
