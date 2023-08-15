@@ -22,14 +22,4 @@ library Int256Lib {
             z := xor(mask, add(mask, x))
         }
     }
-
-    /// @notice determines if input numbers have the same sign
-    /// @dev asserts that both numbers are not zero
-    /// @param x: signed number
-    /// @param y: signed number
-    /// @return true if same sign, false otherwise
-    function isSameSign(int256 x, int256 y) internal pure returns (bool) {
-        assert(x != 0 && y != 0);
-        return (x ^ y) >= 0;
-    }
 }
