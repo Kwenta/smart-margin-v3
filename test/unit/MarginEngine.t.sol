@@ -269,9 +269,8 @@ contract AsyncOrderManagement is MarginEngineTest {
             _perpsMarketId: SETH_PERPS_MARKET_ID,
             _accountId: accountId,
             _sizeDelta: 1 ether,
-            _settlementStrategyId: 0, // @custom:todo what is this?
-            _acceptablePrice: type(uint256).max,
-            _referrer: REFERRER
+            _settlementStrategyId: 0,
+            _acceptablePrice: type(uint256).max
         });
     }
 
