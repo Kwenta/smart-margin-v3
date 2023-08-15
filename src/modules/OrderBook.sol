@@ -2,7 +2,7 @@
 pragma solidity 0.8.18;
 
 // margin engine
-import {IMarginEngine} from "src/interfaces/IMarginEngine.sol";
+import {Engine} from "src/Engine.sol";
 
 // synthetix v3
 import {IPerpsMarketProxy} from "src/interfaces/synthetix/IPerpsMarketProxy.sol";
@@ -46,16 +46,12 @@ contract OrderBook is EIP712, Ownable {
         0x97c4a1d00b5ee0ef549e3ea4b8c1d9330da4e4e9de51dcff8d243e587eedfd10;
 
     IPerpsMarketProxy public immutable PERPS_MARKET_PROXY;
-    IMarginEngine public immutable MARGIN_ENGINE;
+    Engine public immutable ENGINE;
     mapping(uint128 nonce => bool) public executedOrders;
 
-    constructor(
-        address _owner,
-        address _marginEngine,
-        address _perpsMarketProxy
-    ) {
+    constructor(address _owner, address _engine, address _perpsMarketProxy) {
         _initializeOwner(_owner);
-        MARGIN_ENGINE = IMarginEngine(_marginEngine);
+        ENGINE = Engine(_engine);
         PERPS_MARKET_PROXY = IPerpsMarketProxy(_perpsMarketProxy);
     }
 
@@ -82,7 +78,7 @@ contract OrderBook is EIP712, Ownable {
 
         if (!canExecute(_co, _signature)) revert CannotExecuteOrder();
 
-        MARGIN_ENGINE.commitOrder(
+        ENGINE.commitOrder(
             _co.marketId,
             _co.accountId,
             _co.sizeDelta,
