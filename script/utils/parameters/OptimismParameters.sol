@@ -2,9 +2,6 @@
 pragma solidity 0.8.18;
 
 contract OptimismParameters {
-    address constant OPTIMISM_CORE_PROXY =
-        0x967B6d2D754839d34000a74F0D086Ac9D3afa877;
-
     address constant OPTIMISM_PERPS_MARKET_PROXY = address(0);
 
     address constant OPTIMISM_SPOT_MARKET_PROXY =
