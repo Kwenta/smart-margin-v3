@@ -1,108 +1,38 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 pragma solidity 0.8.18;
 
-// foundry
+import {Constants} from "test/utils/Constants.sol";
+import {IStats} from "src/modules/Stats.sol";
+import {StatsExposed} from "test/utils/exposed/StatsExposed.sol";
 import {Test} from "lib/forge-std/src/Test.sol";
 
-// modules
-import {Stats, Ownable} from "src/modules/Stats.sol";
-
-// constants
-import {Constants} from "test/utils/Constants.sol";
-
 contract StatsTest is Test, Constants {
-    Stats stats;
+    StatsExposed stats;
 
     function setUp() public {
-        stats = new Stats(OWNER);
-    }
-}
-
-contract StatsOwner is StatsTest {
-    function test_owner() public {
-        assertEq(stats.owner(), OWNER);
-    }
-
-    function test_transferOwnership() public {
-        vm.prank(OWNER);
-
-        stats.transferOwnership(ACTOR);
-
-        assertEq(stats.owner(), ACTOR);
-    }
-
-    function test_transferOwnership_notOwner() public {
-        vm.prank(BAD_ACTOR);
-
-        vm.expectRevert(abi.encodeWithSelector(Ownable.Unauthorized.selector));
-
-        stats.transferOwnership(ACTOR);
-    }
-
-    function test_transferOwnership_zeroAddress() public {
-        vm.prank(OWNER);
-
-        vm.expectRevert(
-            abi.encodeWithSelector(Ownable.NewOwnerIsZeroAddress.selector)
-        );
-
-        stats.transferOwnership(address(0));
-    }
-}
-
-contract RegisterMarginEngine is StatsTest {
-    function test_registerMarginEngine() public {
-        vm.prank(OWNER);
-
-        stats.registerMarginEngine(MOCK_MARGIN_ENGINE);
-
-        assertTrue(stats.registeredMarginEngines(MOCK_MARGIN_ENGINE));
-    }
-
-    function test_registerMarginEngine_notOwner() public {
-        vm.prank(BAD_ACTOR);
-
-        vm.expectRevert(abi.encodeWithSelector(Ownable.Unauthorized.selector));
-
-        stats.registerMarginEngine(MOCK_MARGIN_ENGINE);
+        vm.rollFork(GOERLI_BLOCK_NUMBER);
+        stats = new StatsExposed();
     }
 }
 
 contract UpdateAccountStats is StatsTest {
-    uint128 accountId = 19;
-    uint256 fees = 111;
-    uint128 volume = 276;
-
-    function test_updateAccountStats() public {
-        vm.prank(OWNER);
-
-        stats.registerMarginEngine(MOCK_MARGIN_ENGINE);
-
-        vm.startPrank(MOCK_MARGIN_ENGINE);
+    function test_updateAccountStats(
+        uint128 accountId,
+        uint256 fees,
+        uint128 volume
+    ) public {
+        vm.assume(fees < type(uint256).max / 10);
+        vm.assume(volume < type(uint128).max / 10);
 
         for (uint256 i = 1; i <= 10; i++) {
             stats.updateAccountStats(accountId, fees, volume);
 
-            Stats.AccountStats memory accountStats =
+            IStats.AccountStats memory accountStats =
                 stats.getAccountStats(accountId);
 
             assertEq(accountStats.totalFees, fees * i);
             assertEq(accountStats.totalVolume, volume * i);
             assertEq(accountStats.totalTrades, i);
         }
-
-        vm.stopPrank();
-    }
-
-    function test_updateAccountStats_notMarginEngine() public {
-        vm.prank(BAD_ACTOR);
-
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                Stats.InvalidMarginEngine.selector, BAD_ACTOR
-            )
-        );
-
-        stats.updateAccountStats(0, 0, 0);
     }
 }

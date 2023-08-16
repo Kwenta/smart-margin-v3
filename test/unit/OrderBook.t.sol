@@ -10,10 +10,14 @@ import {OrderBook} from "src/modules/OrderBook.sol";
 // constants
 import {Conditions} from "test/utils/Conditions.sol";
 import {Constants} from "test/utils/Constants.sol";
-import {OPTIMISM_GOERLI_PERPS_MARKET_PROXY} from
-    "script/utils/parameters/OptimismGoerliParameters.sol";
+import {OptimismGoerliParameters} from "script/Deploy.s.sol";
 
-contract OrderBookTest is Test, Constants, Conditions {
+contract OrderBookTest is
+    Test,
+    Constants,
+    Conditions,
+    OptimismGoerliParameters
+{
     OrderBook orderBook;
 
     function setUp() public {

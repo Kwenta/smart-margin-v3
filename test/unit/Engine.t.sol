@@ -1,67 +1,12 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 pragma solidity 0.8.18;
 
-// foundry
-import {Test} from "lib/forge-std/src/Test.sol";
+import {Bootstrap} from "test/utils/Bootstrap.sol";
 
-// engine
-import {Engine} from "src/Engine.sol";
-
-// synthetix v3
-import {ICoreProxy} from "src/interfaces/synthetix/ICoreProxy.sol";
-import {IPerpsMarketProxy} from "src/interfaces/synthetix/IPerpsMarketProxy.sol";
-
-// tokens
-import {IERC20, SUSDHelper} from "test/utils/SUSDHelper.sol";
-
-// constants
-import {Constants} from "test/utils/Constants.sol";
-import {
-    OPTIMISM_GOERLI_CORE_PROXY,
-    OPTIMISM_GOERLI_SPOT_MARKET_PROXY,
-    OPTIMISM_GOERLI_PERPS_MARKET_PROXY
-} from "script/utils/parameters/OptimismGoerliParameters.sol";
-
-contract EngineTest is Test, Constants {
-    // margin engine
-    Engine engine;
-
-    // synthetix v3
-    ICoreProxy coreProxy;
-    IPerpsMarketProxy perpsMarketProxy;
-
-    // tokens
-    IERC20 sUSD;
-    SUSDHelper sUSDHelper;
-
-    // test state
-    uint128 accountId;
-
+contract EngineTest is Bootstrap {
     function setUp() public {
         vm.rollFork(GOERLI_BLOCK_NUMBER);
-
-        sUSDHelper = new SUSDHelper();
-        perpsMarketProxy = IPerpsMarketProxy(OPTIMISM_GOERLI_PERPS_MARKET_PROXY);
-        coreProxy = ICoreProxy(OPTIMISM_GOERLI_CORE_PROXY);
-
-        sUSD = IERC20(coreProxy.getUsdToken());
-
-        engine = new Engine(
-            OPTIMISM_GOERLI_PERPS_MARKET_PROXY, 
-            OPTIMISM_GOERLI_SPOT_MARKET_PROXY,
-            address(sUSD)
-        );
-
-        vm.startPrank(ACTOR);
-        accountId = perpsMarketProxy.createAccount();
-        perpsMarketProxy.grantPermission({
-            accountId: accountId,
-            permission: "ADMIN",
-            user: address(engine)
-        });
-        vm.stopPrank();
-
-        sUSDHelper.mint(ACTOR, AMOUNT);
+        initialize();
     }
 }
 
