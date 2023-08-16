@@ -1,16 +1,9 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 pragma solidity 0.8.18;
 
-// margin engine
 import {Engine} from "src/Engine.sol";
-
-// synthetix v3
 import {IPerpsMarketProxy} from "src/interfaces/synthetix/IPerpsMarketProxy.sol";
-
-// libraries
 import {SignatureCheckerLib} from "src/libraries/SignatureCheckerLib.sol";
-
-// utils
 import {EIP712} from "src/utils/EIP712.sol";
 import {Ownable} from "src/utils/Ownable.sol";
 

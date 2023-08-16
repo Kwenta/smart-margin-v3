@@ -1,27 +1,21 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 pragma solidity 0.8.18;
 
-/// @title Kwenta Smart Margin v3: Margin Engine Interface
+/// @title Kwenta Smart Margin v3: Engine Interface
 /// @author JaredBorders (jaredborders@pm.me)
-interface IMarginEngine {
+interface IEngine {
     /*//////////////////////////////////////////////////////////////
                                  ERRORS
     //////////////////////////////////////////////////////////////*/
 
-    /// @notice thrown when an amount is zero when it should not be
-    error ZeroAmount();
-
-    /// @notice thrown when an address is zero when it should not be
-    error ZeroAddress();
-
-    /// @notice thrown an actor is not authorized to interact with an account
+    /// @notice thrown when msg.sender is not authorized to interact with an account
     error Unauthorized();
 
     /*//////////////////////////////////////////////////////////////
                          COLLATERAL MANAGEMENT
     //////////////////////////////////////////////////////////////*/
 
-    /// @notice modify the collateral of an account
+    /// @notice modify the collateral of an account identified by the accountId
     /// @param _accountId the account to modify
     /// @param _synthMarketId the id of the synth being used as collateral
     /// @param _amount the amount of collateral to add or remove (negative to remove)
@@ -35,7 +29,8 @@ interface IMarginEngine {
                          ASYNC ORDER MANAGEMENT
     //////////////////////////////////////////////////////////////*/
 
-    /// @notice commit an order to be executed asynchronously
+    /// @notice commit an order for an account identified by the
+    /// accountId to be executed asynchronously
     /// @param _perpsMarketId the id of the perps market to trade
     /// @param _accountId the id of the account to trade with
     /// @param _sizeDelta the amount of the order to trade (short if negative, long if positive)
