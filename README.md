@@ -27,35 +27,10 @@ Smart Margin v3 is the greasiest defi fly-wheel ever seen on any evm-based block
 > @custom:todo add more details that are not cringe satire
 
 ### Quick Start
-1. Create a Synthetix v3 perps market account via `Auth.createAccount(marginEngine)`
-> Or, create an account via `Auth.createAccount()` and in a separate transaction, call `Auth.registerMarginEngine(accountId, marginEngine)` to set the margin engine.
-2. Deposit/Withdraw specified collateral via:
-```
-MarginEngine.depositCollateral(
-    accountId,
-    synthMarketId,
-    amount
-)
-```
-or
-```
-MarginEngine.withdrawCollateral(
-    accountId,
-    synthMarketId,
-    amount
-)
-```
-3. Trade specified market via:
-```
-commitOrder(
-    _marketId,
-    _accountId,
-    _sizeDelta,
-    _settlementStrategyId,
-    _acceptablePrice,
-    _referrer
-)
-```
+> @custom:todo add more details
+1. Create a new Synthetix v3 perps market account NFT
+2. Give `Engine.sol` `admin` permissions
+3. Start trading!
 
 ### Account/Accounts Management
 > @custom:todo add more details
@@ -77,25 +52,22 @@ commitOrder(
 > to run: `tree src/`
 ```
 src/
-├── MarginEngine.sol
+├── Engine.sol
 ├── interfaces
-│   ├── IAuth.sol
-│   ├── IMarginEngine.sol
-│   ├── synthetix
-│   │   ├── IPerpsMarketProxy.sol
-│   │   └── ISpotMarketProxy.sol
-│   └── tokens
-│       └── IERC20.sol
+│   ├── IEngine.sol
+│   ├── oracles
+│   │   └── IPyth.sol
+│   ├── synthetix
+│   │   ├── IPerpsMarketProxy.sol
+│   │   └── ISpotMarketProxy.sol
+│   └── tokens
+│       └── IERC20.sol
 ├── libraries
-│   ├── Int128Lib.sol
-│   └── Int256Lib.sol
-├── modules
-│   ├── Auth.sol
-│   ├── OrderBook.sol
-│   └── Stats.sol
-├── tokens
-│   └── ERC721Receiver.sol
+│   ├── Int128Lib.sol
+│   ├── Int256Lib.sol
+│   └── SignatureCheckerLib.sol
 └── utils
+    ├── EIP712.sol
     ├── Multicallable.sol
     └── Ownable.sol
 ```
