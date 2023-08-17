@@ -1,17 +1,13 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 pragma solidity 0.8.18;
 
-import {Constants} from "test/utils/Constants.sol";
-import {IStats} from "src/modules/Stats.sol";
-import {StatsExposed} from "test/utils/exposed/StatsExposed.sol";
-import {Test} from "lib/forge-std/src/Test.sol";
+import {Bootstrap} from "test/utils/Bootstrap.sol";
+import {IEngine} from "src/interfaces/IEngine.sol";
 
-contract StatsTest is Test, Constants {
-    StatsExposed stats;
-
+contract StatsTest is Bootstrap {
     function setUp() public {
         vm.rollFork(GOERLI_BLOCK_NUMBER);
-        stats = new StatsExposed();
+        initializeOptimismGoerli();
     }
 }
 
@@ -25,10 +21,10 @@ contract UpdateAccountStats is StatsTest {
         vm.assume(volume < type(uint128).max / 10);
 
         for (uint256 i = 1; i <= 10; i++) {
-            stats.updateAccountStats(accountId, fees, volume);
+            engineExposed.updateAccountStats(accountId, fees, volume);
 
-            IStats.AccountStats memory accountStats =
-                stats.getAccountStats(accountId);
+            IEngine.AccountStats memory accountStats =
+                engineExposed.getAccountStats(accountId);
 
             assertEq(accountStats.totalFees, fees * i);
             assertEq(accountStats.totalVolume, volume * i);

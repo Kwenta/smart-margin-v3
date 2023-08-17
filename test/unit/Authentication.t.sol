@@ -1,71 +1,70 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 pragma solidity 0.8.18;
 
-import {Auth} from "src/modules/Auth.sol";
-import {Constants} from "test/utils/Constants.sol";
-import {IPerpsMarketProxy} from "src/interfaces/synthetix/IPerpsMarketProxy.sol";
-import {OptimismGoerliParameters} from "script/Deploy.s.sol";
-import {Test} from "lib/forge-std/src/Test.sol";
+import {Bootstrap} from "test/utils/Bootstrap.sol";
 
-contract AuthTest is Test, Constants, OptimismGoerliParameters {
-    Auth auth;
-    IPerpsMarketProxy perpsMarketProxy;
-
+contract AuthenticationTest is Bootstrap {
     function setUp() public {
         vm.rollFork(GOERLI_BLOCK_NUMBER);
-        perpsMarketProxy = IPerpsMarketProxy(OPTIMISM_GOERLI_PERPS_MARKET_PROXY);
-        auth = new Auth(OPTIMISM_GOERLI_PERPS_MARKET_PROXY);
+        initializeOptimismGoerli();
     }
 }
 
-contract Authentication is AuthTest {
+contract AccountOwner is AuthenticationTest {
     function test_isAccountOwner_true() public {
-        vm.startPrank(ACTOR);
+        vm.prank(ACTOR);
+
         uint128 accountId = perpsMarketProxy.createAccount();
-        bool isOwner = auth.isAccountOwner(accountId);
-        vm.stopPrank();
+
+        bool isOwner = engine.isAccountOwner(accountId, ACTOR);
 
         assertTrue(isOwner);
     }
 
     function test_isAccountOwner_false() public {
         vm.prank(ACTOR);
+
         uint128 accountId = perpsMarketProxy.createAccount();
 
-        vm.prank(BAD_ACTOR);
-        bool isOwner = auth.isAccountOwner(accountId);
+        bool isOwner = engine.isAccountOwner(accountId, BAD_ACTOR);
 
         assertFalse(isOwner);
     }
+}
 
+contract AccountDelegate is AuthenticationTest {
     function test_isAccountDelegate_true() public {
         vm.startPrank(ACTOR);
+
         uint128 accountId = perpsMarketProxy.createAccount();
+
         perpsMarketProxy.grantPermission({
             accountId: accountId,
             permission: "ADMIN",
             user: NEW_ACTOR
         });
+
         vm.stopPrank();
 
-        vm.prank(NEW_ACTOR);
-        bool isDelegate = auth.isAccountDelegate(accountId);
+        bool isDelegate = engine.isAccountDelegate(accountId, NEW_ACTOR);
 
         assertTrue(isDelegate);
     }
 
     function test_isAccountDelegate_false() public {
         vm.startPrank(ACTOR);
+
         uint128 accountId = perpsMarketProxy.createAccount();
+
         perpsMarketProxy.grantPermission({
             accountId: accountId,
             permission: "ADMIN",
             user: NEW_ACTOR
         });
+
         vm.stopPrank();
 
-        vm.prank(BAD_ACTOR);
-        bool isDelegate = auth.isAccountDelegate(accountId);
+        bool isDelegate = engine.isAccountDelegate(accountId, BAD_ACTOR);
 
         assertFalse(isDelegate);
     }

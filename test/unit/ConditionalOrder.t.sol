@@ -1,37 +1,22 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 pragma solidity 0.8.18;
 
-// foundry
-import {Test} from "lib/forge-std/src/Test.sol";
+import {Bootstrap} from "test/utils/Bootstrap.sol";
+import {IEngine} from "src/interfaces/IEngine.sol";
 
-// modules
-import {OrderBook} from "src/modules/OrderBook.sol";
-
-// constants
-import {Conditions} from "test/utils/Conditions.sol";
-import {Constants} from "test/utils/Constants.sol";
-import {OptimismGoerliParameters} from "script/Deploy.s.sol";
-
-contract OrderBookTest is
-    Test,
-    Constants,
-    Conditions,
-    OptimismGoerliParameters
-{
-    OrderBook orderBook;
-
+contract ConditionalOrderTest is Bootstrap {
     function setUp() public {
-        orderBook =
-        new OrderBook(OWNER, MOCK_MARGIN_ENGINE, OPTIMISM_GOERLI_PERPS_MARKET_PROXY);
+        vm.rollFork(GOERLI_BLOCK_NUMBER);
+        initializeOptimismGoerli();
     }
 }
 
-contract VerificationTest is OrderBookTest {
+contract VerificationTest is ConditionalOrderTest {
     function test_verifyCondtionalOrder_verified() public {
         bytes[] memory conditions = new bytes[](1);
         conditions[0] = isTimestampAfter(0);
 
-        OrderBook.ConditionalOrder memory co = OrderBook.ConditionalOrder({
+        IEngine.ConditionalOrder memory co = IEngine.ConditionalOrder({
             signer: address(0),
             nonce: 0,
             requireVerified: true,
@@ -40,10 +25,11 @@ contract VerificationTest is OrderBookTest {
             sizeDelta: 0,
             settlementStrategyId: 0,
             acceptablePrice: 0,
+            trustedExecutor: address(this),
             conditions: conditions
         });
 
-        bool isVerified = orderBook.verifyConditions(co);
+        bool isVerified = engine.verifyConditions(co);
 
         assertTrue(isVerified);
     }
@@ -52,7 +38,7 @@ contract VerificationTest is OrderBookTest {
         bytes[] memory conditions = new bytes[](1);
         conditions[0] = isTimestampAfter(type(uint256).max);
 
-        OrderBook.ConditionalOrder memory co = OrderBook.ConditionalOrder({
+        IEngine.ConditionalOrder memory co = IEngine.ConditionalOrder({
             signer: address(0),
             nonce: 0,
             requireVerified: true,
@@ -61,13 +47,14 @@ contract VerificationTest is OrderBookTest {
             sizeDelta: 0,
             settlementStrategyId: 0,
             acceptablePrice: 0,
+            trustedExecutor: address(0),
             conditions: conditions
         });
 
-        bool isVerified = orderBook.verifyConditions(co);
+        bool isVerified = engine.verifyConditions(co);
 
         assertFalse(isVerified);
     }
 }
 
-contract ConditionsTest is OrderBookTest {}
+contract ConditionsTest is ConditionalOrderTest {}

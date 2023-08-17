@@ -3,14 +3,14 @@ pragma solidity 0.8.18;
 
 import {Bootstrap} from "test/utils/Bootstrap.sol";
 
-contract EngineTest is Bootstrap {
+contract CollateralTest is Bootstrap {
     function setUp() public {
         vm.rollFork(GOERLI_BLOCK_NUMBER);
-        initialize();
+        initializeOptimismGoerli();
     }
 }
 
-contract Collateral is EngineTest {
+contract DepositCollateral is CollateralTest {
     function test_depositCollateral() public {
         uint256 preBalance = sUSD.balanceOf(ACTOR);
 
@@ -83,7 +83,9 @@ contract Collateral is EngineTest {
             perpsMarketProxy.totalCollateralValue(accountId);
         assertEq(totalCollateralValue, AMOUNT);
     }
+}
 
+contract WithdrawCollateral is CollateralTest {
     function test_withdrawCollateral() public {
         uint256 preBalance = sUSD.balanceOf(ACTOR);
 
@@ -179,59 +181,5 @@ contract Collateral is EngineTest {
         uint256 totalCollateralValue =
             perpsMarketProxy.totalCollateralValue(accountId);
         assertEq(totalCollateralValue, 0);
-    }
-}
-
-contract AsyncOrder is EngineTest {
-    function test_commitOrder() public {
-        vm.startPrank(ACTOR);
-
-        sUSD.approve(address(engine), type(uint256).max);
-
-        engine.modifyCollateral({
-            _accountId: accountId,
-            _synthMarketId: SUSD_SPOT_MARKET_ID,
-            _amount: int256(AMOUNT)
-        });
-
-        engine.commitOrder({
-            _perpsMarketId: SETH_PERPS_MARKET_ID,
-            _accountId: accountId,
-            _sizeDelta: 1 ether,
-            _settlementStrategyId: 0,
-            _acceptablePrice: type(uint256).max
-        });
-    }
-
-    /// @cutsoom:todo test commitOrder: Market that does not exist
-    /// @custom:todo test commitOrder: Market that is paused
-    /// @custom:todo test commitOrder: Account does not have enough collateral/margin
-    /// @custom:todo test commitOrder: Position size exceeds max leverage
-}
-
-contract Multicallable is EngineTest {
-    function test_multicall_depositCollateral_commitOrder() public {
-        vm.startPrank(ACTOR);
-
-        sUSD.approve(address(engine), type(uint256).max);
-
-        bytes[] memory data = new bytes[](2);
-        data[0] = abi.encodeWithSelector(
-            engine.modifyCollateral.selector,
-            accountId,
-            SUSD_SPOT_MARKET_ID,
-            int256(AMOUNT)
-        );
-        data[1] = abi.encodeWithSelector(
-            engine.commitOrder.selector,
-            SETH_PERPS_MARKET_ID,
-            accountId,
-            1 ether,
-            0,
-            type(uint256).max,
-            REFERRER
-        );
-
-        engine.multicall(data);
     }
 }

@@ -8,44 +8,52 @@ import {OptimismParameters} from
     "script/utils/parameters/OptimismParameters.sol";
 import {Script} from "lib/forge-std/src/Script.sol";
 
-contract Setup is Script {
+contract Setup {
     function deploySystem(
         address perpsMarketProxy,
         address spotMarketProxy,
-        address sUSDProxy
+        address sUSDProxy,
+        address oracle,
+        bytes32 pythPriceFeedIdEthUsd
     ) public returns (Engine engine) {
         engine = new Engine({
             _perpsMarketProxy: perpsMarketProxy,
             _spotMarketProxy: spotMarketProxy,
-            _sUSDProxy: sUSDProxy
+            _sUSDProxy: sUSDProxy,
+            _oracle: oracle,
+            _pythPriceFeedIdEthUsd: pythPriceFeedIdEthUsd
         });
     }
 }
 
-contract DeployOptimism is Setup, OptimismParameters {
+contract DeployOptimism is Script, Setup, OptimismParameters {
     function run() public {
         uint256 privateKey = vm.envUint("PRIVATE_KEY");
         vm.startBroadcast(privateKey);
 
         Setup.deploySystem({
-            perpsMarketProxy: OPTIMISM_PERPS_MARKET_PROXY,
-            spotMarketProxy: OPTIMISM_SPOT_MARKET_PROXY,
-            sUSDProxy: OPTIMISM_USD_PROXY
+            perpsMarketProxy: PERPS_MARKET_PROXY,
+            spotMarketProxy: SPOT_MARKET_PROXY,
+            sUSDProxy: USD_PROXY,
+            oracle: PYTH,
+            pythPriceFeedIdEthUsd: PYTH_ETH_USD_ID
         });
 
         vm.stopBroadcast();
     }
 }
 
-contract DeployOptimismGoerli is Setup, OptimismGoerliParameters {
+contract DeployOptimismGoerli is Script, Setup, OptimismGoerliParameters {
     function run() public {
         uint256 privateKey = vm.envUint("PRIVATE_KEY");
         vm.startBroadcast(privateKey);
 
         Setup.deploySystem({
-            perpsMarketProxy: OPTIMISM_GOERLI_PERPS_MARKET_PROXY,
-            spotMarketProxy: OPTIMISM_GOERLI_SPOT_MARKET_PROXY,
-            sUSDProxy: OPTIMISM_GOERLI_USD_PROXY
+            perpsMarketProxy: PERPS_MARKET_PROXY,
+            spotMarketProxy: SPOT_MARKET_PROXY,
+            sUSDProxy: USD_PROXY,
+            oracle: PYTH,
+            pythPriceFeedIdEthUsd: PYTH_ETH_USD_ID
         });
 
         vm.stopBroadcast();
