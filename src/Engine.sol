@@ -145,28 +145,41 @@ contract Engine is IEngine, Multicallable, EIP712 {
         uint128 _accountId,
         uint128 _synthMarketId,
         int256 _amount
-    ) public override {
+    ) external override {
         IERC20 synth = IERC20(_getSynthAddress(_synthMarketId));
 
         if (_amount > 0) {
-            // @dev given the amount is positive, simply casting (int -> uint) is safe
-            synth.transferFrom(msg.sender, address(this), uint256(_amount));
-
-            synth.approve(address(PERPS_MARKET_PROXY), uint256(_amount));
-
-            PERPS_MARKET_PROXY.modifyCollateral(
-                _accountId, _synthMarketId, _amount
-            );
+            _depositCollateral(synth, _accountId, _synthMarketId, _amount);
         } else {
             if (!isAccountOwner(_accountId, msg.sender)) revert Unauthorized();
-
-            /// @dev given the amount is negative, simply casting (int -> uint) is unsafe, thus we use .abs()
-            PERPS_MARKET_PROXY.modifyCollateral(
-                _accountId, _synthMarketId, _amount
-            );
-
-            synth.transfer(msg.sender, _amount.abs());
+            _withdrawCollateral(synth, _accountId, _synthMarketId, _amount);
         }
+    }
+
+    function _depositCollateral(
+        IERC20 _synth,
+        uint128 _accountId,
+        uint128 _synthMarketId,
+        int256 _amount
+    ) internal {
+        // @dev given the amount is positive, simply casting (int -> uint) is safe
+        _synth.transferFrom(msg.sender, address(this), uint256(_amount));
+
+        _synth.approve(address(PERPS_MARKET_PROXY), uint256(_amount));
+
+        PERPS_MARKET_PROXY.modifyCollateral(_accountId, _synthMarketId, _amount);
+    }
+
+    function _withdrawCollateral(
+        IERC20 _synth,
+        uint128 _accountId,
+        uint128 _synthMarketId,
+        int256 _amount
+    ) internal {
+        PERPS_MARKET_PROXY.modifyCollateral(_accountId, _synthMarketId, _amount);
+
+        /// @dev given the amount is negative, simply casting (int -> uint) is unsafe, thus we use .abs()
+        _synth.transfer(msg.sender, _amount.abs());
     }
 
     /// @notice query and return the address of the synth contract
@@ -194,63 +207,72 @@ contract Engine is IEngine, Multicallable, EIP712 {
         int128 _sizeDelta,
         uint128 _settlementStrategyId,
         uint256 _acceptablePrice
-    ) public override {
+    ) external override {
         /// @dev only the account owner can withdraw collateral
         if (
             isAccountOwner(_accountId, msg.sender)
                 || isAccountDelegate(_accountId, msg.sender)
         ) {
-            (, uint256 fees) = PERPS_MARKET_PROXY.commitOrder(
-                IPerpsMarketProxy.OrderCommitmentRequest({
-                    marketId: _perpsMarketId,
-                    accountId: _accountId,
-                    sizeDelta: _sizeDelta,
-                    settlementStrategyId: _settlementStrategyId,
-                    acceptablePrice: _acceptablePrice,
-                    trackingCode: TRACKING_CODE,
-                    referrer: REFERRER
-                })
-            );
-
-            _updateAccountStats(_accountId, fees, _sizeDelta.abs());
+            _commitOrder({
+                _perpsMarketId: _perpsMarketId,
+                _accountId: _accountId,
+                _sizeDelta: _sizeDelta,
+                _settlementStrategyId: _settlementStrategyId,
+                _acceptablePrice: _acceptablePrice
+            });
         } else {
             revert Unauthorized();
         }
+    }
+
+    function _commitOrder(
+        uint128 _perpsMarketId,
+        uint128 _accountId,
+        int128 _sizeDelta,
+        uint128 _settlementStrategyId,
+        uint256 _acceptablePrice
+    ) internal {
+        (, uint256 fees) = PERPS_MARKET_PROXY.commitOrder(
+            IPerpsMarketProxy.OrderCommitmentRequest({
+                marketId: _perpsMarketId,
+                accountId: _accountId,
+                sizeDelta: _sizeDelta,
+                settlementStrategyId: _settlementStrategyId,
+                acceptablePrice: _acceptablePrice,
+                trackingCode: TRACKING_CODE,
+                referrer: REFERRER
+            })
+        );
+
+        _updateAccountStats(_accountId, fees, _sizeDelta.abs());
     }
 
     /*//////////////////////////////////////////////////////////////
                       CONDITIONAL ORDER MANAGEMENT
     //////////////////////////////////////////////////////////////*/
 
-    function _domainNameAndVersion()
-        internal
-        pure
-        override
-        returns (string memory name, string memory version)
-    {
-        name = "SMv3: OrderBook";
-        version = "1";
-    }
-
-    /*//////////////////////////////////////////////////////////////
-                               EXECUTION
-    //////////////////////////////////////////////////////////////*/
-
     /// @inheritdoc IEngine
     function execute(ConditionalOrder calldata _co, bytes calldata _signature)
         external
     {
-        (bool canExecuteOrder, uint256 gasSpent) = canExecute(_co, _signature);
+        executedOrders[_co.nonce] = true;
+
+        (bool canExecuteOrder, uint256 gasSpentUSD) =
+            canExecute(_co, _signature);
 
         if (!canExecuteOrder) revert CannotExecuteOrder();
 
-        modifyCollateral({
+        /// @custom:todo figure out gas used for modifyCollateral & commitOrder
+        uint256 fee = gasSpentUSD + 0; // 0 is the gas used for modifyCollateral & commitOrder
+
+        _withdrawCollateral({
+            _synth: SUSD,
             _accountId: _co.accountId,
             _synthMarketId: 0,
-            _amount: -int256(gasSpent + 100_000) // 100k gas is the est. amount of gas required to execute the order
+            _amount: -int256(fee)
         });
 
-        commitOrder(
+        _commitOrder(
             _co.marketId,
             _co.accountId,
             _co.sizeDelta,
@@ -304,8 +326,18 @@ contract Engine is IEngine, Multicallable, EIP712 {
     }
 
     /*//////////////////////////////////////////////////////////////
-                              VERIFICATION
+                     CONDITIONAL ORDER VERIFICATION
     //////////////////////////////////////////////////////////////*/
+
+    function _domainNameAndVersion()
+        internal
+        pure
+        override
+        returns (string memory name, string memory version)
+    {
+        name = "SMv3: OrderBook";
+        version = "1";
+    }
 
     /// @inheritdoc IEngine
     function verifySigner(ConditionalOrder calldata _co)
