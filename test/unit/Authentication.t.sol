@@ -30,6 +30,8 @@ contract AccountOwner is AuthenticationTest {
 
         assertFalse(isOwner);
     }
+
+    /// @custom:todo test when account does not exist
 }
 
 contract AccountDelegate is AuthenticationTest {
@@ -68,4 +70,6 @@ contract AccountDelegate is AuthenticationTest {
 
         assertFalse(isDelegate);
     }
+
+    /// @custom:todo test when account does not exist
 }

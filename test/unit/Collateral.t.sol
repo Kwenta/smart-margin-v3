@@ -83,6 +83,8 @@ contract DepositCollateral is CollateralTest {
             perpsMarketProxy.totalCollateralValue(accountId);
         assertEq(totalCollateralValue, AMOUNT);
     }
+
+    /// @custom:todo test deposit collateral with _amount > ACTOR balance
 }
 
 contract WithdrawCollateral is CollateralTest {
@@ -182,4 +184,8 @@ contract WithdrawCollateral is CollateralTest {
             perpsMarketProxy.totalCollateralValue(accountId);
         assertEq(totalCollateralValue, 0);
     }
+
+    /// @custom:todo test withdraw collateral with _amount == 0
+    /// @custom:todo test withdraw collateral with _amount > account balance
+    /// @custom:todo test withdraw collateral with _amount > withdrawable amount
 }

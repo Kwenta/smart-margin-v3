@@ -11,7 +11,25 @@ contract ConditionalOrderTest is Bootstrap {
     }
 }
 
-contract VerificationTest is ConditionalOrderTest {
+contract Execute is ConditionalOrderTest {
+/// @custom:todo canExecute !verifySigner()
+/// @custom:todo canExecute !verifySignature()
+/// @custom:todo canExecute !verifyConditions()
+/// @custom:todo canExecute !trustedExecutor
+/// @custom:todo canExecute when account has enough gas
+/// @custom:todo canExecute when account doesnt have enough gas
+/// @custom:todo test order is committed
+/// @custom:todo test no replays (i.e. nonce is used)
+/// @custom:todo test when order committed results in error (exceeds leverage after fee taken by executor)
+/// @custom:todo test when order committed results in error (other edge cases)
+/// @custom:todo test error CannotExecuteOrder()
+}
+
+contract VerifySigner is ConditionalOrderTest {}
+
+contract VerifySignature is ConditionalOrderTest {}
+
+contract VerifyConditions is ConditionalOrderTest {
     function test_verifyCondtionalOrder_verified() public {
         bytes[] memory conditions = new bytes[](1);
         conditions[0] = isTimestampAfter(0);
@@ -56,5 +74,3 @@ contract VerificationTest is ConditionalOrderTest {
         assertFalse(isVerified);
     }
 }
-
-contract ConditionsTest is ConditionalOrderTest {}
