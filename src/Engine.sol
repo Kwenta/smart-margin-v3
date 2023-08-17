@@ -2,6 +2,7 @@
 pragma solidity 0.8.18;
 
 import {EIP712} from "src/utils/EIP712.sol";
+import {ERC721Receivable} from "src/utils/ERC721Receivable.sol";
 import {IEngine} from "src/interfaces/IEngine.sol";
 import {IERC20} from "src/interfaces/tokens/IERC20.sol";
 import {Int128Lib} from "src/libraries/Int128Lib.sol";
@@ -15,7 +16,7 @@ import {SignatureCheckerLib} from "src/libraries/SignatureCheckerLib.sol";
 /// @title Kwenta Smart Margin v3: Engine contract
 /// @notice Responsible for interacting with Synthetix v3 perps markets
 /// @author JaredBorders (jaredborders@pm.me)
-contract Engine is IEngine, Multicallable, EIP712 {
+contract Engine is IEngine, Multicallable, EIP712, ERC721Receivable {
     using Int128Lib for int128;
     using Int256Lib for int256;
     using SignatureCheckerLib for bytes32;
@@ -78,6 +79,23 @@ contract Engine is IEngine, Multicallable, EIP712 {
         SUSD = IERC20(_sUSDProxy);
         ORACLE = IPyth(_oracle);
         PYTH_ETH_USD_ID = _pythPriceFeedIdEthUsd;
+    }
+
+    /*//////////////////////////////////////////////////////////////
+                             CREATE ACCOUNT
+    //////////////////////////////////////////////////////////////*/
+
+    /// @inheritdoc IEngine
+    function createAccount() external override returns (uint128 accountId) {
+        accountId = PERPS_MARKET_PROXY.createAccount();
+
+        PERPS_MARKET_PROXY.grantPermission({
+            accountId: accountId,
+            permission: ADMIN_PERMISSION,
+            user: address(this)
+        });
+
+        /// @custom:todo figure out how to transfer ownership to msg.sender
     }
 
     /*//////////////////////////////////////////////////////////////
