@@ -8,7 +8,7 @@ import {OptimismParameters} from
     "script/utils/parameters/OptimismParameters.sol";
 import {Script} from "lib/forge-std/src/Script.sol";
 
-contract Setup {
+contract Setup is Script {
     function deploySystem(
         address perpsMarketProxy,
         address spotMarketProxy,
@@ -26,7 +26,10 @@ contract Setup {
     }
 }
 
-contract DeployOptimism is Script, Setup, OptimismParameters {
+/// @dev steps to deploy and verify on Optimism:
+/// (1) load the variables in the .env file via `source .env`
+/// (2) run `forge script script/Deploy.s.sol:DeployOptimism --rpc-url $OPTIMISM_RPC_URL --broadcast --verify -vvvv`
+contract DeployOptimism is Setup, OptimismParameters {
     function run() public {
         uint256 privateKey = vm.envUint("PRIVATE_KEY");
         vm.startBroadcast(privateKey);
@@ -42,8 +45,10 @@ contract DeployOptimism is Script, Setup, OptimismParameters {
         vm.stopBroadcast();
     }
 }
-
-contract DeployOptimismGoerli is Script, Setup, OptimismGoerliParameters {
+/// @dev steps to deploy and verify on Optimism Goerli:
+/// (1) load the variables in the .env file via `source .env`
+/// (2) run `forge script script/Deploy.s.sol:DeployOptimismGoerli --rpc-url $OPTIMISM_GOERLI_RPC_URL --broadcast --verify -vvvv`
+contract DeployOptimismGoerli is Setup, OptimismGoerliParameters {
     function run() public {
         uint256 privateKey = vm.envUint("PRIVATE_KEY");
         vm.startBroadcast(privateKey);
