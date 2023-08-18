@@ -16,7 +16,7 @@ goerli = "${GOERLI_RPC_URL}"
 optimismGoerli = "${OPTIMISM_GOERLI_RPC_URL}"
 
 [etherscan]
-mainnet = { key = "${ETHERSCAN_KEY}" }
-optimism = { key = "${ETHERSCAN_KEY}" }
-goerli = { key = "${ETHERSCAN_KEY}" }
-optimismGoerli = { key = "${ETHERSCAN_KEY}" }
+mainnet = { key = "${ETHERSCAN_API_KEY}" }
+optimism = { key = "${OPTIMISM_ETHERSCAN_API_KEY}" }
+goerli = { key = "${ETHERSCAN_API_KEY}" }
+optimismGoerli = { key = "${OPTIMISM_ETHERSCAN_API_KEY}" }
