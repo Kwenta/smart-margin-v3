@@ -48,6 +48,7 @@ contract DeployOptimism is Setup, OptimismParameters {
 /// @dev steps to deploy and verify on Optimism Goerli:
 /// (1) load the variables in the .env file via `source .env`
 /// (2) run `forge script script/Deploy.s.sol:DeployOptimismGoerli --rpc-url $OPTIMISM_GOERLI_RPC_URL --broadcast --verify -vvvv`
+
 contract DeployOptimismGoerli is Setup, OptimismGoerliParameters {
     function run() public {
         uint256 privateKey = vm.envUint("PRIVATE_KEY");
