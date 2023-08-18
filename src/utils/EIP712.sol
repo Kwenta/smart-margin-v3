@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 pragma solidity 0.8.18;
 
-/// @notice Contract for EIP-712 typed structured data hashing and signing.
-/// @author Solady (https://github.com/vectorized/solady/blob/main/src/utils/EIP712.sol)
+/// @notice EIP-712 typed structured data hashing and signing helpers for Kwenta Smart Margin v3: Engine contract
+/// @author JaredBorders (jaredborders@pm.me)
+/// @author Modified from Solady (https://github.com/vectorized/solady/blob/main/src/utils/EIP712.sol)
 /// @author Modified from Solbase (https://github.com/Sol-DAO/solbase/blob/main/src/utils/EIP712.sol)
 /// @author Modified from OpenZeppelin (https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/utils/cryptography/EIP712.sol)
 /// Note, this implementation:
@@ -11,7 +12,7 @@ pragma solidity 0.8.18;
 /// - Does NOT use any EIP-712 extensions.
 /// This is for simplicity and to save gas.
 /// If you need to customize, please fork / modify accordingly.
-abstract contract EIP712 {
+contract EIP712 {
     /*´:°•.°+.*•´.*:˚.°*.˚•´.°:°•.°•.*•´.*:˚.°*.˚•´.°:°•.°+.*•´.*:*/
     /*                  CONSTANTS AND IMMUTABLES                  */
     /*.•°:°.´+˚.*°.˚:*.´•*.+°.•°:´*.´•*.•°.•°:°.´:•˚°.*°.˚:*.´+°.•*/
@@ -59,26 +60,24 @@ abstract contract EIP712 {
     }
 
     /*´:°•.°+.*•´.*:˚.°*.˚•´.°:°•.°•.*•´.*:˚.°*.˚•´.°:°•.°+.*•´.*:*/
-    /*                   FUNCTIONS TO OVERRIDE                    */
-    /*.•°:°.´+˚.*°.˚:*.´•*.+°.•°:´*.´•*.•°.•°:°.´:•˚°.*°.˚:*.´+°.•*/
-
-    function _domainNameAndVersion()
-        internal
-        pure
-        virtual
-        returns (string memory name, string memory version);
-
-    /*´:°•.°+.*•´.*:˚.°*.˚•´.°:°•.°•.*•´.*:˚.°*.˚•´.°:°•.°+.*•´.*:*/
     /*                     HASHING OPERATIONS                     */
     /*.•°:°.´+˚.*°.˚:*.´•*.+°.•°:´*.´•*.•°.•°:°.´:•˚°.*°.˚:*.´+°.•*/
 
-    /// @dev Returns the EIP-712 domain separator.
-    function _domainSeparator()
+    /// @notice Returns the domain name and version for the current chain
+    /// @return name The domain name: prevents signature reuse across different dapps
+    /// @return version The domain version: prevents signature reuse across different versions of the same dapp
+    function _domainNameAndVersion()
         internal
-        view
-        virtual
-        returns (bytes32 separator)
+        pure
+        returns (string memory name, string memory version)
     {
+        name = "SMv3: OrderBook";
+        version = "1";
+    }
+
+    /// @notice Returns the domain separator for the current chain
+    /// @dev Uses cached version if chainid and address are unchanged from construction
+    function DOMAIN_SEPARATOR() public view returns (bytes32 separator) {
         separator = _cachedDomainSeparator;
         if (_cachedDomainSeparatorInvalidated()) {
             separator = _buildDomainSeparator();
@@ -101,7 +100,6 @@ abstract contract EIP712 {
     function _hashTypedData(bytes32 structHash)
         internal
         view
-        virtual
         returns (bytes32 digest)
     {
         bytes32 separator = _cachedDomainSeparator;
@@ -125,10 +123,10 @@ abstract contract EIP712 {
     /*.•°:°.´+˚.*°.˚:*.´•*.+°.•°:´*.´•*.•°.•°:°.´:•˚°.*°.˚:*.´+°.•*/
 
     /// @dev See: https://eips.ethereum.org/EIPS/eip-5267
+    /// @custom:tldr standardizing how contracts should publish the fields and values that describe their domain
     function eip712Domain()
         public
         view
-        virtual
         returns (
             bytes1 fields,
             string memory name,

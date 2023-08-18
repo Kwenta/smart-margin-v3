@@ -18,24 +18,29 @@ interface IEngine {
         uint128 totalTrades;
     }
 
+    struct OrderDetails {
+        /// @dev Order market id.
+        uint128 marketId;
+        /// @dev Order account id.
+        uint128 accountId;
+        /// @dev Order size delta (of asset units expressed in decimal 18 digits). It can be positive or negative.
+        int128 sizeDelta;
+        /// @dev Settlement strategy used for the order.
+        uint128 settlementStrategyId;
+        /// @dev Acceptable price set at submission.
+        uint256 acceptablePrice;
+    }
+
     /// @notice conditional order
     struct ConditionalOrder {
+        // order details
+        OrderDetails orderDetails;
         // address of the signer of the order
         address signer;
         // an incrementing value indexed per order
         uint128 nonce;
-        // option to require all extra conditions to be met
+        // option to require all extra conditions to be verified on-chain
         bool requireVerified;
-        // order market id.
-        uint128 marketId;
-        // order account id.
-        uint128 accountId;
-        // order size delta (of asset units expressed in decimal 18 digits). It can be positive or negative.
-        int128 sizeDelta;
-        // settlement strategy used for the order.
-        uint128 settlementStrategyId;
-        // acceptable price set at submission.
-        uint256 acceptablePrice;
         // address that can execute the order if requireVerified is false
         address trustedExecutor;
         // array of extra conditions to be met
@@ -161,12 +166,12 @@ interface IEngine {
         returns (bool);
 
     /// @notice verify the signature of the conditional order
-    /// @param _signature the signature of the conditional order
     /// @param _co the conditional order
+    /// @param _signature the signature of the conditional order
     /// @return true if the signature is valid
     function verifySignature(
-        bytes calldata _signature,
-        ConditionalOrder calldata _co
+        ConditionalOrder calldata _co,
+        bytes calldata _signature
     ) external view returns (bool);
 
     /// @notice verify array of conditions defined in the conditional order

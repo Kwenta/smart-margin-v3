@@ -20,8 +20,8 @@ library SignatureCheckerLib {
     /// If `signer` is a smart contract, the signature is validated with ERC1271.
     /// Otherwise, the signature is validated with `ECDSA.recover`.
     function isValidSignatureNowCalldata(
-        bytes32 hash,
         bytes calldata signature,
+        bytes32 hash,
         address signer
     ) internal view returns (bool isValid) {
         /// @solidity memory-safe-assembly

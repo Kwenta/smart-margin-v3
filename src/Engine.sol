@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 pragma solidity 0.8.18;
 
+import {ConditionalOrderHashLib} from "src/libraries/ConditionalOrderHashLib.sol";
 import {EIP712} from "src/utils/EIP712.sol";
 import {ERC721Receivable} from "src/utils/ERC721Receivable.sol";
 import {IEngine} from "src/interfaces/IEngine.sol";
@@ -19,7 +20,9 @@ import {SignatureCheckerLib} from "src/libraries/SignatureCheckerLib.sol";
 contract Engine is IEngine, Multicallable, EIP712, ERC721Receivable {
     using Int128Lib for int128;
     using Int256Lib for int256;
-    using SignatureCheckerLib for bytes32;
+    using SignatureCheckerLib for bytes;
+    using ConditionalOrderHashLib for OrderDetails;
+    using ConditionalOrderHashLib for ConditionalOrder;
 
     /// @notice tracking code submitted with trades to identify the source of the trade
     bytes32 internal constant TRACKING_CODE = "KWENTA";
@@ -32,11 +35,6 @@ contract Engine is IEngine, Multicallable, EIP712, ERC721Receivable {
     /// @notice the address of the kwenta treasury multisig; used for source of collecting fees
     address internal constant REFERRER =
         0xF510a2Ff7e9DD7e18629137adA4eb56B9c13E885;
-
-    /// @notice pre-computed keccak256(ConditionalOrder struct)
-    bytes32 private constant CONDITIONAL_ORDER_TYPEHASH = keccak256(
-        "ConditionalOrder(address signer,uint128 nonce,bool requireVerified,uint128 marketId,uint128 accountId,int128 sizeDelta,uint128 settlementStrategyId,uint256 acceptablePrice,address trustedExecutor,bytes[] conditions)"
-    );
 
     /// @notice pyth oracle contract used to get asset prices
     IPyth internal immutable ORACLE;
@@ -285,17 +283,17 @@ contract Engine is IEngine, Multicallable, EIP712, ERC721Receivable {
 
         _withdrawCollateral({
             _synth: SUSD,
-            _accountId: _co.accountId,
+            _accountId: _co.orderDetails.accountId,
             _synthMarketId: 0,
             _amount: -int256(fee)
         });
 
         _commitOrder(
-            _co.marketId,
-            _co.accountId,
-            _co.sizeDelta,
-            _co.settlementStrategyId,
-            _co.acceptablePrice
+            _co.orderDetails.marketId,
+            _co.orderDetails.accountId,
+            _co.orderDetails.sizeDelta,
+            _co.orderDetails.settlementStrategyId,
+            _co.orderDetails.acceptablePrice
         );
     }
 
@@ -309,13 +307,17 @@ contract Engine is IEngine, Multicallable, EIP712, ERC721Receivable {
         /// @dev reverts if the price has not been updated
         /// within the last `getValidTimePeriod()` seconds
         PythStructs.Price memory priceData = ORACLE.getPrice(PYTH_ETH_USD_ID);
+        /// @custom:todo determine if we need to use the exponent
         uint64 price = uint64(priceData.price); // uint64 price = uint64(priceData.price) * 10**uint32(priceData.expo);
+
+        // verify nonce has not been executed before
+        if (executedOrders[_co.nonce]) return (false, 0);
 
         // verify signer is authorized to interact with the account
         if (!verifySigner(_co)) return (false, 0);
 
         // verify signature is valid for signer and order
-        if (!verifySignature(_signature, _co)) return (false, 0);
+        if (!verifySignature(_co, _signature)) return (false, 0);
 
         // verify conditions are met
         if (_co.requireVerified) {
@@ -329,8 +331,10 @@ contract Engine is IEngine, Multicallable, EIP712, ERC721Receivable {
         }
 
         // determine how much margin is available to withdraw
+        /// @custom:todo getWithdrawableMargin vs getRequiredMargins vs totalCollateralValue vs getCollateralAmount
+        /// @custom:todo figure out how to *SAFELY* pull sUSD from account without causing a liquidation
         int256 withdrawableMargin =
-            PERPS_MARKET_PROXY.getWithdrawableMargin(_co.accountId);
+            PERPS_MARKET_PROXY.getWithdrawableMargin(_co.orderDetails.accountId);
 
         // if enough margin is available to withdraw to pay for the order execution, then return true
         if (
@@ -347,16 +351,6 @@ contract Engine is IEngine, Multicallable, EIP712, ERC721Receivable {
                      CONDITIONAL ORDER VERIFICATION
     //////////////////////////////////////////////////////////////*/
 
-    function _domainNameAndVersion()
-        internal
-        pure
-        override
-        returns (string memory name, string memory version)
-    {
-        name = "SMv3: OrderBook";
-        version = "1";
-    }
-
     /// @inheritdoc IEngine
     function verifySigner(ConditionalOrder calldata _co)
         public
@@ -364,8 +358,8 @@ contract Engine is IEngine, Multicallable, EIP712, ERC721Receivable {
         returns (bool)
     {
         if (
-            isAccountOwner(_co.accountId, msg.sender)
-                || isAccountDelegate(_co.accountId, msg.sender)
+            isAccountOwner(_co.orderDetails.accountId, _co.signer)
+                || isAccountDelegate(_co.orderDetails.accountId, _co.signer)
         ) {
             return true;
         }
@@ -375,36 +369,14 @@ contract Engine is IEngine, Multicallable, EIP712, ERC721Receivable {
 
     /// @inheritdoc IEngine
     function verifySignature(
-        bytes calldata _signature,
-        ConditionalOrder calldata _co
+        ConditionalOrder calldata _co,
+        bytes calldata _signature
     ) public view returns (bool) {
-        // prevent replay
-        if (executedOrders[_co.nonce]) return false;
-
-        // ensure signature is valid for signer and order
-        bytes32 digest = _hashTypedData(
-            keccak256(
-                abi.encode(
-                    CONDITIONAL_ORDER_TYPEHASH,
-                    _co.signer,
-                    _co.nonce,
-                    _co.requireVerified,
-                    _co.marketId,
-                    _co.accountId,
-                    _co.sizeDelta,
-                    _co.settlementStrategyId,
-                    _co.acceptablePrice,
-                    _co.trustedExecutor,
-                    _co.conditions
-                )
-            )
+        bool isValid = _signature.isValidSignatureNowCalldata(
+            _hashTypedData(_co.hash()), _co.signer
         );
 
-        if (!digest.isValidSignatureNowCalldata(_signature, _co.signer)) {
-            return false;
-        }
-
-        return true;
+        return isValid;
     }
 
     /// @inheritdoc IEngine
@@ -426,26 +398,32 @@ contract Engine is IEngine, Multicallable, EIP712, ERC721Receivable {
                                CONDITIONS
     //////////////////////////////////////////////////////////////*/
 
+    /// @custom:todo add documentation
     function isTimestampAfter(uint256 _timestamp) public view returns (bool) {
         return block.timestamp > _timestamp;
     }
 
+    /// @custom:todo add documentation
     function isTimestampBefore(uint256 _timestamp) public view returns (bool) {
         return block.timestamp < _timestamp;
     }
 
+    /// @custom:todo add documentation
     function isPriceAbove(uint256 price) public pure returns (bool) {
         return price == type(uint256).max ? false : true;
     }
 
+    /// @custom:todo add documentation
     function isPriceBelow(uint256 price) public pure returns (bool) {
         return price == 0 ? false : true;
     }
 
+    /// @custom:todo add documentation
     function isMarketPaused(address market) public pure returns (bool) {
         return market == address(0) ? true : false;
     }
 
+    /// @custom:todo add documentation
     function isMarketClosed(address market) public pure returns (bool) {
         return market == address(0) ? true : false;
     }
