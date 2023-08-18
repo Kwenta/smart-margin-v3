@@ -1,15 +1,14 @@
 # 🧱 Smart Margin v3
 
 ## TODO
+/// @custom:todo
 - [ ] search `@custom:todo` and handle them all!!!
 - [ ] Add more details to README
 - [ ] Sort all imports in alphabetical order
 - [ ] Add title, description, and author to all SMv3 contracts
-- [ ] Split up tests into unit and integration tests (some in unit are more integration)
-- [ ] Write invariant tests for Auth.sol
-- [ ] Write invariant tests for OrderBook.sol
+- [ ] Refactor `Engine.sol` into smaller modules once code complete (i.e. Base, Stats, Auth, ConditionalOrder, etc.)
+- [ ] Write invariant tests 
 - [ ] Trim fat (unused code) from all interfaces (e.g. IPerpsMarketProxy.sol)
-- [ ] Look into easier way to shift tests from Goerli Optimism to Optimism
 
 [![Github Actions][gha-badge]][gha] 
 [![Foundry][foundry-badge]][foundry] 
@@ -63,11 +62,13 @@ src/
 │   └── tokens
 │       └── IERC20.sol
 ├── libraries
+│   ├── ConditionalOrderHash.sol
 │   ├── Int128Lib.sol
 │   ├── Int256Lib.sol
 │   └── SignatureCheckerLib.sol
 └── utils
     ├── EIP712.sol
+    ├── ERC721Receivable.sol
     ├── Multicallable.sol
     └── Ownable.sol
 ```
