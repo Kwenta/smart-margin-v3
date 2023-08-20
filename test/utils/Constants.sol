@@ -8,6 +8,8 @@ contract Constants {
     address internal constant REFERRER =
         0x0a2578598C6Db6bc1C1FCE8aDcB1f52122940e05;
 
+    bytes32 internal constant ADMIN_PERMISSION = "ADMIN";
+
     address internal constant MOCK_MARGIN_ENGINE = address(0xE1);
 
     address internal constant ACTOR = address(0xa1);
