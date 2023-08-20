@@ -18,6 +18,13 @@ interface IPerpsMarketProxy {
         view
         returns (address owner);
 
+    /// @notice Returns the address for the account token used by the module.
+    /// @return accountNftToken The address of the account token.
+    function getAccountTokenAddress()
+        external
+        view
+        returns (address accountNftToken);
+
     /// @notice Grants `permission` to `user` for account `accountId`.
     /// @param accountId The id of the account that granted the permission.
     /// @param permission The bytes32 identifier of the permission.

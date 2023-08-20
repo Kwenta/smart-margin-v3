@@ -7,6 +7,7 @@ import {EIP712} from "src/utils/EIP712.sol";
 import {ERC721Receivable} from "src/utils/ERC721Receivable.sol";
 import {IEngine} from "src/interfaces/IEngine.sol";
 import {IERC20} from "src/interfaces/tokens/IERC20.sol";
+import {IERC721} from "src/interfaces/tokens/IERC721.sol";
 import {Int128Lib} from "src/libraries/Int128Lib.sol";
 import {Int256Lib} from "src/libraries/Int256Lib.sol";
 import {IPerpsMarketProxy} from "src/interfaces/synthetix/IPerpsMarketProxy.sol";
@@ -94,7 +95,9 @@ contract Engine is IEngine, Multicallable, EIP712, ERC721Receivable {
             user: address(this)
         });
 
-        /// @custom:todo figure out how to transfer ownership to msg.sender
+        IERC721 accountNftToken =
+            IERC721(PERPS_MARKET_PROXY.getAccountTokenAddress());
+        accountNftToken.safeTransferFrom(address(this), msg.sender, accountId);
     }
 
     /*//////////////////////////////////////////////////////////////
