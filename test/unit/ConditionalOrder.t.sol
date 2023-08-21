@@ -207,10 +207,12 @@ contract VerifyConditions is ConditionalOrderTest {
 }
 
 contract Execute is ConditionalOrderTest {
-/// @custom:todo test order is committed
-/// @custom:todo test when order committed results in error (exceeds leverage after fee taken by executor)
-/// @custom:todo test when order committed results in error (other edge cases)
-/// @custom:todo test error CannotExecuteOrder()
+    /// @custom:todo test order is committed
+    function test_execute_order_committed() public {}
+
+    /// @custom:todo test when order committed results in error (exceeds leverage after fee taken by executor)
+    /// @custom:todo test when order committed results in error (other edge cases)
+    /// @custom:todo test error CannotExecuteOrder()
 }
 
 contract Fee is ConditionalOrderTest {

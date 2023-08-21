@@ -5,8 +5,9 @@ contract Constants {
     uint256 internal constant GOERLI_BLOCK_NUMBER = 13_076_019;
 
     address internal constant OWNER = address(0x01);
+    bytes32 internal constant TRACKING_CODE = "KWENTA";
     address internal constant REFERRER =
-        0x0a2578598C6Db6bc1C1FCE8aDcB1f52122940e05;
+        0xF510a2Ff7e9DD7e18629137adA4eb56B9c13E885;
 
     bytes32 internal constant ADMIN_PERMISSION = "ADMIN";
 
