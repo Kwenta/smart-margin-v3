@@ -37,6 +37,9 @@ contract Engine is IEngine, Multicallable, EIP712, ERC721Receivable {
     address internal constant REFERRER =
         0xF510a2Ff7e9DD7e18629137adA4eb56B9c13E885;
 
+    /// @notice the gas cost associated with executing a conditional order
+    uint256 internal constant CONDITIONAL_ORDER_GAS_COST = 466_000 * 20 gwei;
+
     /// @notice pyth oracle contract used to get asset prices
     IPyth internal immutable ORACLE;
 
@@ -107,6 +110,7 @@ contract Engine is IEngine, Multicallable, EIP712, ERC721Receivable {
     function getAccountStats(uint128 _accountId)
         external
         view
+        override
         returns (AccountStats memory)
     {
         return accountStats[_accountId];
@@ -168,21 +172,26 @@ contract Engine is IEngine, Multicallable, EIP712, ERC721Receivable {
         IERC20 synth = IERC20(_getSynthAddress(_synthMarketId));
 
         if (_amount > 0) {
-            _depositCollateral(synth, _accountId, _synthMarketId, _amount);
+            _depositCollateral(
+                msg.sender, synth, _accountId, _synthMarketId, _amount
+            );
         } else {
             if (!isAccountOwner(_accountId, msg.sender)) revert Unauthorized();
-            _withdrawCollateral(synth, _accountId, _synthMarketId, _amount);
+            _withdrawCollateral(
+                msg.sender, synth, _accountId, _synthMarketId, _amount
+            );
         }
     }
 
     function _depositCollateral(
+        address _from,
         IERC20 _synth,
         uint128 _accountId,
         uint128 _synthMarketId,
         int256 _amount
     ) internal {
         // @dev given the amount is positive, simply casting (int -> uint) is safe
-        _synth.transferFrom(msg.sender, address(this), uint256(_amount));
+        _synth.transferFrom(_from, address(this), uint256(_amount));
 
         _synth.approve(address(PERPS_MARKET_PROXY), uint256(_amount));
 
@@ -190,6 +199,7 @@ contract Engine is IEngine, Multicallable, EIP712, ERC721Receivable {
     }
 
     function _withdrawCollateral(
+        address _to,
         IERC20 _synth,
         uint128 _accountId,
         uint128 _synthMarketId,
@@ -198,7 +208,7 @@ contract Engine is IEngine, Multicallable, EIP712, ERC721Receivable {
         PERPS_MARKET_PROXY.modifyCollateral(_accountId, _synthMarketId, _amount);
 
         /// @dev given the amount is negative, simply casting (int -> uint) is unsafe, thus we use .abs()
-        _synth.transfer(msg.sender, _amount.abs());
+        _synth.transfer(_to, _amount.abs());
     }
 
     /// @notice query and return the address of the synth contract
@@ -277,18 +287,16 @@ contract Engine is IEngine, Multicallable, EIP712, ERC721Receivable {
     /// @inheritdoc IEngine
     function execute(ConditionalOrder calldata _co, bytes calldata _signature)
         external
+        override
     {
+        if (!canExecute(_co, _signature)) revert CannotExecuteOrder();
+
         executedOrders[_co.nonce] = true;
 
-        (bool canExecuteOrder, uint256 gasSpentUSD) =
-            canExecute(_co, _signature);
-
-        if (!canExecuteOrder) revert CannotExecuteOrder();
-
-        /// @custom:todo figure out gas used for modifyCollateral & commitOrder
-        uint256 fee = gasSpentUSD + 0; // 0 is the gas used for modifyCollateral & commitOrder
+        uint256 fee = getConditionalOrderFeeInUSD();
 
         _withdrawCollateral({
+            _to: _co.requireVerified ? msg.sender : _co.trustedExecutor,
             _synth: SUSD,
             _accountId: _co.orderDetails.accountId,
             _synthMarketId: 0,
@@ -308,50 +316,45 @@ contract Engine is IEngine, Multicallable, EIP712, ERC721Receivable {
     function canExecute(
         ConditionalOrder calldata _co,
         bytes calldata _signature
-    ) public returns (bool, uint256) {
-        uint256 gas = gasleft();
-
-        /// @dev reverts if the price has not been updated
-        /// within the last `getValidTimePeriod()` seconds
-        PythStructs.Price memory priceData = ORACLE.getPrice(PYTH_ETH_USD_ID);
-        /// @custom:todo determine if we need to use the exponent
-        uint64 price = uint64(priceData.price); // uint64 price = uint64(priceData.price) * 10**uint32(priceData.expo);
-
+    ) public override returns (bool) {
         // verify nonce has not been executed before
-        if (executedOrders[_co.nonce]) return (false, 0);
+        if (executedOrders[_co.nonce]) return false;
 
         // verify signer is authorized to interact with the account
-        if (!verifySigner(_co)) return (false, 0);
+        if (!verifySigner(_co)) return false;
 
         // verify signature is valid for signer and order
-        if (!verifySignature(_co, _signature)) return (false, 0);
+        if (!verifySignature(_co, _signature)) return false;
 
         // verify conditions are met
         if (_co.requireVerified) {
             // if the order requires verification, then all conditions
             // defined by "conditions" for the order must be met
-            if (!verifyConditions(_co)) return (false, 0);
+            if (!verifyConditions(_co)) return false;
         } else {
             // if the order does not require verification, then the caller
             // must be the trusted executor defined by "trustedExecutor"
-            if (msg.sender != _co.trustedExecutor) return (false, 0);
+            if (msg.sender != _co.trustedExecutor) return false;
         }
 
-        // determine how much margin is available to withdraw
-        /// @custom:todo getWithdrawableMargin vs getRequiredMargins vs totalCollateralValue vs getCollateralAmount
-        /// @custom:todo figure out how to *SAFELY* pull sUSD from account without causing a liquidation
-        int256 withdrawableMargin =
-            PERPS_MARKET_PROXY.getWithdrawableMargin(_co.orderDetails.accountId);
+        return true;
+    }
 
-        // if enough margin is available to withdraw to pay for the order execution, then return true
-        if (
-            withdrawableMargin > 0
-                && uint256(withdrawableMargin) > gas - gasleft() * price
-        ) {
-            return (true, gas - gasleft() * price);
-        }
+    /// @inheritdoc IEngine
+    function getConditionalOrderFeeInUSD()
+        public
+        view
+        override
+        returns (uint256 fee)
+    {
+        /// @dev reverts if the price has not been updated
+        /// within the last `getValidTimePeriod()` seconds
+        PythStructs.Price memory priceData = ORACLE.getPrice(PYTH_ETH_USD_ID);
 
-        return (false, 0);
+        uint256 ethPriceWei =
+            uint64(priceData.price) * 10 ** uint32(18 + priceData.expo);
+
+        fee = (CONDITIONAL_ORDER_GAS_COST * ethPriceWei) / 1e18;
     }
 
     /*//////////////////////////////////////////////////////////////
@@ -362,6 +365,7 @@ contract Engine is IEngine, Multicallable, EIP712, ERC721Receivable {
     function verifySigner(ConditionalOrder calldata _co)
         public
         view
+        override
         returns (bool)
     {
         if (
@@ -378,7 +382,7 @@ contract Engine is IEngine, Multicallable, EIP712, ERC721Receivable {
     function verifySignature(
         ConditionalOrder calldata _co,
         bytes calldata _signature
-    ) public view returns (bool) {
+    ) public view override returns (bool) {
         bool isValid = _signature.isValidSignatureNowCalldata(
             _hashTypedData(_co.hash()), _co.signer
         );
@@ -389,6 +393,7 @@ contract Engine is IEngine, Multicallable, EIP712, ERC721Receivable {
     /// @inheritdoc IEngine
     function verifyConditions(ConditionalOrder calldata _co)
         public
+        override
         returns (bool)
     {
         uint256 length = _co.conditions.length;

@@ -95,6 +95,18 @@ interface IPerpsMarketProxy {
         external
         returns (Data memory retOrder, uint256 fees);
 
+    /// @notice For a given market, account id, and a position size, returns the required total account margin for this order to succeed
+    /// @dev Useful for integrators to determine if an order will succeed or fail
+    /// @param marketId id of the market.
+    /// @param accountId id of the trader account.
+    /// @param sizeDelta size of position.
+    /// @return requiredMargin margin required for the order to succeed.
+    function requiredMarginForOrder(
+        uint128 marketId,
+        uint128 accountId,
+        int128 sizeDelta
+    ) external view returns (uint256 requiredMargin);
+
     /*//////////////////////////////////////////////////////////////
                           PERPS ACCOUNT MODULE
     //////////////////////////////////////////////////////////////*/

@@ -153,13 +153,19 @@ interface IEngine {
     /// @notice checks if the order can be executed
     /// @param _co the conditional order
     /// @param _signature the signature of the conditional order
-    /// @return true if the order can be executed, false otherwise
-    /// @return the amount of gas spent to *affirmatively* verify the order denominated in USD
-    /// @dev if the order cannot be executed, gasSpent will 0
+    /// @return true if the order can be executed based on defined conditions, false otherwise
     function canExecute(
         ConditionalOrder calldata _co,
         bytes calldata _signature
-    ) external returns (bool, uint256);
+    ) external returns (bool);
+
+    /// @notice get the fee imposed for executing a conditional order in USD
+    /// @dev relies on the current price of ETH provided by the pyth oracle
+    /// @return fee the fee imposed in USD
+    function getConditionalOrderFeeInUSD()
+        external
+        view
+        returns (uint256 fee);
 
     /// @notice verify the conditional order signer is the owner or delegate of the account
     /// @param _co the conditional order
