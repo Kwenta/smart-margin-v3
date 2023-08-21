@@ -5,8 +5,13 @@ import {Bootstrap} from "test/utils/Bootstrap.sol";
 import {ConditionalOrderSignature} from
     "test/utils/ConditionalOrderSignature.sol";
 import {IEngine} from "src/interfaces/IEngine.sol";
+import {PythMock} from "test/utils/mocks/PythMock.sol";
 
-contract ConditionalOrderTest is Bootstrap, ConditionalOrderSignature {
+contract ConditionalOrderTest is
+    Bootstrap,
+    ConditionalOrderSignature,
+    PythMock
+{
     address signer;
     uint256 signerPrivateKey;
     address bad_signer;
@@ -26,20 +31,71 @@ contract ConditionalOrderTest is Bootstrap, ConditionalOrderSignature {
 
         vm.startPrank(signer);
         accountId = perpsMarketProxy.createAccount();
+
         perpsMarketProxy.grantPermission({
             accountId: accountId,
             permission: "ADMIN",
             user: address(engine)
         });
+
+        sUSD.approve(address(engine), type(uint256).max);
+
+        engine.modifyCollateral({
+            _accountId: accountId,
+            _synthMarketId: SUSD_SPOT_MARKET_ID,
+            _amount: int256(AMOUNT)
+        });
+
         vm.stopPrank();
     }
 }
 
 contract CanExecute is ConditionalOrderTest {
-/// @custom:todo canExecute verify nonce has not been executed before
-/// @custom:todo canExecute !trustedExecutor
-/// @custom:todo canExecute when account has enough gas
-/// @custom:todo canExecute when account doesnt have enough gas
+    int64 constant MOCK_ETH_PRICE = 166_441_377_332;
+    uint64 constant MOCK_ETH_CONF = 136_840_497;
+    int32 constant MOCK_ETH_EXPO = -8; // 166441377332 == 1664.41377332 USD
+
+    function test_canExecute_fee() public {
+        mock_pyth_getPrice({
+            pyth: address(pyth),
+            id: pythPriceFeedIdEthUsd,
+            price: MOCK_ETH_PRICE,
+            conf: MOCK_ETH_CONF,
+            expo: MOCK_ETH_EXPO
+        });
+
+        IEngine.OrderDetails memory orderDetails = IEngine.OrderDetails({
+            marketId: SETH_PERPS_MARKET_ID,
+            accountId: accountId,
+            sizeDelta: 1 ether,
+            settlementStrategyId: 0,
+            acceptablePrice: type(uint256).max
+        });
+
+        IEngine.ConditionalOrder memory co = IEngine.ConditionalOrder({
+            orderDetails: orderDetails,
+            signer: signer,
+            nonce: 0,
+            requireVerified: false,
+            trustedExecutor: address(this),
+            conditions: new bytes[](0)
+        });
+
+        bytes memory signature = getConditionalOrderSignature({
+            co: co,
+            privateKey: signerPrivateKey,
+            domainSeparator: engine.DOMAIN_SEPARATOR()
+        });
+
+        bool canExec = engine.canExecute(co, signature);
+
+        assertTrue(canExec);
+    }
+
+    /// @custom:todo canExecute verify nonce has not been executed before
+    /// @custom:todo canExecute !trustedExecutor
+    /// @custom:todo canExecute when account has enough gas
+    /// @custom:todo canExecute when account doesnt have enough gas
 }
 
 contract VerifySigner is ConditionalOrderTest {
@@ -207,8 +263,48 @@ contract VerifyConditions is ConditionalOrderTest {
 }
 
 contract Execute is ConditionalOrderTest {
-    /// @custom:todo test order is committed
-    function test_execute_order_committed() public {}
+    int64 constant MOCK_ETH_PRICE = 166_441_377_332;
+    uint64 constant MOCK_ETH_CONF = 136_840_497;
+    int32 constant MOCK_ETH_EXPO = -8; // 166441377332 == 1664.41377332 USD
+
+    function test_execute_order_committed() public {
+        mock_pyth_getPrice({
+            pyth: address(pyth),
+            id: pythPriceFeedIdEthUsd,
+            price: MOCK_ETH_PRICE,
+            conf: MOCK_ETH_CONF,
+            expo: MOCK_ETH_EXPO
+        });
+
+        IEngine.OrderDetails memory orderDetails = IEngine.OrderDetails({
+            marketId: SETH_PERPS_MARKET_ID,
+            accountId: accountId,
+            sizeDelta: 1 ether,
+            settlementStrategyId: 0,
+            acceptablePrice: type(uint256).max
+        });
+
+        IEngine.ConditionalOrder memory co = IEngine.ConditionalOrder({
+            orderDetails: orderDetails,
+            signer: signer,
+            nonce: 0,
+            requireVerified: false,
+            trustedExecutor: address(this),
+            conditions: new bytes[](0)
+        });
+
+        bytes memory signature = getConditionalOrderSignature({
+            co: co,
+            privateKey: signerPrivateKey,
+            domainSeparator: engine.DOMAIN_SEPARATOR()
+        });
+
+        engine.execute(co, signature);
+
+        assertEq(
+            engine.getConditionalOrderFeeInUSD(), sUSD.balanceOf(address(this))
+        );
+    }
 
     /// @custom:todo test when order committed results in error (exceeds leverage after fee taken by executor)
     /// @custom:todo test when order committed results in error (other edge cases)
