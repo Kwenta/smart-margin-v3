@@ -5,12 +5,11 @@ import {ConditionalOrderHashLib} from
     "src/libraries/ConditionalOrderHashLib.sol";
 import {EIP712} from "src/utils/EIP712.sol";
 import {ERC721Receivable} from "src/utils/ERC721Receivable.sol";
-import {IEngine} from "src/interfaces/IEngine.sol";
+import {IEngine, IPerpsMarketProxy} from "src/interfaces/IEngine.sol";
 import {IERC20} from "src/interfaces/tokens/IERC20.sol";
 import {IERC721} from "src/interfaces/tokens/IERC721.sol";
 import {Int128Lib} from "src/libraries/Int128Lib.sol";
 import {Int256Lib} from "src/libraries/Int256Lib.sol";
-import {IPerpsMarketProxy} from "src/interfaces/synthetix/IPerpsMarketProxy.sol";
 import {IPyth, PythStructs} from "src/interfaces/oracles/IPyth.sol";
 import {ISpotMarketProxy} from "src/interfaces/synthetix/ISpotMarketProxy.sol";
 import {Multicallable} from "src/utils/Multicallable.sol";
@@ -227,13 +226,17 @@ contract Engine is IEngine, Multicallable, EIP712, ERC721Receivable {
         int128 _sizeDelta,
         uint128 _settlementStrategyId,
         uint256 _acceptablePrice
-    ) external override {
+    )
+        external
+        override
+        returns (IPerpsMarketProxy.Data memory retOrder, uint256 fees)
+    {
         /// @dev only the account owner can withdraw collateral
         if (
             isAccountOwner(_accountId, msg.sender)
                 || isAccountDelegate(_accountId, msg.sender)
         ) {
-            _commitOrder({
+            (retOrder, fees) = _commitOrder({
                 _perpsMarketId: _perpsMarketId,
                 _accountId: _accountId,
                 _sizeDelta: _sizeDelta,
@@ -251,8 +254,8 @@ contract Engine is IEngine, Multicallable, EIP712, ERC721Receivable {
         int128 _sizeDelta,
         uint128 _settlementStrategyId,
         uint256 _acceptablePrice
-    ) internal {
-        (, uint256 fees) = PERPS_MARKET_PROXY.commitOrder(
+    ) internal returns (IPerpsMarketProxy.Data memory retOrder, uint256 fees) {
+        (retOrder, fees) = PERPS_MARKET_PROXY.commitOrder(
             IPerpsMarketProxy.OrderCommitmentRequest({
                 marketId: _perpsMarketId,
                 accountId: _accountId,

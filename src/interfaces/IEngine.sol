@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 pragma solidity 0.8.18;
 
+import {IPerpsMarketProxy} from "src/interfaces/synthetix/IPerpsMarketProxy.sol";
+
 /// @title Kwenta Smart Margin v3: Engine Interface
 /// @author JaredBorders (jaredborders@pm.me)
 interface IEngine {
@@ -128,13 +130,15 @@ interface IEngine {
     /// @param _sizeDelta the amount of the order to trade (short if negative, long if positive)
     /// @param _settlementStrategyId the id of the settlement strategy to use
     /// @param _acceptablePrice acceptable price set at submission. Compared against the fill price
+    /// @return retOrder the order committed
+    /// @return fees the fees paid for the order
     function commitOrder(
         uint128 _perpsMarketId,
         uint128 _accountId,
         int128 _sizeDelta,
         uint128 _settlementStrategyId,
         uint256 _acceptablePrice
-    ) external;
+    ) external returns (IPerpsMarketProxy.Data memory retOrder, uint256 fees);
 
     /*//////////////////////////////////////////////////////////////
                       CONDITIONAL ORDER MANAGEMENT
