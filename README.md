@@ -44,7 +44,7 @@ struct OrderDetails {
     // order market id.
     uint128 marketId;
     // order account id.
-        int128 accountId;
+    int128 accountId;
     // order size delta (of asset units expressed in decimal 18 digits). It can be positive or negative.
     int128 sizeDelta;
     // settlement strategy used for the order.
