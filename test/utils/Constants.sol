@@ -19,7 +19,7 @@ contract Constants {
 
     address internal constant DELEGATE_1 = address(0xd1);
     address internal constant DELEGATE_2 = address(0xd2);
-    address public constant DELEGATE_3 = address(0xd3);
+    address internal constant DELEGATE_3 = address(0xd3);
 
     uint128 internal constant SUSD_SPOT_MARKET_ID = 0;
     uint128 internal constant SBTC_SPOT_MARKET_ID = 1;

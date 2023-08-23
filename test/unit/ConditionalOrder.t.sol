@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 pragma solidity 0.8.18;
 
-import {Bootstrap} from "test/utils/Bootstrap.sol";
+import {Bootstrap, IPerpsMarketProxy} from "test/utils/Bootstrap.sol";
 import {ConditionalOrderSignature} from
     "test/utils/ConditionalOrderSignature.sol";
 import {IEngine} from "src/interfaces/IEngine.sol";
@@ -27,7 +27,7 @@ contract ConditionalOrderTest is
         bad_signerPrivateKey = 0x12341235;
         bad_signer = vm.addr(bad_signerPrivateKey);
 
-        sUSDHelper.mint(signer, AMOUNT);
+        synthMinter.mint_sUSD(signer, AMOUNT);
 
         vm.startPrank(signer);
         accountId = perpsMarketProxy.createAccount();
@@ -51,19 +51,7 @@ contract ConditionalOrderTest is
 }
 
 contract CanExecute is ConditionalOrderTest {
-    int64 constant MOCK_ETH_PRICE = 166_441_377_332;
-    uint64 constant MOCK_ETH_CONF = 136_840_497;
-    int32 constant MOCK_ETH_EXPO = -8; // 166441377332 == 1664.41377332 USD
-
-    function test_canExecute_fee() public {
-        mock_pyth_getPrice({
-            pyth: address(pyth),
-            id: pythPriceFeedIdEthUsd,
-            price: MOCK_ETH_PRICE,
-            conf: MOCK_ETH_CONF,
-            expo: MOCK_ETH_EXPO
-        });
-
+    function test_canExecute() public {
         IEngine.OrderDetails memory orderDetails = IEngine.OrderDetails({
             marketId: SETH_PERPS_MARKET_ID,
             accountId: accountId,
@@ -299,11 +287,17 @@ contract Execute is ConditionalOrderTest {
             domainSeparator: engine.DOMAIN_SEPARATOR()
         });
 
-        engine.execute(co, signature);
+        (IPerpsMarketProxy.Data memory retOrder, uint256 fees) =
+            engine.execute(co, signature);
 
-        assertEq(
-            engine.getConditionalOrderFeeInUSD(), sUSD.balanceOf(address(this))
-        );
+        assertTrue(retOrder.settlementTime != 0);
+        assertTrue(retOrder.request.marketId == SETH_PERPS_MARKET_ID);
+        assertTrue(retOrder.request.accountId == accountId);
+        assertTrue(retOrder.request.sizeDelta == 1 ether);
+        assertTrue(retOrder.request.settlementStrategyId == 0);
+        assertTrue(retOrder.request.acceptablePrice == type(uint256).max);
+        assertTrue(retOrder.request.trackingCode == TRACKING_CODE);
+        assertTrue(retOrder.request.referrer == REFERRER);
     }
 
     /// @custom:todo test when order committed results in error (exceeds leverage after fee taken by executor)
@@ -312,8 +306,49 @@ contract Execute is ConditionalOrderTest {
 }
 
 contract Fee is ConditionalOrderTest {
-/// @custom:todo test fee is paid
-/// @custom:todo test fee is not paid
-/// @custom:todo test fee is not paid because no sUSD
-/// @custom:todo test fee paid results in error (exceeds leverage after fee taken by executor)
+    int64 constant MOCK_ETH_PRICE = 166_441_377_332;
+    uint64 constant MOCK_ETH_CONF = 136_840_497;
+    int32 constant MOCK_ETH_EXPO = -8; // 166441377332 == 1664.41377332 USD
+
+    function test_fee_imposed() public {
+        mock_pyth_getPrice({
+            pyth: address(pyth),
+            id: pythPriceFeedIdEthUsd,
+            price: MOCK_ETH_PRICE,
+            conf: MOCK_ETH_CONF,
+            expo: MOCK_ETH_EXPO
+        });
+
+        IEngine.OrderDetails memory orderDetails = IEngine.OrderDetails({
+            marketId: SETH_PERPS_MARKET_ID,
+            accountId: accountId,
+            sizeDelta: 1 ether,
+            settlementStrategyId: 0,
+            acceptablePrice: type(uint256).max
+        });
+
+        IEngine.ConditionalOrder memory co = IEngine.ConditionalOrder({
+            orderDetails: orderDetails,
+            signer: signer,
+            nonce: 0,
+            requireVerified: false,
+            trustedExecutor: address(this),
+            conditions: new bytes[](0)
+        });
+
+        bytes memory signature = getConditionalOrderSignature({
+            co: co,
+            privateKey: signerPrivateKey,
+            domainSeparator: engine.DOMAIN_SEPARATOR()
+        });
+
+        engine.execute(co, signature);
+
+        assertEq(
+            engine.getConditionalOrderFeeInUSD(), sUSD.balanceOf(address(this))
+        );
+    }
+    /// @custom:todo test fee is not paid
+    /// @custom:todo test fee is not paid because no sUSD
+    /// @custom:todo test fee paid results in error (exceeds leverage after fee taken by executor)
 }
