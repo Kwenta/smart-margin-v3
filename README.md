@@ -89,9 +89,9 @@ struct ConditionalOrder {
 5. If `ConditionalOrder.requireVerified` is set to `false`, then the `ConditionalOrder.conditions` will not be verified on-chain prior to execution (*not* gas-intensive; cheap)
 6. If `ConditionalOrder.requireVerified` is set to `false`, then the `ConditionalOrder.trustedExecutor` must be the `msg.sender` calling the `Engine.execute` function
 7. Regardless of whether `ConditionalOrder.requireVerified` is set to `true` or `false`, the `ConditionalOrder` will only be executed if: 
-  1. The `ConditionalOrder.nonce` is valid (i.e. the `ConditionalOrder` has not been executed before)
-  2. The `ConditionalOrder.signer` is valid (i.e. the `signer` is the owner or delegate of the account identified by the `ConditionalOrder.accountId`)
-  3. The provided `ConditionalOrder` signature is valid (i.e. the `ConditionalOrder` was signed by the `ConditionalOrder.signer`)
+ 1. The `ConditionalOrder.nonce` is valid (i.e. the `ConditionalOrder` has not been executed before)
+ 2. The `ConditionalOrder.signer` is valid (i.e. the `signer` is the owner or delegate of the account identified by the `ConditionalOrder.accountId`)
+ 3. The provided `ConditionalOrder` signature is valid (i.e. the `ConditionalOrder` was signed by the `ConditionalOrder.signer`)
 8. If the above conditions are met, then the `ConditionalOrder` will be executed and the `ConditionalOrder.nonce` will be "spent"
 
 #### On-Chain Fees
