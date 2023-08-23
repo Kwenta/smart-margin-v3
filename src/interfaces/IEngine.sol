@@ -147,10 +147,16 @@ interface IEngine {
     /// @notice execute a conditional order
     /// @param _co the conditional order
     /// @param _signature the signature of the conditional order
+    /// @return retOrder the order committed
+    /// @return fees the fees paid for the order
     function execute(ConditionalOrder calldata _co, bytes calldata _signature)
-        external;
+        external
+        returns (IPerpsMarketProxy.Data memory retOrder, uint256 fees);
 
-    /// @notice checks if the order can be executed
+    /// @notice checks if the order can be executed based on defined conditions
+    /// @dev this function does NOT check if the order can be executed based on the account's balance
+    /// (i.e. does not check if enough USD is available to pay for the order fee nor does it check
+    /// if enough collateral is available to cover the order)
     /// @param _co the conditional order
     /// @param _signature the signature of the conditional order
     /// @return true if the order can be executed based on defined conditions, false otherwise

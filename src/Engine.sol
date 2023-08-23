@@ -37,8 +37,11 @@ contract Engine is IEngine, Multicallable, EIP712, ERC721Receivable {
     address internal constant REFERRER =
         0xF510a2Ff7e9DD7e18629137adA4eb56B9c13E885;
 
+    /// @notice "0" synthMarketId represents sUSD in Synthetix v3
+    uint128 internal constant USD_SYNTH_ID = 0;
+
     /// @notice the gas cost associated with executing a conditional order
-    uint256 internal constant CONDITIONAL_ORDER_GAS_COST = 466_000 * 20 gwei;
+    uint256 internal constant CONDITIONAL_ORDER_GAS_COST = 400_000 * 20 gwei;
 
     /// @notice pyth oracle contract used to get asset prices
     IPyth internal immutable ORACLE;
@@ -219,8 +222,7 @@ contract Engine is IEngine, Multicallable, EIP712, ERC721Receivable {
         view
         returns (address synthAddress)
     {
-        /// @dev "0" synthMarketId represents sUSD in Synthetix v3
-        synthAddress = _synthMarketId == 0
+        synthAddress = _synthMarketId == USD_SYNTH_ID
             ? address(SUSD)
             : SPOT_MARKET_PROXY.getSynth(_synthMarketId);
     }
@@ -288,6 +290,7 @@ contract Engine is IEngine, Multicallable, EIP712, ERC721Receivable {
     function execute(ConditionalOrder calldata _co, bytes calldata _signature)
         external
         override
+        returns (IPerpsMarketProxy.Data memory retOrder, uint256 fees)
     {
         if (!canExecute(_co, _signature)) revert CannotExecuteOrder();
 
@@ -299,11 +302,11 @@ contract Engine is IEngine, Multicallable, EIP712, ERC721Receivable {
             _to: _co.requireVerified ? msg.sender : _co.trustedExecutor,
             _synth: SUSD,
             _accountId: _co.orderDetails.accountId,
-            _synthMarketId: 0,
+            _synthMarketId: USD_SYNTH_ID,
             _amount: -int256(fee)
         });
 
-        _commitOrder(
+        (retOrder, fees) = _commitOrder(
             _co.orderDetails.marketId,
             _co.orderDetails.accountId,
             _co.orderDetails.sizeDelta,
