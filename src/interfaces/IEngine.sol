@@ -20,16 +20,17 @@ interface IEngine {
         uint128 totalTrades;
     }
 
+    /// @notice order details used to create an order on a perps market within a conditional order
     struct OrderDetails {
-        /// @dev Order market id.
+        // order market id.
         uint128 marketId;
-        /// @dev Order account id.
+        // order account id.
         uint128 accountId;
-        /// @dev Order size delta (of asset units expressed in decimal 18 digits). It can be positive or negative.
+        // order size delta (of asset units expressed in decimal 18 digits). It can be positive or negative.
         int128 sizeDelta;
-        /// @dev Settlement strategy used for the order.
+        // settlement strategy used for the order.
         uint128 settlementStrategyId;
-        /// @dev Acceptable price set at submission.
+        // acceptable price set at submission.
         uint256 acceptablePrice;
     }
 
