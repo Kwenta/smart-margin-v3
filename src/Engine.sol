@@ -299,7 +299,7 @@ contract Engine is IEngine, Multicallable, EIP712, ERC721Receivable {
         uint256 fee = getConditionalOrderFeeInUSD();
 
         _withdrawCollateral({
-            _to: _co.requireVerified ? msg.sender : _co.trustedExecutor,
+            _to: msg.sender,
             _synth: SUSD,
             _accountId: _co.orderDetails.accountId,
             _synthMarketId: USD_SYNTH_ID,
