@@ -8,17 +8,8 @@ contract EngineExposed is Engine {
         address _perpsMarketProxy,
         address _spotMarketProxy,
         address _sUSDProxy,
-        address _oracle,
-        bytes32 _pythPriceFeedIdEthUsd
-    )
-        Engine(
-            _perpsMarketProxy,
-            _spotMarketProxy,
-            _sUSDProxy,
-            _oracle,
-            _pythPriceFeedIdEthUsd
-        )
-    {}
+        address _oracle
+    ) Engine(_perpsMarketProxy, _spotMarketProxy, _sUSDProxy, _oracle) {}
 
     function updateAccountStats(uint128 accountId, uint256 fees, uint128 volume)
         public

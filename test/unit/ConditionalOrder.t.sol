@@ -251,19 +251,7 @@ contract VerifyConditions is ConditionalOrderTest {
 }
 
 contract Execute is ConditionalOrderTest {
-    int64 constant MOCK_ETH_PRICE = 166_441_377_332;
-    uint64 constant MOCK_ETH_CONF = 136_840_497;
-    int32 constant MOCK_ETH_EXPO = -8; // 166441377332 == 1664.41377332 USD
-
     function test_execute_order_committed() public {
-        mock_pyth_getPrice({
-            pyth: address(pyth),
-            id: pythPriceFeedIdEthUsd,
-            price: MOCK_ETH_PRICE,
-            conf: MOCK_ETH_CONF,
-            expo: MOCK_ETH_EXPO
-        });
-
         IEngine.OrderDetails memory orderDetails = IEngine.OrderDetails({
             marketId: SETH_PERPS_MARKET_ID,
             accountId: accountId,
@@ -303,22 +291,11 @@ contract Execute is ConditionalOrderTest {
     /// @custom:todo test when order committed results in error (exceeds leverage after fee taken by executor)
     /// @custom:todo test when order committed results in error (other edge cases)
     /// @custom:todo test error CannotExecuteOrder()
+    /// @custom:todo test multi conditional orders trigger at once
 }
 
 contract Fee is ConditionalOrderTest {
-    int64 constant MOCK_ETH_PRICE = 166_441_377_332;
-    uint64 constant MOCK_ETH_CONF = 136_840_497;
-    int32 constant MOCK_ETH_EXPO = -8; // 166441377332 == 1664.41377332 USD
-
     function test_fee_imposed() public {
-        mock_pyth_getPrice({
-            pyth: address(pyth),
-            id: pythPriceFeedIdEthUsd,
-            price: MOCK_ETH_PRICE,
-            conf: MOCK_ETH_CONF,
-            expo: MOCK_ETH_EXPO
-        });
-
         IEngine.OrderDetails memory orderDetails = IEngine.OrderDetails({
             marketId: SETH_PERPS_MARKET_ID,
             accountId: accountId,
@@ -342,11 +319,9 @@ contract Fee is ConditionalOrderTest {
             domainSeparator: engine.DOMAIN_SEPARATOR()
         });
 
-        engine.execute(co, signature);
+        (, uint256 fees) = engine.execute(co, signature);
 
-        assertEq(
-            engine.getConditionalOrderFeeInUSD(), sUSD.balanceOf(address(this))
-        );
+        assertEq(fees, sUSD.balanceOf(address(this)));
     }
     /// @custom:todo test fee is not paid
     /// @custom:todo test fee is not paid because no sUSD

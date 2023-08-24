@@ -25,7 +25,6 @@ contract Bootstrap is Test, Constants, Conditions {
     IERC20 public sUSD;
     IERC20 public sBTC;
     IPyth public pyth;
-    bytes32 public pythPriceFeedIdEthUsd;
 
     SynthMinter public synthMinter;
     uint128 public accountId;
@@ -38,8 +37,7 @@ contract Bootstrap is Test, Constants, Conditions {
             address _perpesMarketProxyAddress,
             address _spotMarketProxyAddress,
             address _sUSDAddress,
-            address _pythAddress,
-            bytes32 _pythPriceFeedIdEthUsd
+            address _pythAddress
         ) = bootstrap.init();
 
         engine = Engine(_engineAddress);
@@ -48,7 +46,6 @@ contract Bootstrap is Test, Constants, Conditions {
         spotMarketProxy = ISpotMarketProxy(_spotMarketProxyAddress);
         sUSD = IERC20(_sUSDAddress);
         pyth = IPyth(_pythAddress);
-        pythPriceFeedIdEthUsd = _pythPriceFeedIdEthUsd;
         synthMinter = new SynthMinter(_sUSDAddress, _spotMarketProxyAddress);
         sBTC = synthMinter.sBTC();
 
@@ -72,8 +69,7 @@ contract Bootstrap is Test, Constants, Conditions {
             address _perpesMarketProxyAddress,
             address _spotMarketProxyAddress,
             address _sUSDAddress,
-            address _pythAddress,
-            bytes32 _pythPriceFeedIdEthUsd
+            address _pythAddress
         ) = bootstrap.init();
 
         engine = Engine(_engineAddress);
@@ -82,7 +78,6 @@ contract Bootstrap is Test, Constants, Conditions {
         spotMarketProxy = ISpotMarketProxy(_spotMarketProxyAddress);
         sUSD = IERC20(_sUSDAddress);
         pyth = IPyth(_pythAddress);
-        pythPriceFeedIdEthUsd = _pythPriceFeedIdEthUsd;
         synthMinter = new SynthMinter(_sUSDAddress, _spotMarketProxyAddress);
         sBTC = synthMinter.sBTC();
 
@@ -102,22 +97,20 @@ contract Bootstrap is Test, Constants, Conditions {
 contract BootstrapOptimism is Setup, OptimismParameters {
     function init()
         public
-        returns (address, address, address, address, address, address, bytes32)
+        returns (address, address, address, address, address, address)
     {
         Engine engine = Setup.deploySystem({
             perpsMarketProxy: PERPS_MARKET_PROXY,
             spotMarketProxy: SPOT_MARKET_PROXY,
             sUSDProxy: USD_PROXY,
-            oracle: PYTH,
-            pythPriceFeedIdEthUsd: PYTH_ETH_USD_ID
+            oracle: PYTH
         });
 
         EngineExposed engineExposed = new EngineExposed({
             _perpsMarketProxy: PERPS_MARKET_PROXY,
             _spotMarketProxy: SPOT_MARKET_PROXY,
             _sUSDProxy: USD_PROXY,
-            _oracle: PYTH,
-            _pythPriceFeedIdEthUsd: PYTH_ETH_USD_ID
+            _oracle: PYTH
         });
 
         return (
@@ -126,8 +119,7 @@ contract BootstrapOptimism is Setup, OptimismParameters {
             PERPS_MARKET_PROXY,
             SPOT_MARKET_PROXY,
             USD_PROXY,
-            PYTH,
-            PYTH_ETH_USD_ID
+            PYTH
         );
     }
 }
@@ -135,22 +127,20 @@ contract BootstrapOptimism is Setup, OptimismParameters {
 contract BootstrapOptimismGoerli is Setup, OptimismGoerliParameters {
     function init()
         public
-        returns (address, address, address, address, address, address, bytes32)
+        returns (address, address, address, address, address, address)
     {
         Engine engine = Setup.deploySystem({
             perpsMarketProxy: PERPS_MARKET_PROXY,
             spotMarketProxy: SPOT_MARKET_PROXY,
             sUSDProxy: USD_PROXY,
-            oracle: PYTH,
-            pythPriceFeedIdEthUsd: PYTH_ETH_USD_ID
+            oracle: PYTH
         });
 
         EngineExposed engineExposed = new EngineExposed({
             _perpsMarketProxy: PERPS_MARKET_PROXY,
             _spotMarketProxy: SPOT_MARKET_PROXY,
             _sUSDProxy: USD_PROXY,
-            _oracle: PYTH,
-            _pythPriceFeedIdEthUsd: PYTH_ETH_USD_ID
+            _oracle: PYTH
         });
 
         return (
@@ -159,8 +149,7 @@ contract BootstrapOptimismGoerli is Setup, OptimismGoerliParameters {
             PERPS_MARKET_PROXY,
             SPOT_MARKET_PROXY,
             USD_PROXY,
-            PYTH,
-            PYTH_ETH_USD_ID
+            PYTH
         );
     }
 }
