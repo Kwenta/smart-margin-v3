@@ -166,14 +166,6 @@ interface IEngine {
         bytes calldata _signature
     ) external returns (bool);
 
-    /// @notice get the fee imposed for executing a conditional order in USD
-    /// @dev relies on the current price of ETH provided by the pyth oracle
-    /// @return fee the fee imposed in USD
-    function getConditionalOrderFeeInUSD()
-        external
-        view
-        returns (uint256 fee);
-
     /// @notice verify the conditional order signer is the owner or delegate of the account
     /// @param _co the conditional order
     /// @return true if the signer is the owner or delegate of the account
@@ -197,4 +189,50 @@ interface IEngine {
     function verifyConditions(ConditionalOrder calldata _co)
         external
         returns (bool);
+
+    /*//////////////////////////////////////////////////////////////
+                               CONDITIONS
+    //////////////////////////////////////////////////////////////*/
+
+    /// @notice determine if current timestamp is after the given timestamp
+    /// @param _timestamp the timestamp to compare against
+    /// @return true if current timestamp is after the given timestamp, false otherwise
+    function isTimestampAfter(uint256 _timestamp)
+        external
+        view
+        returns (bool);
+
+    /// @notice determine if current timestamp is before the given timestamp
+    /// @param _timestamp the timestamp to compare against
+    /// @return true if current timestamp is before the given timestamp, false otherwise
+    function isTimestampBefore(uint256 _timestamp)
+        external
+        view
+        returns (bool);
+
+    /// @notice determine if the current price of an asset is above a given price
+    /// @dev assets price is determined by the pyth oracle
+    /// @param _assetId id of an asset to check the price of
+    /// @param _price the price to compare against
+    /// @return true if the current price of the asset is above the given price, false otherwise
+    function isPriceAbove(bytes32 _assetId, int64 _price)
+        external
+        view
+        returns (bool);
+
+    /// @notice determine if the current price of an asset is below a given price
+    /// @dev assets price is determined by the pyth oracle
+    /// @param _assetId id of an asset to check the price of
+    /// @param _price the price to compare against
+    /// @return true if the current price of the asset is below the given price, false otherwise
+    function isPriceBelow(bytes32 _assetId, int64 _price)
+        external
+        view
+        returns (bool);
+
+    /// @notice can market accept non close-only orders (i.e. is the market open)
+    /// @dev if maxMarketSize to 0, the market will be in a close-only state
+    /// @param _marketId the id of the market to check
+    /// @return true if the market is open, false otherwise
+    function isMarketOpen(uint128 _marketId) external view returns (bool);
 }

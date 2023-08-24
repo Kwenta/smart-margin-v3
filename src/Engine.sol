@@ -5,11 +5,10 @@ import {ConditionalOrderHashLib} from
     "src/libraries/ConditionalOrderHashLib.sol";
 import {EIP712} from "src/utils/EIP712.sol";
 import {ERC721Receivable} from "src/utils/ERC721Receivable.sol";
+import {FixedPointMathLib} from "src/libraries/FixedPointMathLib.sol";
 import {IEngine, IPerpsMarketProxy} from "src/interfaces/IEngine.sol";
 import {IERC20} from "src/interfaces/tokens/IERC20.sol";
 import {IERC721} from "src/interfaces/tokens/IERC721.sol";
-import {Int128Lib} from "src/libraries/Int128Lib.sol";
-import {Int256Lib} from "src/libraries/Int256Lib.sol";
 import {IPyth, PythStructs} from "src/interfaces/oracles/IPyth.sol";
 import {ISpotMarketProxy} from "src/interfaces/synthetix/ISpotMarketProxy.sol";
 import {Multicallable} from "src/utils/Multicallable.sol";
@@ -19,11 +18,16 @@ import {SignatureCheckerLib} from "src/libraries/SignatureCheckerLib.sol";
 /// @notice Responsible for interacting with Synthetix v3 perps markets
 /// @author JaredBorders (jaredborders@pm.me)
 contract Engine is IEngine, Multicallable, EIP712, ERC721Receivable {
-    using Int128Lib for int128;
-    using Int256Lib for int256;
+    using FixedPointMathLib for int128;
+    using FixedPointMathLib for int256;
+    using FixedPointMathLib for uint256;
     using SignatureCheckerLib for bytes;
     using ConditionalOrderHashLib for OrderDetails;
     using ConditionalOrderHashLib for ConditionalOrder;
+
+    /*//////////////////////////////////////////////////////////////
+                               CONSTANTS
+    //////////////////////////////////////////////////////////////*/
 
     /// @notice tracking code submitted with trades to identify the source of the trade
     bytes32 internal constant TRACKING_CODE = "KWENTA";
@@ -40,14 +44,15 @@ contract Engine is IEngine, Multicallable, EIP712, ERC721Receivable {
     /// @notice "0" synthMarketId represents sUSD in Synthetix v3
     uint128 internal constant USD_SYNTH_ID = 0;
 
-    /// @notice the gas cost associated with executing a conditional order
-    uint256 internal constant CONDITIONAL_ORDER_GAS_COST = 400_000 * 20 gwei;
+    /// @notice max fee that can be charged for a conditional order execution
+    uint256 public constant FEE_CAP = 50 ether;
+
+    /*//////////////////////////////////////////////////////////////
+                               IMMUTABLES
+    //////////////////////////////////////////////////////////////*/
 
     /// @notice pyth oracle contract used to get asset prices
     IPyth internal immutable ORACLE;
-
-    /// @notice pyth price feed id for ETH/USD
-    bytes32 immutable PYTH_ETH_USD_ID;
 
     /// @notice Synthetix v3 perps market proxy contract
     IPerpsMarketProxy internal immutable PERPS_MARKET_PROXY;
@@ -57,6 +62,10 @@ contract Engine is IEngine, Multicallable, EIP712, ERC721Receivable {
 
     /// @notice Synthetix v3 sUSD contract
     IERC20 internal immutable SUSD;
+
+    /*//////////////////////////////////////////////////////////////
+                                 STATE
+    //////////////////////////////////////////////////////////////*/
 
     /// @notice mapping that stores stats for an account
     mapping(uint128 accountId => AccountStats) internal accountStats;
@@ -76,14 +85,12 @@ contract Engine is IEngine, Multicallable, EIP712, ERC721Receivable {
         address _perpsMarketProxy,
         address _spotMarketProxy,
         address _sUSDProxy,
-        address _oracle,
-        bytes32 _pythPriceFeedIdEthUsd
+        address _oracle
     ) {
         PERPS_MARKET_PROXY = IPerpsMarketProxy(_perpsMarketProxy);
         SPOT_MARKET_PROXY = ISpotMarketProxy(_spotMarketProxy);
         SUSD = IERC20(_sUSDProxy);
         ORACLE = IPyth(_oracle);
-        PYTH_ETH_USD_ID = _pythPriceFeedIdEthUsd;
     }
 
     /*//////////////////////////////////////////////////////////////
@@ -205,7 +212,7 @@ contract Engine is IEngine, Multicallable, EIP712, ERC721Receivable {
         PERPS_MARKET_PROXY.modifyCollateral(_accountId, _synthMarketId, _amount);
 
         /// @dev given the amount is negative, simply casting (int -> uint) is unsafe, thus we use .abs()
-        _synth.transfer(_to, _amount.abs());
+        _synth.transfer(_to, _amount.abs256());
     }
 
     /// @notice query and return the address of the synth contract
@@ -273,7 +280,7 @@ contract Engine is IEngine, Multicallable, EIP712, ERC721Receivable {
             })
         );
 
-        _updateAccountStats(_accountId, fees, _sizeDelta.abs());
+        _updateAccountStats(_accountId, fees, _sizeDelta.abs128());
     }
 
     /*//////////////////////////////////////////////////////////////
@@ -290,14 +297,21 @@ contract Engine is IEngine, Multicallable, EIP712, ERC721Receivable {
 
         executedOrders[_co.nonce] = true;
 
-        uint256 fee = getConditionalOrderFeeInUSD();
+        (uint256 orderFees,) = PERPS_MARKET_PROXY.computeOrderFees({
+            marketId: _co.orderDetails.marketId,
+            sizeDelta: _co.orderDetails.sizeDelta
+        });
+
+        uint256 conditionalOrderFee = orderFees.divWad(2);
+        conditionalOrderFee =
+            conditionalOrderFee < FEE_CAP ? conditionalOrderFee : FEE_CAP;
 
         _withdrawCollateral({
             _to: msg.sender,
             _synth: SUSD,
             _accountId: _co.orderDetails.accountId,
             _synthMarketId: USD_SYNTH_ID,
-            _amount: -int256(fee)
+            _amount: -int256(conditionalOrderFee)
         });
 
         (retOrder, fees) = _commitOrder(
@@ -307,6 +321,8 @@ contract Engine is IEngine, Multicallable, EIP712, ERC721Receivable {
             _co.orderDetails.settlementStrategyId,
             _co.orderDetails.acceptablePrice
         );
+
+        fees += conditionalOrderFee;
     }
 
     /// @inheritdoc IEngine
@@ -335,23 +351,6 @@ contract Engine is IEngine, Multicallable, EIP712, ERC721Receivable {
         }
 
         return true;
-    }
-
-    /// @inheritdoc IEngine
-    function getConditionalOrderFeeInUSD()
-        public
-        view
-        override
-        returns (uint256 fee)
-    {
-        /// @dev reverts if the price has not been updated
-        /// within the last `getValidTimePeriod()` seconds
-        PythStructs.Price memory priceData = ORACLE.getPrice(PYTH_ETH_USD_ID);
-
-        uint256 ethPriceWei =
-            uint64(priceData.price) * 10 ** uint32(18 + priceData.expo);
-
-        fee = (CONDITIONAL_ORDER_GAS_COST * ethPriceWei) / 1e18;
     }
 
     /*//////////////////////////////////////////////////////////////
@@ -407,33 +406,62 @@ contract Engine is IEngine, Multicallable, EIP712, ERC721Receivable {
                                CONDITIONS
     //////////////////////////////////////////////////////////////*/
 
-    /// @custom:todo add documentation
-    function isTimestampAfter(uint256 _timestamp) public view returns (bool) {
+    /// @inheritdoc IEngine
+    function isTimestampAfter(uint256 _timestamp)
+        public
+        view
+        override
+        returns (bool)
+    {
         return block.timestamp > _timestamp;
     }
 
-    /// @custom:todo add documentation
-    function isTimestampBefore(uint256 _timestamp) public view returns (bool) {
+    /// @inheritdoc IEngine
+    function isTimestampBefore(uint256 _timestamp)
+        public
+        view
+        override
+        returns (bool)
+    {
         return block.timestamp < _timestamp;
     }
 
-    /// @custom:todo add documentation
-    function isPriceAbove(uint256 price) public pure returns (bool) {
-        return price == type(uint256).max ? false : true;
+    /// @inheritdoc IEngine
+    function isPriceAbove(bytes32 _assetId, int64 _price)
+        public
+        view
+        override
+        returns (bool)
+    {
+        /// @dev reverts if the price has not been updated
+        /// within the last `getValidTimePeriod()` seconds
+        PythStructs.Price memory priceData = ORACLE.getPrice(_assetId);
+
+        return _price > priceData.price;
     }
 
-    /// @custom:todo add documentation
-    function isPriceBelow(uint256 price) public pure returns (bool) {
-        return price == 0 ? false : true;
+    /// @inheritdoc IEngine
+    function isPriceBelow(bytes32 _assetId, int64 _price)
+        public
+        view
+        override
+        returns (bool)
+    {
+        /// @dev reverts if the price has not been updated
+        /// within the last `getValidTimePeriod()` seconds
+        PythStructs.Price memory priceData = ORACLE.getPrice(_assetId);
+
+        return _price < priceData.price;
     }
 
-    /// @custom:todo add documentation
-    function isMarketPaused(address market) public pure returns (bool) {
-        return market == address(0) ? true : false;
-    }
-
-    /// @custom:todo add documentation
-    function isMarketClosed(address market) public pure returns (bool) {
-        return market == address(0) ? true : false;
+    /// @inheritdoc IEngine
+    function isMarketOpen(uint128 _marketId)
+        public
+        view
+        override
+        returns (bool)
+    {
+        return
+            PERPS_MARKET_PROXY.getMaxMarketSize(_marketId) == 0 ? true : false;
     }
 }

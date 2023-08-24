@@ -107,6 +107,17 @@ interface IPerpsMarketProxy {
         int128 sizeDelta
     ) external view returns (uint256 requiredMargin);
 
+    /// @notice Simulates what the order fee would be for the given market with the specified size.
+    /// @dev Note that this does not include the settlement reward fee, which is based on the strategy type used
+    /// @param marketId id of the market.
+    /// @param sizeDelta size of position.
+    /// @return orderFees incurred fees.
+    /// @return fillPrice price at which the order would be filled.
+    function computeOrderFees(uint128 marketId, int128 sizeDelta)
+        external
+        view
+        returns (uint256 orderFees, uint256 fillPrice);
+
     /*//////////////////////////////////////////////////////////////
                           PERPS ACCOUNT MODULE
     //////////////////////////////////////////////////////////////*/
@@ -236,4 +247,12 @@ interface IPerpsMarketProxy {
         external
         view
         returns (MarketSummary memory summary);
+
+    /// @notice Gets the max size of an specific market.
+    /// @param marketId id of the market.
+    /// @return maxMarketSize the max market size in market asset units.
+    function getMaxMarketSize(uint128 marketId)
+        external
+        view
+        returns (uint256 maxMarketSize);
 }
