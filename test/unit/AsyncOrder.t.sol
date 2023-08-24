@@ -33,6 +33,7 @@ contract CommitOrder is AsyncOrderTest {
 
         vm.stopPrank();
 
+        // retOrder
         assertTrue(retOrder.settlementTime != 0);
         assertTrue(retOrder.request.marketId == SETH_PERPS_MARKET_ID);
         assertTrue(retOrder.request.accountId == accountId);
@@ -41,6 +42,9 @@ contract CommitOrder is AsyncOrderTest {
         assertTrue(retOrder.request.acceptablePrice == type(uint256).max);
         assertTrue(retOrder.request.trackingCode == TRACKING_CODE);
         assertTrue(retOrder.request.referrer == REFERRER);
+
+        // fees
+        assertTrue(fees != 0);
     }
 
     /// @cutsoom:todo test commitOrder: Market that does not exist

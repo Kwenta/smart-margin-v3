@@ -2,7 +2,7 @@
 pragma solidity 0.8.18;
 
 contract Constants {
-    uint256 internal constant GOERLI_BLOCK_NUMBER = 13_076_019;
+    uint256 internal constant GOERLI_BLOCK_NUMBER = 13_737_929;
 
     address internal constant OWNER = address(0x01);
     bytes32 internal constant TRACKING_CODE = "KWENTA";
