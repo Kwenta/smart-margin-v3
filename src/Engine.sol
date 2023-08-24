@@ -94,12 +94,6 @@ contract Engine is IEngine, Multicallable, EIP712, ERC721Receivable {
     function createAccount() external override returns (uint128 accountId) {
         accountId = PERPS_MARKET_PROXY.createAccount();
 
-        PERPS_MARKET_PROXY.grantPermission({
-            accountId: accountId,
-            permission: ADMIN_PERMISSION,
-            user: address(this)
-        });
-
         IERC721 accountNftToken =
             IERC721(PERPS_MARKET_PROXY.getAccountTokenAddress());
         accountNftToken.safeTransferFrom(address(this), msg.sender, accountId);
