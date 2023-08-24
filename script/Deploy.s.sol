@@ -13,15 +13,13 @@ contract Setup is Script {
         address perpsMarketProxy,
         address spotMarketProxy,
         address sUSDProxy,
-        address oracle,
-        bytes32 pythPriceFeedIdEthUsd
+        address oracle
     ) public returns (Engine engine) {
         engine = new Engine({
             _perpsMarketProxy: perpsMarketProxy,
             _spotMarketProxy: spotMarketProxy,
             _sUSDProxy: sUSDProxy,
-            _oracle: oracle,
-            _pythPriceFeedIdEthUsd: pythPriceFeedIdEthUsd
+            _oracle: oracle
         });
     }
 }
@@ -38,8 +36,7 @@ contract DeployOptimism is Setup, OptimismParameters {
             perpsMarketProxy: PERPS_MARKET_PROXY,
             spotMarketProxy: SPOT_MARKET_PROXY,
             sUSDProxy: USD_PROXY,
-            oracle: PYTH,
-            pythPriceFeedIdEthUsd: PYTH_ETH_USD_ID
+            oracle: PYTH
         });
 
         vm.stopBroadcast();
@@ -58,8 +55,7 @@ contract DeployOptimismGoerli is Setup, OptimismGoerliParameters {
             perpsMarketProxy: PERPS_MARKET_PROXY,
             spotMarketProxy: SPOT_MARKET_PROXY,
             sUSDProxy: USD_PROXY,
-            oracle: PYTH,
-            pythPriceFeedIdEthUsd: PYTH_ETH_USD_ID
+            oracle: PYTH
         });
 
         vm.stopBroadcast();

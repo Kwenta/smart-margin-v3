@@ -12,7 +12,4 @@ contract OptimismGoerliParameters {
         0xe487Ad4291019b33e2230F8E2FB1fb6490325260;
 
     address public constant PYTH = 0xff1a0f4744e8582DF1aE09D5611b887B6a12925C;
-
-    bytes32 public constant PYTH_ETH_USD_ID =
-        0xca80ba6dc32e08d06f1aa886011eed1d77c77be9eb761cc10d72b7d0a2fd57a6;
 }
