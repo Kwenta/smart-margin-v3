@@ -20,7 +20,6 @@ import {SignatureCheckerLib} from "src/libraries/SignatureCheckerLib.sol";
 contract Engine is IEngine, Multicallable, EIP712, ERC721Receivable {
     using FixedPointMathLib for int128;
     using FixedPointMathLib for int256;
-    using FixedPointMathLib for uint256;
     using SignatureCheckerLib for bytes;
     using ConditionalOrderHashLib for OrderDetails;
     using ConditionalOrderHashLib for ConditionalOrder;
@@ -302,7 +301,7 @@ contract Engine is IEngine, Multicallable, EIP712, ERC721Receivable {
             sizeDelta: _co.orderDetails.sizeDelta
         });
 
-        uint256 conditionalOrderFee = orderFees.divWad(2);
+        uint256 conditionalOrderFee = orderFees / 2;
         conditionalOrderFee =
             conditionalOrderFee < FEE_CAP ? conditionalOrderFee : FEE_CAP;
 
