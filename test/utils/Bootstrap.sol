@@ -2,6 +2,7 @@
 pragma solidity 0.8.18;
 
 import {Conditions} from "test/utils/Conditions.sol";
+import {console2} from "lib/forge-std/src/console2.sol";
 import {Constants} from "test/utils/Constants.sol";
 import {EngineExposed} from "test/utils/exposed/EngineExposed.sol";
 import {
@@ -14,10 +15,13 @@ import {IERC20} from "src/interfaces/tokens/IERC20.sol";
 import {IPerpsMarketProxy} from "src/interfaces/synthetix/IPerpsMarketProxy.sol";
 import {ISpotMarketProxy} from "src/interfaces/synthetix/ISpotMarketProxy.sol";
 import {IPyth} from "src/interfaces/oracles/IPyth.sol";
+import {SynthetixV3Errors} from "test/utils/errors/SynthetixV3Errors.sol";
 import {SynthMinter} from "test/utils/SynthMinter.sol";
 import {Test} from "lib/forge-std/src/Test.sol";
 
-contract Bootstrap is Test, Constants, Conditions {
+contract Bootstrap is Test, Constants, Conditions, SynthetixV3Errors {
+    using console2 for *;
+
     Engine public engine;
     EngineExposed public engineExposed;
     IPerpsMarketProxy public perpsMarketProxy;
