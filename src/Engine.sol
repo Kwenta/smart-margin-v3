@@ -44,7 +44,19 @@ contract Engine is IEngine, Multicallable, EIP712, ERC721Receivable {
     uint128 internal constant USD_SYNTH_ID = 0;
 
     /// @notice max fee that can be charged for a conditional order execution
-    uint256 public constant FEE_CAP = 50 ether;
+    /// @dev 50 USD
+    uint256 public constant UPPER_FEE_CAP = 50 ether;
+
+    /// @notice min fee that can be charged for a conditional order execution
+    /// @dev 2 USD
+    uint256 public constant LOWER_FEE_CAP = 2 ether;
+
+    /// @notice percentage of the simulated order fee that is charged for a conditional order execution
+    /// @dev denoted in BPS (basis points) where 1% = 100 BPS and 100% = 10000 BPS
+    uint256 public constant FEE_SCALING_FACTOR = 1000;
+
+    /// @notice max BPS
+    uint256 internal constant MAX_BPS = 10_000;
 
     /*//////////////////////////////////////////////////////////////
                                IMMUTABLES
@@ -292,19 +304,37 @@ contract Engine is IEngine, Multicallable, EIP712, ERC721Receivable {
         override
         returns (IPerpsMarketProxy.Data memory retOrder, uint256 fees)
     {
+        /// @dev check: (1) nonce has not been executed before
+        /// @dev check: (2) signer is authorized to interact with the account
+        /// @dev check: (3) signature for the order was signed by the signer
+        /// @dev check: (4) conditions are met || trusted executor is msg sender
         if (!canExecute(_co, _signature)) revert CannotExecuteOrder();
 
+        /// @dev mark the nonce as executed; prevents replay
         executedOrders[_co.nonce] = true;
 
+        /// @notice get size delta from order details
+        /// @dev up to the caller to not waste gas by passing in a size delta of zero
+        int128 sizeDelta = _co.orderDetails.sizeDelta;
+
+        /// @dev fetch estimated order fees to be used to
+        /// calculate conditional order fee
         (uint256 orderFees,) = PERPS_MARKET_PROXY.computeOrderFees({
             marketId: _co.orderDetails.marketId,
-            sizeDelta: _co.orderDetails.sizeDelta
+            sizeDelta: sizeDelta
         });
 
-        uint256 conditionalOrderFee = orderFees / 2;
-        conditionalOrderFee =
-            conditionalOrderFee < FEE_CAP ? conditionalOrderFee : FEE_CAP;
+        /// @dev calculate conditional order fee based on scaled order fees
+        uint256 conditionalOrderFee = (orderFees * FEE_SCALING_FACTOR) / MAX_BPS;
 
+        /// @dev ensure conditional order fee is within bounds
+        if (conditionalOrderFee < LOWER_FEE_CAP) {
+            conditionalOrderFee = LOWER_FEE_CAP;
+        } else if (conditionalOrderFee > UPPER_FEE_CAP) {
+            conditionalOrderFee = UPPER_FEE_CAP;
+        }
+
+        /// @dev withdraw conditional order fee from account prior to executing order
         _withdrawCollateral({
             _to: msg.sender,
             _synth: SUSD,
@@ -313,14 +343,41 @@ contract Engine is IEngine, Multicallable, EIP712, ERC721Receivable {
             _amount: -int256(conditionalOrderFee)
         });
 
+        /// @notice handle reduce only orders
+        if (_co.orderDetails.isReduceOnly) {
+            (,, int128 positionSize) = PERPS_MARKET_PROXY.getOpenPosition(
+                _co.orderDetails.accountId, _co.orderDetails.marketId
+            );
+
+            // ensure position exists; reduce only orders cannot increase position size
+            /// @dev return conditionalOrderFee paid by account for invalid order
+            if (positionSize == 0) return (retOrder, conditionalOrderFee);
+
+            // ensure incoming size delta is NOT the same sign; i.e. reduce only orders cannot increase position size
+            if (positionSize.isSameSign(sizeDelta)) {
+                return (retOrder, conditionalOrderFee);
+            }
+
+            // ensure incoming size delta is not larger than current position size
+            /// @dev reduce only orders can only reduce position size (i.e. approach size of zero) and
+            /// cannot cross that boundary (i.e. short -> long or long -> short)
+            if (sizeDelta.abs128() > positionSize.abs128()) {
+                sizeDelta = -positionSize;
+            }
+        }
+
+        /// @dev execute the order
         (retOrder, fees) = _commitOrder(
             _co.orderDetails.marketId,
             _co.orderDetails.accountId,
-            _co.orderDetails.sizeDelta,
+            sizeDelta,
             _co.orderDetails.settlementStrategyId,
             _co.orderDetails.acceptablePrice
         );
 
+        /// @notice conditional order fee included in total fees paid by account to execute order
+        /// @dev total fees paid by account to execute order include:
+        /// Synthetix protocol fee + Synthetix settlement reward fee + Kwenta/External conditional order executor fee
         fees += conditionalOrderFee;
     }
 
