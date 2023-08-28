@@ -9,7 +9,7 @@ contract ConditionalOrderTest is Bootstrap {
         initializeOptimismGoerli();
     }
 
-    function plot_chart() public {
+    function plot_chart() public view {
         for (uint256 i = 1; i <= 700; i++) {
             uint256 sizeDelta = i * 1e17;
             (uint256 orderFees,) = perpsMarketProxy.computeOrderFees({
