@@ -5,12 +5,12 @@ import {ConditionalOrderHashLib} from
     "src/libraries/ConditionalOrderHashLib.sol";
 import {EIP712} from "src/utils/EIP712.sol";
 import {ERC721Receivable} from "src/utils/ERC721Receivable.sol";
-import {FixedPointMathLib} from "src/libraries/FixedPointMathLib.sol";
 import {IEngine, IPerpsMarketProxy} from "src/interfaces/IEngine.sol";
 import {IERC20} from "src/interfaces/tokens/IERC20.sol";
 import {IERC721} from "src/interfaces/tokens/IERC721.sol";
 import {IPyth, PythStructs} from "src/interfaces/oracles/IPyth.sol";
 import {ISpotMarketProxy} from "src/interfaces/synthetix/ISpotMarketProxy.sol";
+import {MathLib} from "src/libraries/MathLib.sol";
 import {Multicallable} from "src/utils/Multicallable.sol";
 import {SignatureCheckerLib} from "src/libraries/SignatureCheckerLib.sol";
 
@@ -18,8 +18,8 @@ import {SignatureCheckerLib} from "src/libraries/SignatureCheckerLib.sol";
 /// @notice Responsible for interacting with Synthetix v3 perps markets
 /// @author JaredBorders (jaredborders@pm.me)
 contract Engine is IEngine, Multicallable, EIP712, ERC721Receivable {
-    using FixedPointMathLib for int128;
-    using FixedPointMathLib for int256;
+    using MathLib for int128;
+    using MathLib for int256;
     using SignatureCheckerLib for bytes;
     using ConditionalOrderHashLib for OrderDetails;
     using ConditionalOrderHashLib for ConditionalOrder;
@@ -301,7 +301,11 @@ contract Engine is IEngine, Multicallable, EIP712, ERC721Receivable {
     function execute(ConditionalOrder calldata _co, bytes calldata _signature)
         external
         override
-        returns (IPerpsMarketProxy.Data memory retOrder, uint256 fees)
+        returns (
+            IPerpsMarketProxy.Data memory retOrder,
+            uint256 fees,
+            uint256 conditionalOrderFee
+        )
     {
         /// @dev check: (1) nonce has not been executed before
         /// @dev check: (2) signer is authorized to interact with the account
@@ -316,6 +320,30 @@ contract Engine is IEngine, Multicallable, EIP712, ERC721Receivable {
         /// @dev up to the caller to not waste gas by passing in a size delta of zero
         int128 sizeDelta = _co.orderDetails.sizeDelta;
 
+        /// @notice handle reduce only orders
+        if (_co.orderDetails.isReduceOnly) {
+            (,, int128 positionSize) = PERPS_MARKET_PROXY.getOpenPosition(
+                _co.orderDetails.accountId, _co.orderDetails.marketId
+            );
+
+            // ensure position exists; reduce only orders cannot increase position size
+            if (positionSize == 0) {
+                return (retOrder, 0, 0);
+            }
+
+            // ensure incoming size delta is NOT the same sign; i.e. reduce only orders cannot increase position size
+            if (positionSize.isSameSign(sizeDelta)) {
+                return (retOrder, 0, 0);
+            }
+
+            // ensure incoming size delta is not larger than current position size
+            /// @dev reduce only orders can only reduce position size (i.e. approach size of zero) and
+            /// cannot cross that boundary (i.e. short -> long or long -> short)
+            if (sizeDelta.abs128() > positionSize.abs128()) {
+                sizeDelta = -positionSize;
+            }
+        }
+
         /// @dev fetch estimated order fees to be used to
         /// calculate conditional order fee
         (uint256 orderFees,) = PERPS_MARKET_PROXY.computeOrderFees({
@@ -324,7 +352,7 @@ contract Engine is IEngine, Multicallable, EIP712, ERC721Receivable {
         });
 
         /// @dev calculate conditional order fee based on scaled order fees
-        uint256 conditionalOrderFee = (orderFees * FEE_SCALING_FACTOR) / MAX_BPS;
+        conditionalOrderFee = (orderFees * FEE_SCALING_FACTOR) / MAX_BPS;
 
         /// @dev ensure conditional order fee is within bounds
         if (conditionalOrderFee < LOWER_FEE_CAP) {
@@ -342,29 +370,6 @@ contract Engine is IEngine, Multicallable, EIP712, ERC721Receivable {
             _amount: -int256(conditionalOrderFee)
         });
 
-        /// @notice handle reduce only orders
-        if (_co.orderDetails.isReduceOnly) {
-            (,, int128 positionSize) = PERPS_MARKET_PROXY.getOpenPosition(
-                _co.orderDetails.accountId, _co.orderDetails.marketId
-            );
-
-            // ensure position exists; reduce only orders cannot increase position size
-            /// @dev return conditionalOrderFee paid by account for invalid order
-            if (positionSize == 0) return (retOrder, conditionalOrderFee);
-
-            // ensure incoming size delta is NOT the same sign; i.e. reduce only orders cannot increase position size
-            if (positionSize.isSameSign(sizeDelta)) {
-                return (retOrder, conditionalOrderFee);
-            }
-
-            // ensure incoming size delta is not larger than current position size
-            /// @dev reduce only orders can only reduce position size (i.e. approach size of zero) and
-            /// cannot cross that boundary (i.e. short -> long or long -> short)
-            if (sizeDelta.abs128() > positionSize.abs128()) {
-                sizeDelta = -positionSize;
-            }
-        }
-
         /// @dev execute the order
         (retOrder, fees) = _commitOrder(
             _co.orderDetails.marketId,
@@ -375,11 +380,6 @@ contract Engine is IEngine, Multicallable, EIP712, ERC721Receivable {
             _co.orderDetails.trackingCode,
             _co.orderDetails.referrer
         );
-
-        /// @notice conditional order fee included in total fees paid by account to execute order
-        /// @dev total fees paid by account to execute order include:
-        /// Synthetix protocol fee + Synthetix settlement reward fee + Kwenta/External conditional order executor fee
-        fees += conditionalOrderFee;
     }
 
     /// @inheritdoc IEngine

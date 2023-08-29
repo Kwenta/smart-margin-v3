@@ -159,10 +159,15 @@ interface IEngine {
     /// @param _co the conditional order
     /// @param _signature the signature of the conditional order
     /// @return retOrder the order committed
-    /// @return fees the fees paid for the order
+    /// @return fees the fees paid for the order to Synthetix
+    /// @return conditionalOrderFee the fee paid to executor for the conditional order
     function execute(ConditionalOrder calldata _co, bytes calldata _signature)
         external
-        returns (IPerpsMarketProxy.Data memory retOrder, uint256 fees);
+        returns (
+            IPerpsMarketProxy.Data memory retOrder,
+            uint256 fees,
+            uint256 conditionalOrderFee
+        );
 
     /// @notice checks if the order can be executed based on defined conditions
     /// @dev this function does NOT check if the order can be executed based on the account's balance
