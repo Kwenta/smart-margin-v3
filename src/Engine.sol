@@ -494,7 +494,7 @@ contract Engine is IEngine, Multicallable, EIP712, ERC721Receivable {
         /// within the last `getValidTimePeriod()` seconds
         PythStructs.Price memory priceData = ORACLE.getPrice(_assetId);
 
-        return _price > priceData.price;
+        return priceData.price > _price;
     }
 
     /// @inheritdoc IEngine
@@ -508,7 +508,7 @@ contract Engine is IEngine, Multicallable, EIP712, ERC721Receivable {
         /// within the last `getValidTimePeriod()` seconds
         PythStructs.Price memory priceData = ORACLE.getPrice(_assetId);
 
-        return _price < priceData.price;
+        return priceData.price < _price;
     }
 
     /// @inheritdoc IEngine
@@ -519,6 +519,6 @@ contract Engine is IEngine, Multicallable, EIP712, ERC721Receivable {
         returns (bool)
     {
         return
-            PERPS_MARKET_PROXY.getMaxMarketSize(_marketId) == 0 ? true : false;
+            PERPS_MARKET_PROXY.getMaxMarketSize(_marketId) == 0 ? false : true;
     }
 }
