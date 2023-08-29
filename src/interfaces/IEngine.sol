@@ -34,6 +34,10 @@ interface IEngine {
         uint256 acceptablePrice;
         // bool to indicate if the order is reduce only; i.e. it can only reduce the position size
         bool isReduceOnly;
+        // tracking code to identify the integrator
+        bytes32 trackingCode;
+        // address of the referrer
+        address referrer;
     }
 
     /// @notice conditional order
@@ -133,6 +137,8 @@ interface IEngine {
     /// @param _sizeDelta the amount of the order to trade (short if negative, long if positive)
     /// @param _settlementStrategyId the id of the settlement strategy to use
     /// @param _acceptablePrice acceptable price set at submission. Compared against the fill price
+    /// @param _trackingCode tracking code to identify the integrator
+    /// @param _referrer the address of the referrer
     /// @return retOrder the order committed
     /// @return fees the fees paid for the order
     function commitOrder(
@@ -140,7 +146,9 @@ interface IEngine {
         uint128 _accountId,
         int128 _sizeDelta,
         uint128 _settlementStrategyId,
-        uint256 _acceptablePrice
+        uint256 _acceptablePrice,
+        bytes32 _trackingCode,
+        address _referrer
     ) external returns (IPerpsMarketProxy.Data memory retOrder, uint256 fees);
 
     /*//////////////////////////////////////////////////////////////

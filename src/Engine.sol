@@ -28,17 +28,10 @@ contract Engine is IEngine, Multicallable, EIP712, ERC721Receivable {
                                CONSTANTS
     //////////////////////////////////////////////////////////////*/
 
-    /// @notice tracking code submitted with trades to identify the source of the trade
-    bytes32 internal constant TRACKING_CODE = "KWENTA";
-
     /// @notice admins have permission to do everything that the account owner can
     /// (including granting and revoking permissions for other addresses) except
     /// for transferring account ownership
     bytes32 internal constant ADMIN_PERMISSION = "ADMIN";
-
-    /// @notice the address of the kwenta treasury multisig; used for source of collecting fees
-    address internal constant REFERRER =
-        0xF510a2Ff7e9DD7e18629137adA4eb56B9c13E885;
 
     /// @notice "0" synthMarketId represents sUSD in Synthetix v3
     uint128 internal constant USD_SYNTH_ID = 0;
@@ -249,7 +242,9 @@ contract Engine is IEngine, Multicallable, EIP712, ERC721Receivable {
         uint128 _accountId,
         int128 _sizeDelta,
         uint128 _settlementStrategyId,
-        uint256 _acceptablePrice
+        uint256 _acceptablePrice,
+        bytes32 _trackingCode,
+        address _referrer
     )
         external
         override
@@ -265,7 +260,9 @@ contract Engine is IEngine, Multicallable, EIP712, ERC721Receivable {
                 _accountId: _accountId,
                 _sizeDelta: _sizeDelta,
                 _settlementStrategyId: _settlementStrategyId,
-                _acceptablePrice: _acceptablePrice
+                _acceptablePrice: _acceptablePrice,
+                _trackingCode: _trackingCode,
+                _referrer: _referrer
             });
         } else {
             revert Unauthorized();
@@ -277,7 +274,9 @@ contract Engine is IEngine, Multicallable, EIP712, ERC721Receivable {
         uint128 _accountId,
         int128 _sizeDelta,
         uint128 _settlementStrategyId,
-        uint256 _acceptablePrice
+        uint256 _acceptablePrice,
+        bytes32 _trackingCode,
+        address _referrer
     ) internal returns (IPerpsMarketProxy.Data memory retOrder, uint256 fees) {
         (retOrder, fees) = PERPS_MARKET_PROXY.commitOrder(
             IPerpsMarketProxy.OrderCommitmentRequest({
@@ -286,8 +285,8 @@ contract Engine is IEngine, Multicallable, EIP712, ERC721Receivable {
                 sizeDelta: _sizeDelta,
                 settlementStrategyId: _settlementStrategyId,
                 acceptablePrice: _acceptablePrice,
-                trackingCode: TRACKING_CODE,
-                referrer: REFERRER
+                trackingCode: _trackingCode,
+                referrer: _referrer
             })
         );
 
@@ -372,7 +371,9 @@ contract Engine is IEngine, Multicallable, EIP712, ERC721Receivable {
             _co.orderDetails.accountId,
             sizeDelta,
             _co.orderDetails.settlementStrategyId,
-            _co.orderDetails.acceptablePrice
+            _co.orderDetails.acceptablePrice,
+            _co.orderDetails.trackingCode,
+            _co.orderDetails.referrer
         );
 
         /// @notice conditional order fee included in total fees paid by account to execute order
