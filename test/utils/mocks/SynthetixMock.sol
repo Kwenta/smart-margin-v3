@@ -20,4 +20,19 @@ contract SynthetixMock is Test {
             abi.encode(orderFees, fillPrice)
         );
     }
+
+    function mock_getOpenPosition(
+        address perpsMarketProxy,
+        uint128 accountId,
+        uint128 marketId,
+        int128 positionSize
+    ) public {
+        vm.mockCall(
+            perpsMarketProxy,
+            abi.encodeWithSelector(
+                IPerpsMarketProxy.getOpenPosition.selector, accountId, marketId
+            ),
+            abi.encode(0, 0, positionSize)
+        );
+    }
 }

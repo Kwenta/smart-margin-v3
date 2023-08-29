@@ -284,11 +284,11 @@ contract VerifyConditions is ConditionalOrderTest {
         mock_pyth_getPrice({
             pyth: address(pyth),
             id: mock_assetId,
-            price: 173_078_000_000,
+            price: mock_price,
             conf: 45_999_999,
             expo: -8
         });
-        
+
         bytes[] memory conditions = new bytes[](5);
         conditions[0] = isTimestampAfter(0);
         conditions[1] = isTimestampBefore(type(uint256).max);
@@ -318,11 +318,11 @@ contract VerifyConditions is ConditionalOrderTest {
         mock_pyth_getPrice({
             pyth: address(pyth),
             id: mock_assetId,
-            price: 173_078_000_000,
+            price: mock_price,
             conf: 45_999_999,
             expo: -8
         });
-        
+
         bytes[] memory conditions = new bytes[](5);
         conditions[0] = isTimestampAfter(0);
         conditions[1] = isTimestampBefore(type(uint256).max);
@@ -343,7 +343,7 @@ contract VerifyConditions is ConditionalOrderTest {
 
         bool isVerified = engine.verifyConditions(co);
 
-        assertTrue(isVerified);
+        assertFalse(isVerified);
     }
 }
 
@@ -375,8 +375,11 @@ contract Execute is ConditionalOrderTest {
             domainSeparator: engine.DOMAIN_SEPARATOR()
         });
 
-        (IPerpsMarketProxy.Data memory retOrder, uint256 fees) =
-            engine.execute(co, signature);
+        (
+            IPerpsMarketProxy.Data memory retOrder,
+            uint256 fees,
+            uint256 conditionalOrderFee
+        ) = engine.execute(co, signature);
 
         // retOrder
         assertTrue(retOrder.settlementTime != 0);
@@ -390,6 +393,9 @@ contract Execute is ConditionalOrderTest {
 
         // fees
         assertTrue(fees != 0);
+
+        // conditionalOrderFee
+        assertTrue(conditionalOrderFee != 0);
     }
 
     function test_execute_leverage_exceeded() public {
@@ -507,11 +513,9 @@ contract Fee is ConditionalOrderTest {
             domainSeparator: engine.DOMAIN_SEPARATOR()
         });
 
-        engine.execute(co, signature);
+        (,, uint256 conditionalOrderFee) = engine.execute(co, signature);
 
-        // for reference, at this block number, the fee is ~$7.80 for
-        // executing an order of with a size of 10 ETH
-        assertGt(sUSD.balanceOf(address(this)), 2 ether);
+        assertEq(sUSD.balanceOf(address(this)), conditionalOrderFee);
     }
 
     function test_fee_imposed_at_upper_fee_cap() public {
@@ -552,8 +556,9 @@ contract Fee is ConditionalOrderTest {
             domainSeparator: engine.DOMAIN_SEPARATOR()
         });
 
-        engine.execute(co, signature);
+        (,, uint256 conditionalOrderFee) = engine.execute(co, signature);
 
+        assertEq(engine.UPPER_FEE_CAP(), conditionalOrderFee);
         assertEq(engine.UPPER_FEE_CAP(), sUSD.balanceOf(address(this)));
     }
 
@@ -595,8 +600,9 @@ contract Fee is ConditionalOrderTest {
             domainSeparator: engine.DOMAIN_SEPARATOR()
         });
 
-        engine.execute(co, signature);
+        (,, uint256 conditionalOrderFee) = engine.execute(co, signature);
 
+        assertEq(engine.UPPER_FEE_CAP(), conditionalOrderFee);
         assertEq(engine.UPPER_FEE_CAP(), sUSD.balanceOf(address(this)));
     }
 
@@ -637,8 +643,12 @@ contract Fee is ConditionalOrderTest {
             domainSeparator: engine.DOMAIN_SEPARATOR()
         });
 
-        engine.execute(co, signature);
+        (,, uint256 conditionalOrderFee) = engine.execute(co, signature);
 
+        assertEq(
+            (engine.UPPER_FEE_CAP() * engine.FEE_SCALING_FACTOR()) / 10_000,
+            conditionalOrderFee
+        );
         assertEq(
             (engine.UPPER_FEE_CAP() * engine.FEE_SCALING_FACTOR()) / 10_000,
             sUSD.balanceOf(address(this))
@@ -682,8 +692,9 @@ contract Fee is ConditionalOrderTest {
             domainSeparator: engine.DOMAIN_SEPARATOR()
         });
 
-        engine.execute(co, signature);
+        (,, uint256 conditionalOrderFee) = engine.execute(co, signature);
 
+        assertEq(engine.LOWER_FEE_CAP(), conditionalOrderFee);
         assertEq(engine.LOWER_FEE_CAP(), sUSD.balanceOf(address(this)));
     }
 
@@ -793,19 +804,188 @@ contract Fee is ConditionalOrderTest {
 
 contract ReduceOnly is ConditionalOrderTest {
     function test_reduce_only() public {
-        /// @custom:todo
+        mock_getOpenPosition(
+            address(perpsMarketProxy), accountId, SETH_PERPS_MARKET_ID, -1 ether
+        );
+
+        IEngine.OrderDetails memory orderDetails = IEngine.OrderDetails({
+            marketId: SETH_PERPS_MARKET_ID,
+            accountId: accountId,
+            sizeDelta: 1 ether,
+            settlementStrategyId: 0,
+            acceptablePrice: type(uint256).max,
+            isReduceOnly: true,
+            trackingCode: TRACKING_CODE,
+            referrer: REFERRER
+        });
+
+        IEngine.ConditionalOrder memory co = IEngine.ConditionalOrder({
+            orderDetails: orderDetails,
+            signer: signer,
+            nonce: 0,
+            requireVerified: false,
+            trustedExecutor: address(this),
+            conditions: new bytes[](0)
+        });
+
+        bytes memory signature = getConditionalOrderSignature({
+            co: co,
+            privateKey: signerPrivateKey,
+            domainSeparator: engine.DOMAIN_SEPARATOR()
+        });
+
+        (, uint256 fees,) = engine.execute(co, signature);
+
+        // confirms that the reduce-only order was executed
+        assertTrue(fees > 0);
     }
 
     function test_reduce_only_zero_size() public {
-        /// @custom:todo
+        IEngine.OrderDetails memory orderDetails = IEngine.OrderDetails({
+            marketId: SETH_PERPS_MARKET_ID,
+            accountId: accountId,
+            sizeDelta: 1 ether,
+            settlementStrategyId: 0,
+            acceptablePrice: type(uint256).max,
+            isReduceOnly: true,
+            trackingCode: TRACKING_CODE,
+            referrer: REFERRER
+        });
+
+        IEngine.ConditionalOrder memory co = IEngine.ConditionalOrder({
+            orderDetails: orderDetails,
+            signer: signer,
+            nonce: 0,
+            requireVerified: false,
+            trustedExecutor: address(this),
+            conditions: new bytes[](0)
+        });
+
+        bytes memory signature = getConditionalOrderSignature({
+            co: co,
+            privateKey: signerPrivateKey,
+            domainSeparator: engine.DOMAIN_SEPARATOR()
+        });
+
+        (, uint256 fees, uint256 conditionalOrderFee) =
+            engine.execute(co, signature);
+
+        assertEq(0, fees);
+        assertEq(0, conditionalOrderFee);
     }
 
     function test_reduce_only_same_sign() public {
-        /// @custom:todo
+        mock_getOpenPosition(
+            address(perpsMarketProxy), accountId, SETH_PERPS_MARKET_ID, 1 ether
+        );
+
+        IEngine.OrderDetails memory orderDetails = IEngine.OrderDetails({
+            marketId: SETH_PERPS_MARKET_ID,
+            accountId: accountId,
+            sizeDelta: 1 ether,
+            settlementStrategyId: 0,
+            acceptablePrice: type(uint256).max,
+            isReduceOnly: true,
+            trackingCode: TRACKING_CODE,
+            referrer: REFERRER
+        });
+
+        IEngine.ConditionalOrder memory co = IEngine.ConditionalOrder({
+            orderDetails: orderDetails,
+            signer: signer,
+            nonce: 0,
+            requireVerified: false,
+            trustedExecutor: address(this),
+            conditions: new bytes[](0)
+        });
+
+        bytes memory signature = getConditionalOrderSignature({
+            co: co,
+            privateKey: signerPrivateKey,
+            domainSeparator: engine.DOMAIN_SEPARATOR()
+        });
+
+        (, uint256 fees, uint256 conditionalOrderFee) =
+            engine.execute(co, signature);
+
+        assertEq(0, fees);
+        assertEq(0, conditionalOrderFee);
     }
 
-    function test_reduce_only_truncate_size() public {
-        /// @custom:todo
+    function test_reduce_only_truncate_size_down() public {
+        mock_getOpenPosition(
+            address(perpsMarketProxy), accountId, SETH_PERPS_MARKET_ID, -1 ether
+        );
+
+        IEngine.OrderDetails memory orderDetails = IEngine.OrderDetails({
+            marketId: SETH_PERPS_MARKET_ID,
+            accountId: accountId,
+            sizeDelta: type(int128).max,
+            settlementStrategyId: 0,
+            acceptablePrice: type(uint256).max,
+            isReduceOnly: true,
+            trackingCode: TRACKING_CODE,
+            referrer: REFERRER
+        });
+
+        IEngine.ConditionalOrder memory co = IEngine.ConditionalOrder({
+            orderDetails: orderDetails,
+            signer: signer,
+            nonce: 0,
+            requireVerified: false,
+            trustedExecutor: address(this),
+            conditions: new bytes[](0)
+        });
+
+        bytes memory signature = getConditionalOrderSignature({
+            co: co,
+            privateKey: signerPrivateKey,
+            domainSeparator: engine.DOMAIN_SEPARATOR()
+        });
+
+        (, uint256 fees,) = engine.execute(co, signature);
+
+        // confirms that the reduce-only order was executed
+        /// @dev max sizeDelta used proves prices was truncated
+        assertTrue(fees > 0);
+    }
+
+    function test_reduce_only_truncate_size_up() public {
+        mock_getOpenPosition(
+            address(perpsMarketProxy), accountId, SETH_PERPS_MARKET_ID, 1 ether
+        );
+
+        IEngine.OrderDetails memory orderDetails = IEngine.OrderDetails({
+            marketId: SETH_PERPS_MARKET_ID,
+            accountId: accountId,
+            sizeDelta: -type(int128).max,
+            settlementStrategyId: 0,
+            acceptablePrice: 0,
+            isReduceOnly: true,
+            trackingCode: TRACKING_CODE,
+            referrer: REFERRER
+        });
+
+        IEngine.ConditionalOrder memory co = IEngine.ConditionalOrder({
+            orderDetails: orderDetails,
+            signer: signer,
+            nonce: 0,
+            requireVerified: false,
+            trustedExecutor: address(this),
+            conditions: new bytes[](0)
+        });
+
+        bytes memory signature = getConditionalOrderSignature({
+            co: co,
+            privateKey: signerPrivateKey,
+            domainSeparator: engine.DOMAIN_SEPARATOR()
+        });
+
+        (, uint256 fees,) = engine.execute(co, signature);
+
+        // confirms that the reduce-only order was executed
+        /// @dev max sizeDelta used proves prices was truncated
+        assertTrue(fees > 0);
     }
 }
 

@@ -2,6 +2,7 @@
 pragma solidity 0.8.18;
 
 import {Bootstrap, IPerpsMarketProxy} from "test/utils/Bootstrap.sol";
+import {IEngine} from "src/interfaces/IEngine.sol";
 
 contract AsyncOrderTest is Bootstrap {
     function setUp() public {
@@ -47,6 +48,13 @@ contract CommitOrder is AsyncOrderTest {
 
         // fees
         assertTrue(fees != 0);
+
+        // account stats
+        IEngine.AccountStats memory accountStats =
+            engine.getAccountStats(accountId);
+        assertEq(accountStats.totalFees, fees);
+        assertEq(accountStats.totalVolume, 1 ether);
+        assertEq(accountStats.totalTrades, 1);
     }
 
     /// @cutsoom:todo test commitOrder: Market that does not exist
