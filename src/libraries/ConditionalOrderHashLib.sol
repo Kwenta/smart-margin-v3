@@ -7,7 +7,7 @@ import {IEngine} from "src/interfaces/IEngine.sol";
 library ConditionalOrderHashLib {
     /// @notice pre-computed keccak256(OrderDetails struct)
     bytes32 public constant _ORDER_DETAILS_TYPEHASH = keccak256(
-        "OrderDetails(uint128 marketId,uint128 accountId,int128 sizeDelta,uint128 settlementStrategyId,uint256 acceptablePrice)"
+        "OrderDetails(uint128 marketId,uint128 accountId,int128 sizeDelta,uint128 settlementStrategyId,uint256 acceptablePrice,bool isReduceOnly,bytes32 trackingCode,address referrer)"
     );
 
     /// @notice pre-computed keccak256(ConditionalOrder struct)
@@ -28,7 +28,10 @@ library ConditionalOrderHashLib {
                 orderDetails.accountId,
                 orderDetails.sizeDelta,
                 orderDetails.settlementStrategyId,
-                orderDetails.acceptablePrice
+                orderDetails.acceptablePrice,
+                orderDetails.isReduceOnly,
+                orderDetails.trackingCode,
+                orderDetails.referrer
             )
         );
     }
