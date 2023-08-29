@@ -2,7 +2,7 @@
 pragma solidity 0.8.18;
 
 contract Constants {
-    uint256 internal constant GOERLI_BLOCK_NUMBER = 13_737_929;
+    uint256 internal constant GOERLI_BLOCK_NUMBER = 13_950_376;
 
     address internal constant OWNER = address(0x01);
     bytes32 internal constant TRACKING_CODE = "KWENTA";
@@ -26,6 +26,9 @@ contract Constants {
     uint128 internal constant SETH_SPOT_MARKET_ID = 2;
 
     uint128 constant SETH_PERPS_MARKET_ID = 200;
+
+    bytes32 constant PYTH_ETH_USD_ASSET_ID =
+        0xca80ba6dc32e08d06f1aa886011eed1d77c77be9eb761cc10d72b7d0a2fd57a6;
 
     uint256 internal constant AMOUNT = 10_000 ether;
 }

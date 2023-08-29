@@ -279,26 +279,31 @@ contract VerifySignature is ConditionalOrderTest {
 
 contract VerifyConditions is ConditionalOrderTest {
     function test_verify_conditions_verified() public {
-        bytes[] memory conditions = new bytes[](1);
-        conditions[0] = isTimestampAfter(0);
-
-        IEngine.OrderDetails memory orderDetails = IEngine.OrderDetails({
-            marketId: 0,
-            accountId: 0,
-            sizeDelta: 0,
-            settlementStrategyId: 0,
-            acceptablePrice: 0,
-            isReduceOnly: false,
-            trackingCode: TRACKING_CODE,
-            referrer: REFERRER
+        int64 mock_price = 173_078_000_000;
+        bytes32 mock_assetId = PYTH_ETH_USD_ASSET_ID;
+        mock_pyth_getPrice({
+            pyth: address(pyth),
+            id: mock_assetId,
+            price: 173_078_000_000,
+            conf: 45_999_999,
+            expo: -8
         });
+        
+        bytes[] memory conditions = new bytes[](5);
+        conditions[0] = isTimestampAfter(0);
+        conditions[1] = isTimestampBefore(type(uint256).max);
+        conditions[2] = isPriceAbove(PYTH_ETH_USD_ASSET_ID, 0);
+        conditions[3] = isPriceBelow(PYTH_ETH_USD_ASSET_ID, type(int64).max);
+        conditions[4] = isMarketOpen(SETH_PERPS_MARKET_ID);
+
+        IEngine.OrderDetails memory orderDetails;
 
         IEngine.ConditionalOrder memory co = IEngine.ConditionalOrder({
             orderDetails: orderDetails,
             signer: signer,
             nonce: 0,
-            requireVerified: false,
-            trustedExecutor: address(this),
+            requireVerified: true,
+            trustedExecutor: address(0),
             conditions: conditions
         });
 
@@ -308,32 +313,37 @@ contract VerifyConditions is ConditionalOrderTest {
     }
 
     function test_verify_conditions_not_verified() public {
-        bytes[] memory conditions = new bytes[](1);
-        conditions[0] = isTimestampAfter(type(uint256).max);
-
-        IEngine.OrderDetails memory orderDetails = IEngine.OrderDetails({
-            marketId: 0,
-            accountId: 0,
-            sizeDelta: 0,
-            settlementStrategyId: 0,
-            acceptablePrice: 0,
-            isReduceOnly: false,
-            trackingCode: TRACKING_CODE,
-            referrer: REFERRER
+        int64 mock_price = 173_078_000_000;
+        bytes32 mock_assetId = PYTH_ETH_USD_ASSET_ID;
+        mock_pyth_getPrice({
+            pyth: address(pyth),
+            id: mock_assetId,
+            price: 173_078_000_000,
+            conf: 45_999_999,
+            expo: -8
         });
+        
+        bytes[] memory conditions = new bytes[](5);
+        conditions[0] = isTimestampAfter(0);
+        conditions[1] = isTimestampBefore(type(uint256).max);
+        conditions[2] = isPriceAbove(PYTH_ETH_USD_ASSET_ID, 0);
+        conditions[3] = isPriceBelow(PYTH_ETH_USD_ASSET_ID, 0); // false
+        conditions[4] = isMarketOpen(SETH_PERPS_MARKET_ID);
+
+        IEngine.OrderDetails memory orderDetails;
 
         IEngine.ConditionalOrder memory co = IEngine.ConditionalOrder({
             orderDetails: orderDetails,
             signer: signer,
             nonce: 0,
-            requireVerified: false,
-            trustedExecutor: address(this),
+            requireVerified: true,
+            trustedExecutor: address(0),
             conditions: conditions
         });
 
         bool isVerified = engine.verifyConditions(co);
 
-        assertFalse(isVerified);
+        assertTrue(isVerified);
     }
 }
 
@@ -801,22 +811,75 @@ contract ReduceOnly is ConditionalOrderTest {
 
 contract Conditions is ConditionalOrderTest {
     function test_isTimestampAfter() public {
-        /// @custom:todo
+        bool isAfter = engine.isTimestampAfter(block.timestamp - 1);
+        assertTrue(isAfter);
+
+        isAfter = engine.isTimestampAfter(block.timestamp);
+        assertFalse(isAfter);
+
+        isAfter = engine.isTimestampAfter(block.timestamp + 1);
+        assertFalse(isAfter);
     }
 
-    function test_iisTimestampBefore() public {
-        /// @custom:todo
+    function test_isTimestampBefore() public {
+        bool isBefore = engine.isTimestampBefore(block.timestamp - 1);
+        assertFalse(isBefore);
+
+        isBefore = engine.isTimestampBefore(block.timestamp);
+        assertFalse(isBefore);
+
+        isBefore = engine.isTimestampBefore(block.timestamp + 1);
+        assertTrue(isBefore);
     }
 
     function test_isPriceAbove() public {
-        /// @custom:todo
+        int64 mock_price = 173_078_000_000;
+        bytes32 mock_assetId = PYTH_ETH_USD_ASSET_ID;
+        mock_pyth_getPrice({
+            pyth: address(pyth),
+            id: mock_assetId,
+            price: 173_078_000_000,
+            conf: 45_999_999,
+            expo: -8
+        });
+
+        bool isAbove = engine.isPriceAbove(mock_assetId, mock_price - 1);
+        assertTrue(isAbove);
+
+        isAbove = engine.isPriceAbove(mock_assetId, mock_price);
+        assertFalse(isAbove);
+
+        isAbove = engine.isPriceAbove(mock_assetId, mock_price + 1);
+        assertFalse(isAbove);
     }
 
     function test_isPriceBelow() public {
-        /// @custom:todo
+        int64 mock_price = 173_078_000_000;
+        bytes32 mock_assetId = PYTH_ETH_USD_ASSET_ID;
+        mock_pyth_getPrice({
+            pyth: address(pyth),
+            id: mock_assetId,
+            price: 173_078_000_000,
+            conf: 45_999_999,
+            expo: -8
+        });
+
+        bool isBelow = engine.isPriceBelow(mock_assetId, mock_price - 1);
+        assertFalse(isBelow);
+
+        isBelow = engine.isPriceBelow(mock_assetId, mock_price);
+        assertFalse(isBelow);
+
+        isBelow = engine.isPriceBelow(mock_assetId, mock_price + 1);
+        assertTrue(isBelow);
     }
 
     function test_isMarketOpen() public {
-        /// @custom:todo
+        bool isOpen = engine.isMarketOpen(SETH_PERPS_MARKET_ID);
+        assertTrue(isOpen);
+
+        uint128 badMarketId = type(uint128).max;
+        isOpen = engine.isMarketOpen(badMarketId);
+        assertFalse(isOpen);
     }
 }
