@@ -28,7 +28,9 @@ contract CommitOrder is AsyncOrderTest {
             _accountId: accountId,
             _sizeDelta: 1 ether,
             _settlementStrategyId: 0,
-            _acceptablePrice: type(uint256).max
+            _acceptablePrice: type(uint256).max,
+            _trackingCode: TRACKING_CODE,
+            _referrer: REFERRER
         });
 
         vm.stopPrank();

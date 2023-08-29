@@ -62,7 +62,9 @@ contract CanExecute is ConditionalOrderTest {
             sizeDelta: 1 ether,
             settlementStrategyId: 0,
             acceptablePrice: type(uint256).max,
-            isReduceOnly: false
+            isReduceOnly: false,
+            trackingCode: TRACKING_CODE,
+            referrer: REFERRER
         });
 
         IEngine.ConditionalOrder memory co = IEngine.ConditionalOrder({
@@ -92,7 +94,9 @@ contract CanExecute is ConditionalOrderTest {
             sizeDelta: 1 ether,
             settlementStrategyId: 0,
             acceptablePrice: type(uint256).max,
-            isReduceOnly: false
+            isReduceOnly: false,
+            trackingCode: TRACKING_CODE,
+            referrer: REFERRER
         });
 
         IEngine.ConditionalOrder memory co = IEngine.ConditionalOrder({
@@ -125,7 +129,9 @@ contract CanExecute is ConditionalOrderTest {
             sizeDelta: 1 ether,
             settlementStrategyId: 0,
             acceptablePrice: type(uint256).max,
-            isReduceOnly: false
+            isReduceOnly: false,
+            trackingCode: TRACKING_CODE,
+            referrer: REFERRER
         });
 
         IEngine.ConditionalOrder memory co = IEngine.ConditionalOrder({
@@ -159,7 +165,9 @@ contract VerifySigner is ConditionalOrderTest {
             sizeDelta: 0,
             settlementStrategyId: 0,
             acceptablePrice: 0,
-            isReduceOnly: false
+            isReduceOnly: false,
+            trackingCode: TRACKING_CODE,
+            referrer: REFERRER
         });
 
         IEngine.ConditionalOrder memory co = IEngine.ConditionalOrder({
@@ -183,7 +191,9 @@ contract VerifySigner is ConditionalOrderTest {
             sizeDelta: 0,
             settlementStrategyId: 0,
             acceptablePrice: 0,
-            isReduceOnly: false
+            isReduceOnly: false,
+            trackingCode: TRACKING_CODE,
+            referrer: REFERRER
         });
 
         IEngine.ConditionalOrder memory co = IEngine.ConditionalOrder({
@@ -209,7 +219,9 @@ contract VerifySignature is ConditionalOrderTest {
             sizeDelta: 0,
             settlementStrategyId: 0,
             acceptablePrice: 0,
-            isReduceOnly: false
+            isReduceOnly: false,
+            trackingCode: TRACKING_CODE,
+            referrer: REFERRER
         });
 
         IEngine.ConditionalOrder memory co = IEngine.ConditionalOrder({
@@ -239,7 +251,9 @@ contract VerifySignature is ConditionalOrderTest {
             sizeDelta: 0,
             settlementStrategyId: 0,
             acceptablePrice: 0,
-            isReduceOnly: false
+            isReduceOnly: false,
+            trackingCode: TRACKING_CODE,
+            referrer: REFERRER
         });
 
         IEngine.ConditionalOrder memory co = IEngine.ConditionalOrder({
@@ -274,7 +288,9 @@ contract VerifyConditions is ConditionalOrderTest {
             sizeDelta: 0,
             settlementStrategyId: 0,
             acceptablePrice: 0,
-            isReduceOnly: false
+            isReduceOnly: false,
+            trackingCode: TRACKING_CODE,
+            referrer: REFERRER
         });
 
         IEngine.ConditionalOrder memory co = IEngine.ConditionalOrder({
@@ -301,7 +317,9 @@ contract VerifyConditions is ConditionalOrderTest {
             sizeDelta: 0,
             settlementStrategyId: 0,
             acceptablePrice: 0,
-            isReduceOnly: false
+            isReduceOnly: false,
+            trackingCode: TRACKING_CODE,
+            referrer: REFERRER
         });
 
         IEngine.ConditionalOrder memory co = IEngine.ConditionalOrder({
@@ -327,7 +345,9 @@ contract Execute is ConditionalOrderTest {
             sizeDelta: 1 ether,
             settlementStrategyId: 0,
             acceptablePrice: type(uint256).max,
-            isReduceOnly: false
+            isReduceOnly: false,
+            trackingCode: TRACKING_CODE,
+            referrer: REFERRER
         });
 
         IEngine.ConditionalOrder memory co = IEngine.ConditionalOrder({
@@ -369,7 +389,9 @@ contract Execute is ConditionalOrderTest {
             sizeDelta: 50 ether,
             settlementStrategyId: 0,
             acceptablePrice: type(uint256).max,
-            isReduceOnly: false
+            isReduceOnly: false,
+            trackingCode: TRACKING_CODE,
+            referrer: REFERRER
         });
 
         IEngine.ConditionalOrder memory co = IEngine.ConditionalOrder({
@@ -417,7 +439,9 @@ contract Execute is ConditionalOrderTest {
             sizeDelta: 50 ether,
             settlementStrategyId: 0,
             acceptablePrice: type(uint256).max,
-            isReduceOnly: false
+            isReduceOnly: false,
+            trackingCode: TRACKING_CODE,
+            referrer: REFERRER
         });
 
         IEngine.ConditionalOrder memory co = IEngine.ConditionalOrder({
@@ -453,7 +477,9 @@ contract Fee is ConditionalOrderTest {
             sizeDelta: 10 ether,
             settlementStrategyId: 0,
             acceptablePrice: type(uint256).max,
-            isReduceOnly: false
+            isReduceOnly: false,
+            trackingCode: TRACKING_CODE,
+            referrer: REFERRER
         });
 
         IEngine.ConditionalOrder memory co = IEngine.ConditionalOrder({
@@ -496,7 +522,9 @@ contract Fee is ConditionalOrderTest {
             sizeDelta: 1 ether,
             settlementStrategyId: 0,
             acceptablePrice: type(uint256).max,
-            isReduceOnly: false
+            isReduceOnly: false,
+            trackingCode: TRACKING_CODE,
+            referrer: REFERRER
         });
 
         IEngine.ConditionalOrder memory co = IEngine.ConditionalOrder({
@@ -537,7 +565,9 @@ contract Fee is ConditionalOrderTest {
             sizeDelta: 1 ether,
             settlementStrategyId: 0,
             acceptablePrice: type(uint256).max,
-            isReduceOnly: false
+            isReduceOnly: false,
+            trackingCode: TRACKING_CODE,
+            referrer: REFERRER
         });
 
         IEngine.ConditionalOrder memory co = IEngine.ConditionalOrder({
@@ -577,7 +607,9 @@ contract Fee is ConditionalOrderTest {
             sizeDelta: 1 ether,
             settlementStrategyId: 0,
             acceptablePrice: type(uint256).max,
-            isReduceOnly: false
+            isReduceOnly: false,
+            trackingCode: TRACKING_CODE,
+            referrer: REFERRER
         });
 
         IEngine.ConditionalOrder memory co = IEngine.ConditionalOrder({
@@ -620,7 +652,9 @@ contract Fee is ConditionalOrderTest {
             sizeDelta: 1 ether,
             settlementStrategyId: 0,
             acceptablePrice: type(uint256).max,
-            isReduceOnly: false
+            isReduceOnly: false,
+            trackingCode: TRACKING_CODE,
+            referrer: REFERRER
         });
 
         IEngine.ConditionalOrder memory co = IEngine.ConditionalOrder({
@@ -658,7 +692,9 @@ contract Fee is ConditionalOrderTest {
             sizeDelta: 10 ether,
             settlementStrategyId: 0,
             acceptablePrice: type(uint256).max,
-            isReduceOnly: false
+            isReduceOnly: false,
+            trackingCode: TRACKING_CODE,
+            referrer: REFERRER
         });
 
         IEngine.ConditionalOrder memory co = IEngine.ConditionalOrder({
@@ -701,7 +737,9 @@ contract Fee is ConditionalOrderTest {
             sizeDelta: 50 ether,
             settlementStrategyId: 0,
             acceptablePrice: type(uint256).max,
-            isReduceOnly: false
+            isReduceOnly: false,
+            trackingCode: TRACKING_CODE,
+            referrer: REFERRER
         });
 
         IEngine.ConditionalOrder memory co = IEngine.ConditionalOrder({
