@@ -7,6 +7,7 @@ import {Test} from "lib/forge-std/src/Test.sol";
 contract MathLibTest is Test {
     using MathLib for int128;
     using MathLib for int256;
+    using MathLib for uint256;
 
     function test_abs128() public {
         int128 x = -1 ether;
@@ -38,6 +39,21 @@ contract MathLibTest is Test {
         );
 
         x.abs256();
+    }
+
+    function test_castU128() public {
+        uint256 x = 1 ether;
+        uint128 z = x.castU128();
+        assertTrue(z == 1 ether);
+    }
+
+    function test_castU128_overflow() public {
+        uint256 x = type(uint128).max;
+        x++;
+
+        vm.expectRevert(abi.encodeWithSelector(MathLib.OverflowU128.selector));
+
+        x.castU128();
     }
 
     function test_isSameSign() public {

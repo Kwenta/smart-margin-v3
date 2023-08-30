@@ -6,9 +6,10 @@ pragma solidity 0.8.18;
 library MathLib {
     error CannotTakeAbsOfMinInt128();
     error CannotTakeAbsOfMinInt256();
+    error OverflowU128();
 
     /// @notice get absolute value of the input, returned as an unsigned number.
-    /// @param x: signed number
+    /// @param x signed number
     /// @return z uint128 absolute value of x
     function abs128(int128 x) internal pure returns (uint128 z) {
         if (x == type(int128).min) {
@@ -20,7 +21,7 @@ library MathLib {
     }
 
     /// @notice get absolute value of the input, returned as an unsigned number.
-    /// @param x: signed number
+    /// @param x signed number
     /// @return z uint256 absolute value of x
     function abs256(int256 x) internal pure returns (uint256 z) {
         if (x == type(int256).min) {
@@ -44,10 +45,21 @@ library MathLib {
         }
     }
 
+    /// @notice cast uint256 to uint128
+    /// @dev asserts that input is not greater than uint128 max
+    /// @param x unsigned 256-bit number
+    /// @return downcasted uint128 from uint256
+    function castU128(uint256 x) internal pure returns (uint128) {
+        if (x > type(uint128).max) {
+            revert OverflowU128();
+        }
+        return uint128(x);
+    }
+
     /// @notice determines if input numbers have the same sign
     /// @dev asserts that both numbers are not zero
-    /// @param x: signed number
-    /// @param y: signed number
+    /// @param x signed number
+    /// @param y signed number
     /// @return true if same sign, false otherwise
     function isSameSign(int128 x, int128 y) internal pure returns (bool) {
         assert(x != 0 && y != 0);
