@@ -1,8 +1,11 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 pragma solidity 0.8.18;
 
+import {console2} from "lib/forge-std/src/console2.sol";
+import {Test} from "lib/forge-std/src/Test.sol";
 import {Conditions} from "test/utils/Conditions.sol";
 import {Constants} from "test/utils/Constants.sol";
+import {SynthetixV3Errors} from "test/utils/errors/SynthetixV3Errors.sol";
 import {EngineExposed} from "test/utils/exposed/EngineExposed.sol";
 import {
     Engine,
@@ -14,19 +17,20 @@ import {IERC20} from "src/interfaces/tokens/IERC20.sol";
 import {IPerpsMarketProxy} from "src/interfaces/synthetix/IPerpsMarketProxy.sol";
 import {ISpotMarketProxy} from "src/interfaces/synthetix/ISpotMarketProxy.sol";
 import {IPyth} from "src/interfaces/oracles/IPyth.sol";
-import {SUSDHelper} from "test/utils/SUSDHelper.sol";
-import {Test} from "lib/forge-std/src/Test.sol";
+import {SynthMinter} from "test/utils/SynthMinter.sol";
 
-contract Bootstrap is Test, Constants, Conditions {
+contract Bootstrap is Test, Constants, Conditions, SynthetixV3Errors {
+    using console2 for *;
+
     Engine public engine;
     EngineExposed public engineExposed;
     IPerpsMarketProxy public perpsMarketProxy;
     ISpotMarketProxy public spotMarketProxy;
     IERC20 public sUSD;
+    IERC20 public sBTC;
     IPyth public pyth;
-    bytes32 public pythPriceFeedIdEthUsd;
 
-    SUSDHelper public sUSDHelper;
+    SynthMinter public synthMinter;
     uint128 public accountId;
 
     function initializeOptimismGoerli() public {
@@ -37,8 +41,7 @@ contract Bootstrap is Test, Constants, Conditions {
             address _perpesMarketProxyAddress,
             address _spotMarketProxyAddress,
             address _sUSDAddress,
-            address _pythAddress,
-            bytes32 _pythPriceFeedIdEthUsd
+            address _pythAddress
         ) = bootstrap.init();
 
         engine = Engine(_engineAddress);
@@ -47,19 +50,19 @@ contract Bootstrap is Test, Constants, Conditions {
         spotMarketProxy = ISpotMarketProxy(_spotMarketProxyAddress);
         sUSD = IERC20(_sUSDAddress);
         pyth = IPyth(_pythAddress);
-        pythPriceFeedIdEthUsd = _pythPriceFeedIdEthUsd;
-        sUSDHelper = new SUSDHelper(_sUSDAddress);
+        synthMinter = new SynthMinter(_sUSDAddress, _spotMarketProxyAddress);
+        sBTC = synthMinter.sBTC();
 
         vm.startPrank(ACTOR);
         accountId = perpsMarketProxy.createAccount();
         perpsMarketProxy.grantPermission({
             accountId: accountId,
-            permission: "ADMIN",
+            permission: ADMIN_PERMISSION,
             user: address(engine)
         });
         vm.stopPrank();
 
-        sUSDHelper.mint(ACTOR, AMOUNT);
+        synthMinter.mint_sUSD(ACTOR, AMOUNT);
     }
 
     function initializeOptimism() public {
@@ -70,8 +73,7 @@ contract Bootstrap is Test, Constants, Conditions {
             address _perpesMarketProxyAddress,
             address _spotMarketProxyAddress,
             address _sUSDAddress,
-            address _pythAddress,
-            bytes32 _pythPriceFeedIdEthUsd
+            address _pythAddress
         ) = bootstrap.init();
 
         engine = Engine(_engineAddress);
@@ -80,41 +82,39 @@ contract Bootstrap is Test, Constants, Conditions {
         spotMarketProxy = ISpotMarketProxy(_spotMarketProxyAddress);
         sUSD = IERC20(_sUSDAddress);
         pyth = IPyth(_pythAddress);
-        pythPriceFeedIdEthUsd = _pythPriceFeedIdEthUsd;
-        sUSDHelper = new SUSDHelper(_sUSDAddress);
+        synthMinter = new SynthMinter(_sUSDAddress, _spotMarketProxyAddress);
+        sBTC = synthMinter.sBTC();
 
         vm.startPrank(ACTOR);
         accountId = perpsMarketProxy.createAccount();
         perpsMarketProxy.grantPermission({
             accountId: accountId,
-            permission: "ADMIN",
+            permission: ADMIN_PERMISSION,
             user: address(engine)
         });
         vm.stopPrank();
 
-        sUSDHelper.mint(ACTOR, AMOUNT);
+        synthMinter.mint_sUSD(ACTOR, AMOUNT);
     }
 }
 
 contract BootstrapOptimism is Setup, OptimismParameters {
     function init()
         public
-        returns (address, address, address, address, address, address, bytes32)
+        returns (address, address, address, address, address, address)
     {
         Engine engine = Setup.deploySystem({
             perpsMarketProxy: PERPS_MARKET_PROXY,
             spotMarketProxy: SPOT_MARKET_PROXY,
             sUSDProxy: USD_PROXY,
-            oracle: PYTH,
-            pythPriceFeedIdEthUsd: PYTH_ETH_USD_ID
+            oracle: PYTH
         });
 
         EngineExposed engineExposed = new EngineExposed({
             _perpsMarketProxy: PERPS_MARKET_PROXY,
             _spotMarketProxy: SPOT_MARKET_PROXY,
             _sUSDProxy: USD_PROXY,
-            _oracle: PYTH,
-            _pythPriceFeedIdEthUsd: PYTH_ETH_USD_ID
+            _oracle: PYTH
         });
 
         return (
@@ -123,8 +123,7 @@ contract BootstrapOptimism is Setup, OptimismParameters {
             PERPS_MARKET_PROXY,
             SPOT_MARKET_PROXY,
             USD_PROXY,
-            PYTH,
-            PYTH_ETH_USD_ID
+            PYTH
         );
     }
 }
@@ -132,22 +131,20 @@ contract BootstrapOptimism is Setup, OptimismParameters {
 contract BootstrapOptimismGoerli is Setup, OptimismGoerliParameters {
     function init()
         public
-        returns (address, address, address, address, address, address, bytes32)
+        returns (address, address, address, address, address, address)
     {
         Engine engine = Setup.deploySystem({
             perpsMarketProxy: PERPS_MARKET_PROXY,
             spotMarketProxy: SPOT_MARKET_PROXY,
             sUSDProxy: USD_PROXY,
-            oracle: PYTH,
-            pythPriceFeedIdEthUsd: PYTH_ETH_USD_ID
+            oracle: PYTH
         });
 
         EngineExposed engineExposed = new EngineExposed({
             _perpsMarketProxy: PERPS_MARKET_PROXY,
             _spotMarketProxy: SPOT_MARKET_PROXY,
             _sUSDProxy: USD_PROXY,
-            _oracle: PYTH,
-            _pythPriceFeedIdEthUsd: PYTH_ETH_USD_ID
+            _oracle: PYTH
         });
 
         return (
@@ -156,8 +153,7 @@ contract BootstrapOptimismGoerli is Setup, OptimismGoerliParameters {
             PERPS_MARKET_PROXY,
             SPOT_MARKET_PROXY,
             USD_PROXY,
-            PYTH,
-            PYTH_ETH_USD_ID
+            PYTH
         );
     }
 }

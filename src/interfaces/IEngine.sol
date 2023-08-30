@@ -20,17 +20,24 @@ interface IEngine {
         uint128 totalTrades;
     }
 
+    /// @notice order details used to create an order on a perps market within a conditional order
     struct OrderDetails {
-        /// @dev Order market id.
+        // order market id
         uint128 marketId;
-        /// @dev Order account id.
+        // order account id
         uint128 accountId;
-        /// @dev Order size delta (of asset units expressed in decimal 18 digits). It can be positive or negative.
+        // order size delta (of asset units expressed in decimal 18 digits). It can be positive or negative
         int128 sizeDelta;
-        /// @dev Settlement strategy used for the order.
+        // settlement strategy used for the order
         uint128 settlementStrategyId;
-        /// @dev Acceptable price set at submission.
+        // acceptable price set at submission
         uint256 acceptablePrice;
+        // bool to indicate if the order is reduce only; i.e. it can only reduce the position size
+        bool isReduceOnly;
+        // tracking code to identify the integrator
+        bytes32 trackingCode;
+        // address of the referrer
+        address referrer;
     }
 
     /// @notice conditional order
@@ -130,6 +137,8 @@ interface IEngine {
     /// @param _sizeDelta the amount of the order to trade (short if negative, long if positive)
     /// @param _settlementStrategyId the id of the settlement strategy to use
     /// @param _acceptablePrice acceptable price set at submission. Compared against the fill price
+    /// @param _trackingCode tracking code to identify the integrator
+    /// @param _referrer the address of the referrer
     /// @return retOrder the order committed
     /// @return fees the fees paid for the order
     function commitOrder(
@@ -137,7 +146,9 @@ interface IEngine {
         uint128 _accountId,
         int128 _sizeDelta,
         uint128 _settlementStrategyId,
-        uint256 _acceptablePrice
+        uint256 _acceptablePrice,
+        bytes32 _trackingCode,
+        address _referrer
     ) external returns (IPerpsMarketProxy.Data memory retOrder, uint256 fees);
 
     /*//////////////////////////////////////////////////////////////
@@ -147,19 +158,28 @@ interface IEngine {
     /// @notice execute a conditional order
     /// @param _co the conditional order
     /// @param _signature the signature of the conditional order
+    /// @return retOrder the order committed
+    /// @return fees the fees paid for the order to Synthetix
+    /// @return conditionalOrderFee the fee paid to executor for the conditional order
     function execute(ConditionalOrder calldata _co, bytes calldata _signature)
-        external;
+        external
+        returns (
+            IPerpsMarketProxy.Data memory retOrder,
+            uint256 fees,
+            uint256 conditionalOrderFee
+        );
 
-    /// @notice checks if the order can be executed
+    /// @notice checks if the order can be executed based on defined conditions
+    /// @dev this function does NOT check if the order can be executed based on the account's balance
+    /// (i.e. does not check if enough USD is available to pay for the order fee nor does it check
+    /// if enough collateral is available to cover the order)
     /// @param _co the conditional order
     /// @param _signature the signature of the conditional order
-    /// @return true if the order can be executed, false otherwise
-    /// @return the amount of gas spent to *affirmatively* verify the order denominated in USD
-    /// @dev if the order cannot be executed, gasSpent will 0
+    /// @return true if the order can be executed based on defined conditions, false otherwise
     function canExecute(
         ConditionalOrder calldata _co,
         bytes calldata _signature
-    ) external returns (bool, uint256);
+    ) external returns (bool);
 
     /// @notice verify the conditional order signer is the owner or delegate of the account
     /// @param _co the conditional order
@@ -184,4 +204,50 @@ interface IEngine {
     function verifyConditions(ConditionalOrder calldata _co)
         external
         returns (bool);
+
+    /*//////////////////////////////////////////////////////////////
+                               CONDITIONS
+    //////////////////////////////////////////////////////////////*/
+
+    /// @notice determine if current timestamp is after the given timestamp
+    /// @param _timestamp the timestamp to compare against
+    /// @return true if current timestamp is after the given timestamp, false otherwise
+    function isTimestampAfter(uint256 _timestamp)
+        external
+        view
+        returns (bool);
+
+    /// @notice determine if current timestamp is before the given timestamp
+    /// @param _timestamp the timestamp to compare against
+    /// @return true if current timestamp is before the given timestamp, false otherwise
+    function isTimestampBefore(uint256 _timestamp)
+        external
+        view
+        returns (bool);
+
+    /// @notice determine if the current price of an asset is above a given price
+    /// @dev assets price is determined by the pyth oracle
+    /// @param _assetId id of an asset to check the price of
+    /// @param _price the price to compare against
+    /// @return true if the current price of the asset is above the given price, false otherwise
+    function isPriceAbove(bytes32 _assetId, int64 _price)
+        external
+        view
+        returns (bool);
+
+    /// @notice determine if the current price of an asset is below a given price
+    /// @dev assets price is determined by the pyth oracle
+    /// @param _assetId id of an asset to check the price of
+    /// @param _price the price to compare against
+    /// @return true if the current price of the asset is below the given price, false otherwise
+    function isPriceBelow(bytes32 _assetId, int64 _price)
+        external
+        view
+        returns (bool);
+
+    /// @notice can market accept non close-only orders (i.e. is the market open)
+    /// @dev if maxMarketSize to 0, the market will be in a close-only state
+    /// @param _marketId the id of the market to check
+    /// @return true if the market is open, false otherwise
+    function isMarketOpen(uint128 _marketId) external view returns (bool);
 }

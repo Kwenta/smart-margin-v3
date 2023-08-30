@@ -1,6 +1,9 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 pragma solidity 0.8.18;
 
+/// @title Consolidated Perpetuals Market Proxy Interface
+/// @notice Responsible for interacting with Synthetix v3 perps markets
+/// @author Synthetix
 interface IPerpsMarketProxy {
     /*//////////////////////////////////////////////////////////////
                              ACCOUNT MODULE
@@ -95,12 +98,32 @@ interface IPerpsMarketProxy {
         external
         returns (Data memory retOrder, uint256 fees);
 
+    /// @notice For a given market, account id, and a position size, returns the required total account margin for this order to succeed
+    /// @dev Useful for integrators to determine if an order will succeed or fail
+    /// @param accountId id of the trader account.
+    /// @param marketId id of the market.
+    /// @param sizeDelta size of position.
+    /// @return requiredMargin margin required for the order to succeed.
+    function requiredMarginForOrder(
+        uint128 accountId,
+        uint128 marketId,
+        int128 sizeDelta
+    ) external view returns (uint256 requiredMargin);
+
+    /// @notice Simulates what the order fee would be for the given market with the specified size.
+    /// @dev Note that this does not include the settlement reward fee, which is based on the strategy type used
+    /// @param marketId id of the market.
+    /// @param sizeDelta size of position.
+    /// @return orderFees incurred fees.
+    /// @return fillPrice price at which the order would be filled.
+    function computeOrderFees(uint128 marketId, int128 sizeDelta)
+        external
+        view
+        returns (uint256 orderFees, uint256 fillPrice);
+
     /*//////////////////////////////////////////////////////////////
                           PERPS ACCOUNT MODULE
     //////////////////////////////////////////////////////////////*/
-
-    /// @notice Gets thrown when the amount delta is zero.
-    error InvalidAmountDelta(int256 amountDelta);
 
     /// @notice Modify the collateral delegated to the account.
     /// @param accountId Id of the account.
@@ -125,14 +148,6 @@ interface IPerpsMarketProxy {
     /// @param accountId Id of the account.
     /// @return collateralValue total collateral value of the account. USD denominated.
     function totalCollateralValue(uint128 accountId)
-        external
-        view
-        returns (uint256);
-
-    /// @notice Gets the account's total open interest value.
-    /// @param accountId Id of the account.
-    /// @return openInterestValue total open interest value of the account.
-    function totalAccountOpenInterest(uint128 accountId)
         external
         view
         returns (uint256);
@@ -180,48 +195,11 @@ interface IPerpsMarketProxy {
                           PERPS MARKET MODULE
     //////////////////////////////////////////////////////////////*/
 
-    struct MarketSummary {
-        int256 skew;
-        uint256 size;
-        uint256 maxOpenInterest;
-        int256 currentFundingRate;
-        int256 currentFundingVelocity;
-        uint256 indexPrice;
-    }
-
-    function metadata(uint128 marketId)
+    /// @notice Gets the max size of an specific market.
+    /// @param marketId id of the market.
+    /// @return maxMarketSize the max market size in market asset units.
+    function getMaxMarketSize(uint128 marketId)
         external
         view
-        returns (string memory name, string memory symbol);
-
-    function skew(uint128 marketId) external view returns (int256);
-
-    function size(uint128 marketId) external view returns (uint256);
-
-    function maxOpenInterest(uint128 marketId)
-        external
-        view
-        returns (uint256);
-
-    function currentFundingRate(uint128 marketId)
-        external
-        view
-        returns (int256);
-
-    function currentFundingVelocity(uint128 marketId)
-        external
-        view
-        returns (int256);
-
-    function indexPrice(uint128 marketId) external view returns (uint256);
-
-    function fillPrice(uint128 marketId, int128 orderSize, uint256 price)
-        external
-        returns (uint256);
-
-    /// @dev Given a marketId return a market's summary details in one call.
-    function getMarketSummary(uint128 marketId)
-        external
-        view
-        returns (MarketSummary memory summary);
+        returns (uint256 maxMarketSize);
 }

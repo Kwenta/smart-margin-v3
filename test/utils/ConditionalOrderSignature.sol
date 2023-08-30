@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 pragma solidity 0.8.18;
 
-import {Vm} from "lib/forge-std/src/Vm.sol";
 import {IEngine} from "src/interfaces/IEngine.sol";
+import {Vm} from "lib/forge-std/src/Vm.sol";
 
 contract ConditionalOrderSignature {
     Vm private constant vm =
@@ -10,7 +10,7 @@ contract ConditionalOrderSignature {
 
     /// @notice pre-computed keccak256(OrderDetails struct)
     bytes32 public constant _ORDER_DETAILS_TYPEHASH = keccak256(
-        "OrderDetails(uint128 marketId,uint128 accountId,int128 sizeDelta,uint128 settlementStrategyId,uint256 acceptablePrice)"
+        "OrderDetails(uint128 marketId,uint128 accountId,int128 sizeDelta,uint128 settlementStrategyId,uint256 acceptablePrice,bool isReduceOnly,bytes32 trackingCode,address referrer)"
     );
 
     /// @notice pre-computed keccak256(ConditionalOrder struct)
@@ -30,7 +30,10 @@ contract ConditionalOrderSignature {
                 co.orderDetails.accountId,
                 co.orderDetails.sizeDelta,
                 co.orderDetails.settlementStrategyId,
-                co.orderDetails.acceptablePrice
+                co.orderDetails.acceptablePrice,
+                co.orderDetails.isReduceOnly,
+                co.orderDetails.trackingCode,
+                co.orderDetails.referrer
             )
         );
 

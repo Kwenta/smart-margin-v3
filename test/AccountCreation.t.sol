@@ -28,14 +28,4 @@ contract CreateAccount is AccountCreationTest {
 
         assertEq(perpsMarketProxy.getAccountOwner(accountId), ACTOR);
     }
-
-    function test_createAccount_permissions() public {
-        vm.prank(ACTOR);
-
-        uint128 accountId = engine.createAccount();
-
-        perpsMarketProxy.hasPermission(
-            accountId, ADMIN_PERMISSION, address(engine)
-        );
-    }
 }

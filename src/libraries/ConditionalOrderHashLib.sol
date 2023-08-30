@@ -3,11 +3,13 @@ pragma solidity 0.8.18;
 
 import {IEngine} from "src/interfaces/IEngine.sol";
 
-/// @custom:todo add documentation
+/// @title Kwenta Smart Margin v3: Signature Hash Library for Conditional Orders
+/// @notice Responsible for computing the hash of a Conditional Order
+/// @author JaredBorders (jaredborders@pm.me)
 library ConditionalOrderHashLib {
     /// @notice pre-computed keccak256(OrderDetails struct)
     bytes32 public constant _ORDER_DETAILS_TYPEHASH = keccak256(
-        "OrderDetails(uint128 marketId,uint128 accountId,int128 sizeDelta,uint128 settlementStrategyId,uint256 acceptablePrice)"
+        "OrderDetails(uint128 marketId,uint128 accountId,int128 sizeDelta,uint128 settlementStrategyId,uint256 acceptablePrice,bool isReduceOnly,bytes32 trackingCode,address referrer)"
     );
 
     /// @notice pre-computed keccak256(ConditionalOrder struct)
@@ -15,7 +17,9 @@ library ConditionalOrderHashLib {
         "ConditionalOrder(OrderDetails orderDetails,address signer,uint128 nonce,bool requireVerified,address trustedExecutor,bytes[] conditions)OrderDetails(uint128 marketId,uint128 accountId,int128 sizeDelta,uint128 settlementStrategyId,uint256 acceptablePrice)"
     );
 
-    /// @custom:todo add documentation
+    /// @notice hash the OrderDetails struct
+    /// @param orderDetails OrderDetails struct
+    /// @return hash of the OrderDetails struct
     function hash(IEngine.OrderDetails memory orderDetails)
         internal
         pure
@@ -28,12 +32,17 @@ library ConditionalOrderHashLib {
                 orderDetails.accountId,
                 orderDetails.sizeDelta,
                 orderDetails.settlementStrategyId,
-                orderDetails.acceptablePrice
+                orderDetails.acceptablePrice,
+                orderDetails.isReduceOnly,
+                orderDetails.trackingCode,
+                orderDetails.referrer
             )
         );
     }
 
-    /// @custom:todo add documentation
+    /// @notice hash the ConditionalOrder struct
+    /// @param co ConditionalOrder struct
+    /// @return hash of the ConditionalOrder struct
     function hash(IEngine.ConditionalOrder memory co)
         internal
         pure
