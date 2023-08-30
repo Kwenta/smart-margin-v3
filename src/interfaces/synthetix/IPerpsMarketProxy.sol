@@ -125,9 +125,6 @@ interface IPerpsMarketProxy {
                           PERPS ACCOUNT MODULE
     //////////////////////////////////////////////////////////////*/
 
-    /// @notice Gets thrown when the amount delta is zero.
-    error InvalidAmountDelta(int256 amountDelta);
-
     /// @notice Modify the collateral delegated to the account.
     /// @param accountId Id of the account.
     /// @param synthMarketId Id of the synth market used as collateral. Synth market id, 0 for snxUSD.
@@ -151,14 +148,6 @@ interface IPerpsMarketProxy {
     /// @param accountId Id of the account.
     /// @return collateralValue total collateral value of the account. USD denominated.
     function totalCollateralValue(uint128 accountId)
-        external
-        view
-        returns (uint256);
-
-    /// @notice Gets the account's total open interest value.
-    /// @param accountId Id of the account.
-    /// @return openInterestValue total open interest value of the account.
-    function totalAccountOpenInterest(uint128 accountId)
         external
         view
         returns (uint256);
@@ -205,51 +194,6 @@ interface IPerpsMarketProxy {
     /*//////////////////////////////////////////////////////////////
                           PERPS MARKET MODULE
     //////////////////////////////////////////////////////////////*/
-
-    struct MarketSummary {
-        int256 skew;
-        uint256 size;
-        uint256 maxOpenInterest;
-        int256 currentFundingRate;
-        int256 currentFundingVelocity;
-        uint256 indexPrice;
-    }
-
-    function metadata(uint128 marketId)
-        external
-        view
-        returns (string memory name, string memory symbol);
-
-    function skew(uint128 marketId) external view returns (int256);
-
-    function size(uint128 marketId) external view returns (uint256);
-
-    function maxOpenInterest(uint128 marketId)
-        external
-        view
-        returns (uint256);
-
-    function currentFundingRate(uint128 marketId)
-        external
-        view
-        returns (int256);
-
-    function currentFundingVelocity(uint128 marketId)
-        external
-        view
-        returns (int256);
-
-    function indexPrice(uint128 marketId) external view returns (uint256);
-
-    function fillPrice(uint128 marketId, int128 orderSize, uint256 price)
-        external
-        returns (uint256);
-
-    /// @dev Given a marketId return a market's summary details in one call.
-    function getMarketSummary(uint128 marketId)
-        external
-        view
-        returns (MarketSummary memory summary);
 
     /// @notice Gets the max size of an specific market.
     /// @param marketId id of the market.

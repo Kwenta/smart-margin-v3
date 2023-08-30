@@ -1,9 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 pragma solidity 0.8.18;
 
-import {
-    Bootstrap, console2, IPerpsMarketProxy
-} from "test/utils/Bootstrap.sol";
+import {Bootstrap, IPerpsMarketProxy} from "test/utils/Bootstrap.sol";
 import {ConditionalOrderSignature} from
     "test/utils/ConditionalOrderSignature.sol";
 import {IEngine} from "src/interfaces/IEngine.sol";
