@@ -84,7 +84,25 @@ contract DepositCollateral is CollateralTest {
         assertEq(totalCollateralValue, AMOUNT);
     }
 
-    /// @custom:todo test deposit collateral with _amount > ACTOR balance
+    function test_depositCollateral_insufficient_balance() public {
+        vm.startPrank(ACTOR);
+
+        sUSD.approve(address(engine), type(uint256).max);
+
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                InsufficientBalance.selector, AMOUNT + 1, AMOUNT
+            )
+        );
+
+        engine.modifyCollateral({
+            _accountId: accountId,
+            _synthMarketId: SUSD_SPOT_MARKET_ID,
+            _amount: int256(AMOUNT + 1)
+        });
+
+        vm.stopPrank();
+    }
 }
 
 contract WithdrawCollateral is CollateralTest {
@@ -185,7 +203,58 @@ contract WithdrawCollateral is CollateralTest {
         assertEq(totalCollateralValue, 0);
     }
 
-    /// @custom:todo test withdraw collateral with _amount == 0
-    /// @custom:todo test withdraw collateral with _amount > account balance
-    /// @custom:todo test withdraw collateral with _amount > withdrawable amount
+    function test_withdrawCollateral_zero() public {
+        /// @notice is amount is zero, modifyCollateral will logically treat
+        /// the interaction as a withdraw which will then revert
+
+        vm.startPrank(ACTOR);
+
+        sUSD.approve(address(engine), type(uint256).max);
+
+        engine.modifyCollateral({
+            _accountId: accountId,
+            _synthMarketId: SUSD_SPOT_MARKET_ID,
+            _amount: int256(AMOUNT)
+        });
+
+        vm.expectRevert(abi.encodeWithSelector(InvalidAmountDelta.selector, 0));
+
+        engine.modifyCollateral({
+            _accountId: accountId,
+            _synthMarketId: SUSD_SPOT_MARKET_ID,
+            _amount: 0
+        });
+
+        vm.stopPrank();
+    }
+
+    function test_withdrawCollateral_insufficient_account_collateral_balance()
+        public
+    {
+        vm.startPrank(ACTOR);
+
+        sUSD.approve(address(engine), type(uint256).max);
+
+        engine.modifyCollateral({
+            _accountId: accountId,
+            _synthMarketId: SUSD_SPOT_MARKET_ID,
+            _amount: int256(AMOUNT)
+        });
+
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                InsufficientCollateralAvailableForWithdraw.selector,
+                AMOUNT,
+                AMOUNT + 1
+            )
+        );
+
+        engine.modifyCollateral({
+            _accountId: accountId,
+            _synthMarketId: SUSD_SPOT_MARKET_ID,
+            _amount: -int256(AMOUNT + 1)
+        });
+
+        vm.stopPrank();
+    }
 }

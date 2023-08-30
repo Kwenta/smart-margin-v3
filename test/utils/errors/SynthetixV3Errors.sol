@@ -100,4 +100,5 @@ contract SynthetixV3Errors {
     error PermissionDenied(
         uint128 accountId, bytes32 permission, address target
     );
+    error InsufficientBalance(uint256 required, uint256 existing);
 }
