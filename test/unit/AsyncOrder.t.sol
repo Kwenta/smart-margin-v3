@@ -3,16 +3,13 @@ pragma solidity 0.8.18;
 
 import {Bootstrap, IPerpsMarketProxy} from "test/utils/Bootstrap.sol";
 import {IEngine} from "src/interfaces/IEngine.sol";
+import {SynthetixMock} from "test/utils/mocks/SynthetixMock.sol";
 
-contract AsyncOrderTest is Bootstrap {
+contract AsyncOrderTest is Bootstrap, SynthetixMock {
     function setUp() public {
         vm.rollFork(GOERLI_BLOCK_NUMBER);
         initializeOptimismGoerli();
-    }
-}
 
-contract CommitOrder is AsyncOrderTest {
-    function test_commitOrder() public {
         vm.startPrank(ACTOR);
 
         sUSD.approve(address(engine), type(uint256).max);
@@ -22,6 +19,14 @@ contract CommitOrder is AsyncOrderTest {
             _synthMarketId: SUSD_SPOT_MARKET_ID,
             _amount: int256(AMOUNT)
         });
+
+        vm.stopPrank();
+    }
+}
+
+contract CommitOrder is AsyncOrderTest {
+    function test_commitOrder() public {
+        vm.prank(ACTOR);
 
         (IPerpsMarketProxy.Data memory retOrder, uint256 fees) = engine
             .commitOrder({
@@ -33,8 +38,6 @@ contract CommitOrder is AsyncOrderTest {
             _trackingCode: TRACKING_CODE,
             _referrer: REFERRER
         });
-
-        vm.stopPrank();
 
         // retOrder
         assertTrue(retOrder.settlementTime != 0);
@@ -57,8 +60,53 @@ contract CommitOrder is AsyncOrderTest {
         assertEq(accountStats.totalTrades, 1);
     }
 
-    /// @cutsoom:todo test commitOrder: Market that does not exist
-    /// @custom:todo test commitOrder: Market that is paused
-    /// @custom:todo test commitOrder: Account does not have enough collateral/margin
-    /// @custom:todo test commitOrder: Position size exceeds max leverage
+    function test_commitOrder_invalid_market() public {
+        vm.prank(ACTOR);
+
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                InvalidMarket.selector, INVALID_PERPS_MARKET_ID
+            )
+        );
+
+        engine.commitOrder({
+            _perpsMarketId: INVALID_PERPS_MARKET_ID,
+            _accountId: accountId,
+            _sizeDelta: 1 ether,
+            _settlementStrategyId: 0,
+            _acceptablePrice: type(uint256).max,
+            _trackingCode: TRACKING_CODE,
+            _referrer: REFERRER
+        });
+    }
+
+    function test_commitOrder_insufficient_collateral() public {
+        int128 sizeDelta = 1000 ether;
+
+        uint256 requiredMargin = perpsMarketProxy.requiredMarginForOrder(
+            accountId, SETH_PERPS_MARKET_ID, sizeDelta
+        );
+
+        int256 availableMargin = perpsMarketProxy.getAvailableMargin(accountId);
+
+        assertGt(requiredMargin, uint256(availableMargin));
+
+        vm.prank(ACTOR);
+
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                InsufficientMargin.selector, AMOUNT, requiredMargin
+            )
+        );
+
+        engine.commitOrder({
+            _perpsMarketId: SETH_PERPS_MARKET_ID,
+            _accountId: accountId,
+            _sizeDelta: sizeDelta,
+            _settlementStrategyId: 0,
+            _acceptablePrice: type(uint256).max,
+            _trackingCode: TRACKING_CODE,
+            _referrer: REFERRER
+        });
+    }
 }
