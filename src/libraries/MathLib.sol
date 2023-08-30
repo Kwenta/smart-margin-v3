@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 pragma solidity 0.8.18;
 
-/// @notice Math Library for int128 and int256
+/// @title Kwenta Smart Margin v3: Math Library for int128 and int256
+/// @author JaredBorders (jaredborders@pm.me)
 library MathLib {
     error CannotTakeAbsOfMinInt128();
     error CannotTakeAbsOfMinInt256();
