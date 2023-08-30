@@ -13,7 +13,7 @@
 
 ## Contracts
 
-> to run: `tree src/`
+> `tree src/`
 
 ```
 src/
@@ -55,7 +55,7 @@ npm run test
 ```
 
 4. Run specific test
-    > OPTIMISM_GOERLI_RPC_URL can be replaced with OPTIMISM_RPC_URL if a mainnet fork is desired
+    > `OPTIMISM_GOERLI_RPC_URL` can be replaced with `OPTIMISM_RPC_URL` if a mainnet fork is desired
 
 ```
 forge test --fork-url $(grep OPTIMISM_GOERLI_RPC_URL .env | cut -d '=' -f2) --match-test TEST_NAME -vvv
