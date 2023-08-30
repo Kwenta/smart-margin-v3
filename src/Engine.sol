@@ -20,6 +20,7 @@ import {SignatureCheckerLib} from "src/libraries/SignatureCheckerLib.sol";
 contract Engine is IEngine, Multicallable, EIP712, ERC721Receivable {
     using MathLib for int128;
     using MathLib for int256;
+    using MathLib for uint256;
     using SignatureCheckerLib for bytes;
     using ConditionalOrderHashLib for OrderDetails;
     using ConditionalOrderHashLib for ConditionalOrder;
@@ -131,14 +132,13 @@ contract Engine is IEngine, Multicallable, EIP712, ERC721Receivable {
     /// @dev only callable by a validated margin engine
     function _updateAccountStats(
         uint128 _accountId,
-        uint256 _fees,
+        uint128 _fees,
         uint128 _volume
     ) internal {
         AccountStats storage stats = accountStats[_accountId];
 
         stats.totalFees += _fees;
         stats.totalVolume += _volume;
-        stats.totalTrades++;
     }
 
     /*//////////////////////////////////////////////////////////////
@@ -290,7 +290,7 @@ contract Engine is IEngine, Multicallable, EIP712, ERC721Receivable {
             })
         );
 
-        _updateAccountStats(_accountId, fees, _sizeDelta.abs128());
+        _updateAccountStats(_accountId, fees.castU128(), _sizeDelta.abs128());
     }
 
     /*//////////////////////////////////////////////////////////////

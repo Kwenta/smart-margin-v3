@@ -13,11 +13,9 @@ interface IEngine {
     /// @notice stats for an account
     struct AccountStats {
         // totalFees the total fees paid by the account
-        uint256 totalFees;
+        uint128 totalFees;
         // totalVolume the total volume traded by the account
         uint128 totalVolume;
-        // totalTrades the total number of trades made by the account
-        uint128 totalTrades;
     }
 
     /// @notice order details used to create an order on a perps market within a conditional order
