@@ -59,6 +59,13 @@ npm run test
 forge test --fork-url $(grep OPTIMISM_GOERLI_RPC_URL .env | cut -d '=' -f2) --match-test TEST_NAME -vvv
 ```
 
+5. Decode a custom error defined by Synthetix v3
+> ex: `npm run decode-custom-error -- 0x01de5522...`
+
+```
+npm run decode-custom-error -- <error hash 0x...>
+```
+
 ## Deployment Addresses
 > See `deployments/` folder
 1. Optimism deployments found in `deployments/Optimism/`
