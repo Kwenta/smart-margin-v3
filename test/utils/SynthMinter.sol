@@ -22,8 +22,4 @@ contract SynthMinter is Test, Constants {
     function mint_sUSD(address target, uint256 amount) public {
         deal(sUSD, target, amount);
     }
-
-    function mint_sBTC(address target, uint256 amount) public {
-        /// @custom:todo mint_sBTC
-    }
 }

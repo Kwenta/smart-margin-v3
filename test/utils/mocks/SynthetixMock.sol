@@ -35,4 +35,18 @@ contract SynthetixMock is Test {
             abi.encode(0, 0, positionSize)
         );
     }
+
+    function mock_getMaxMarketSize(
+        address marketConfigurationModule,
+        uint128 marketId,
+        uint256 maxMarketSize
+    ) public {
+        vm.mockCall(
+            marketConfigurationModule,
+            abi.encodeWithSelector(
+                IPerpsMarketProxy.getMaxMarketSize.selector, marketId
+            ),
+            abi.encode(maxMarketSize)
+        );
+    }
 }

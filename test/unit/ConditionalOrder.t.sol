@@ -1058,8 +1058,11 @@ contract Conditions is ConditionalOrderTest {
         bool isOpen = engine.isMarketOpen(SETH_PERPS_MARKET_ID);
         assertTrue(isOpen);
 
-        uint128 badMarketId = type(uint128).max;
-        isOpen = engine.isMarketOpen(badMarketId);
+        mock_getMaxMarketSize(
+            MARKET_CONFIGURATION_MODULE, SETH_PERPS_MARKET_ID, 0
+        );
+
+        isOpen = engine.isMarketOpen(SETH_PERPS_MARKET_ID);
         assertFalse(isOpen);
     }
 }
