@@ -86,4 +86,18 @@ contract SynthetixV3Errors {
     error IneligibleForCancellation(uint256 timestamp, uint256 expirationTime);
     error OrderAlreadySettled(uint256 asyncOrderId, uint256 settledAt);
     error InvalidClaim(uint256 asyncOrderId);
+    error OnlyAccountTokenProxy(address origin);
+    error PermissionNotGranted(
+        uint128 accountId, bytes32 permission, address user
+    );
+    error InvalidAccountId(uint128 accountId);
+    error Unauthorized(address addr);
+    error CannotSelfApprove(address addr);
+    error InvalidTransferRecipient(address addr);
+    error InvalidOwner(address addr);
+    error TokenDoesNotExist(uint256 id);
+    error TokenAlreadyMinted(uint256 id);
+    error PermissionDenied(
+        uint128 accountId, bytes32 permission, address target
+    );
 }

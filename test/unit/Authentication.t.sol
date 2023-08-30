@@ -31,7 +31,17 @@ contract AccountOwner is AuthenticationTest {
         assertFalse(isOwner);
     }
 
-    /// @custom:todo test when account does not exist
+    function test_isAccountOwner_account_doesnt_exist() public {
+        uint128 accountId = type(uint128).max;
+
+        address owner = perpsMarketProxy.getAccountOwner(accountId);
+
+        assertTrue(owner == address(0));
+
+        bool isOwner = engine.isAccountOwner(accountId, BAD_ACTOR);
+
+        assertFalse(isOwner);
+    }
 }
 
 contract AccountDelegate is AuthenticationTest {
@@ -42,7 +52,7 @@ contract AccountDelegate is AuthenticationTest {
 
         perpsMarketProxy.grantPermission({
             accountId: accountId,
-            permission: "ADMIN",
+            permission: ADMIN_PERMISSION,
             user: NEW_ACTOR
         });
 
@@ -60,7 +70,7 @@ contract AccountDelegate is AuthenticationTest {
 
         perpsMarketProxy.grantPermission({
             accountId: accountId,
-            permission: "ADMIN",
+            permission: ADMIN_PERMISSION,
             user: NEW_ACTOR
         });
 
@@ -71,5 +81,25 @@ contract AccountDelegate is AuthenticationTest {
         assertFalse(isDelegate);
     }
 
-    /// @custom:todo test when account does not exist
+    function test_isAccountDelegate_account_doesnt_exist() public {
+        uint128 accountId = type(uint128).max;
+
+        address owner = perpsMarketProxy.getAccountOwner(accountId);
+
+        assertTrue(owner == address(0));
+
+        vm.prank(ACTOR);
+
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                PermissionDenied.selector, accountId, ADMIN_PERMISSION, ACTOR
+            )
+        );
+
+        perpsMarketProxy.grantPermission({
+            accountId: accountId,
+            permission: ADMIN_PERMISSION,
+            user: NEW_ACTOR
+        });
+    }
 }
