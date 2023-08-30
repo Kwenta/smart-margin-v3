@@ -1,6 +1,9 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 pragma solidity 0.8.18;
 
+/// @title Consolidated Spot Market Proxy Interface
+/// @notice Responsible for interacting with Synthetix v3 spot markets
+/// @author Synthetix
 interface ISpotMarketProxy {
     /*//////////////////////////////////////////////////////////////
                        SPOT MARKET FACTORY MODULE
