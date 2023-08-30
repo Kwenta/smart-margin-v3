@@ -57,7 +57,7 @@ contract Bootstrap is Test, Constants, Conditions, SynthetixV3Errors {
         accountId = perpsMarketProxy.createAccount();
         perpsMarketProxy.grantPermission({
             accountId: accountId,
-            permission: "ADMIN",
+            permission: ADMIN_PERMISSION,
             user: address(engine)
         });
         vm.stopPrank();
@@ -89,7 +89,7 @@ contract Bootstrap is Test, Constants, Conditions, SynthetixV3Errors {
         accountId = perpsMarketProxy.createAccount();
         perpsMarketProxy.grantPermission({
             accountId: accountId,
-            permission: "ADMIN",
+            permission: ADMIN_PERMISSION,
             user: address(engine)
         });
         vm.stopPrank();

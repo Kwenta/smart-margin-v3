@@ -38,7 +38,7 @@ contract ConditionalOrderTest is
 
         perpsMarketProxy.grantPermission({
             accountId: accountId,
-            permission: "ADMIN",
+            permission: ADMIN_PERMISSION,
             user: address(engine)
         });
 
