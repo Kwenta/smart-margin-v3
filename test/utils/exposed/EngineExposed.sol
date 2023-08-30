@@ -1,9 +1,11 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 pragma solidity 0.8.18;
 
-import {Engine} from "src/Engine.sol";
+import {Engine, MathLib} from "src/Engine.sol";
 
 contract EngineExposed is Engine {
+    using MathLib for uint256;
+
     constructor(
         address _perpsMarketProxy,
         address _spotMarketProxy,
@@ -14,7 +16,7 @@ contract EngineExposed is Engine {
     function updateAccountStats(uint128 accountId, uint256 fees, uint128 volume)
         public
     {
-        _updateAccountStats(accountId, fees, volume);
+        _updateAccountStats(accountId, fees.castU128(), volume);
     }
 
     function getSynthAddress(uint128 synthMarketId)

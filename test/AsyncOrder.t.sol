@@ -57,7 +57,6 @@ contract CommitOrder is AsyncOrderTest {
             engine.getAccountStats(accountId);
         assertEq(accountStats.totalFees, fees);
         assertEq(accountStats.totalVolume, 1 ether);
-        assertEq(accountStats.totalTrades, 1);
     }
 
     function test_commitOrder_invalid_market() public {

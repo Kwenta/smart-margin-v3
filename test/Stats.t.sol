@@ -14,10 +14,10 @@ contract StatsTest is Bootstrap {
 contract UpdateAccountStats is StatsTest {
     function test_updateAccountStats(
         uint128 accountId,
-        uint256 fees,
+        uint128 fees,
         uint128 volume
     ) public {
-        vm.assume(fees < type(uint256).max / 10);
+        vm.assume(fees < type(uint128).max / 10);
         vm.assume(volume < type(uint128).max / 10);
 
         for (uint256 i = 1; i <= 10; i++) {
@@ -28,7 +28,6 @@ contract UpdateAccountStats is StatsTest {
 
             assertEq(accountStats.totalFees, fees * i);
             assertEq(accountStats.totalVolume, volume * i);
-            assertEq(accountStats.totalTrades, i);
         }
     }
 }
