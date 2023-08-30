@@ -8,6 +8,8 @@ import {OptimismParameters} from
     "script/utils/parameters/OptimismParameters.sol";
 import {Script} from "lib/forge-std/src/Script.sol";
 
+/// @title Kwenta Smart Margin v3 deployment script
+/// @author JaredBorders (jaredborders@pm.me)
 contract Setup is Script {
     function deploySystem(
         address perpsMarketProxy,
