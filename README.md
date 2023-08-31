@@ -11,6 +11,10 @@
 [license]: https://opensource.org/license/GPL-3.0/
 [license-badge]: https://img.shields.io/badge/GitHub-GPL--3.0-informational
 
+## Docs
+
+Please refer to the project [wiki](https://github.com/Kwenta/smart-margin-v3/wiki) for all documentation.
+
 ## Contracts
 
 > `tree src/`
