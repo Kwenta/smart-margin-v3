@@ -3,7 +3,6 @@ pragma solidity 0.8.18;
 
 import {MathLib} from "src/libraries/MathLib.sol";
 import {Test} from "lib/forge-std/src/Test.sol";
-import {console} from "lib/forge-std/src/console.sol";
 
 contract MathLibTest is Test {
     using MathLib for int128;
