@@ -52,6 +52,9 @@ contract Engine is IEngine, Multicallable, EIP712, ERC721Receivable {
     /// @notice max BPS
     uint256 internal constant MAX_BPS = 10_000;
 
+    /// @notice max number of conditions that can be defined for a conditional order
+    uint256 internal constant MAX_CONDITIONS = 5;
+
     /*//////////////////////////////////////////////////////////////
                                IMMUTABLES
     //////////////////////////////////////////////////////////////*/
@@ -450,10 +453,15 @@ contract Engine is IEngine, Multicallable, EIP712, ERC721Receivable {
         returns (bool)
     {
         uint256 length = _co.conditions.length;
-        for (uint256 i = 0; i < length; i++) {
+        if (length > MAX_CONDITIONS) revert MaxConditionSizeExceeded();
+        for (uint256 i = 0; i < length;) {
             (bool success, bytes memory response) =
                 address(this).call(_co.conditions[i]);
             if (!success || !abi.decode(response, (bool))) return false;
+
+            unchecked {
+                i++;
+            }
         }
 
         return true;

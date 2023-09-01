@@ -64,6 +64,10 @@ interface IEngine {
     /// @notice thrown when an order cannot be executed
     error CannotExecuteOrder();
 
+    /// @notice thrown when number of conditions exceeds max allowed
+    /// @dev used to prevent griefing attacks
+    error MaxConditionSizeExceeded();
+
     /*//////////////////////////////////////////////////////////////
                              CREATE ACCOUNT
     //////////////////////////////////////////////////////////////*/
