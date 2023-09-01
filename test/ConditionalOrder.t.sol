@@ -276,6 +276,27 @@ contract VerifySignature is ConditionalOrderTest {
 }
 
 contract VerifyConditions is ConditionalOrderTest {
+    function test_max_condition_size_exceeded() public {
+        bytes[] memory conditions = new bytes[](6); // exceeds max size of 5
+
+        IEngine.OrderDetails memory orderDetails;
+
+        IEngine.ConditionalOrder memory co = IEngine.ConditionalOrder({
+            orderDetails: orderDetails,
+            signer: signer,
+            nonce: 0,
+            requireVerified: true,
+            trustedExecutor: address(0),
+            conditions: conditions
+        });
+
+        vm.expectRevert(
+            abi.encodeWithSelector(IEngine.MaxConditionSizeExceeded.selector)
+        );
+
+        engine.verifyConditions(co);
+    }
+
     function test_verify_conditions_verified() public {
         int64 mock_price = 173_078_000_000;
         bytes32 mock_assetId = PYTH_ETH_USD_ASSET_ID;
