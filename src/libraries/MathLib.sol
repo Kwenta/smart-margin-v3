@@ -51,7 +51,7 @@ library MathLib {
             let mask := sub(0, shr(255, x))
 
             /// If x is negative, this effectively negates the number
-            // if x is positive, it leaves the number unchanged, thereby computing the absolute value
+            /// if x is positive, it leaves the number unchanged, thereby computing the absolute value
             z := xor(mask, add(mask, x))
         }
     }
