@@ -181,7 +181,7 @@ interface IEngine {
     function canExecute(
         ConditionalOrder calldata _co,
         bytes calldata _signature
-    ) external returns (bool);
+    ) external view returns (bool);
 
     /// @notice verify the conditional order signer is the owner or delegate of the account
     /// @param _co the conditional order
@@ -201,10 +201,16 @@ interface IEngine {
     ) external view returns (bool);
 
     /// @notice verify array of conditions defined in the conditional order
+    /// @dev 
+    ///     1. all conditions are defined by the conditional order creator
+    ///     2. conditions are encoded function selectors and parameters
+    ///     3. each function defined in the condition contract must return a truthy value
+    ///     4. internally, staticcall is used to protect against malicious conditions
     /// @param _co the conditional order
     /// @return true if all conditions are met
     function verifyConditions(ConditionalOrder calldata _co)
         external
+        view
         returns (bool);
 
     /*//////////////////////////////////////////////////////////////

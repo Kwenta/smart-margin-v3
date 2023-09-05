@@ -389,7 +389,7 @@ contract Engine is IEngine, Multicallable, EIP712, ERC721Receivable {
     function canExecute(
         ConditionalOrder calldata _co,
         bytes calldata _signature
-    ) public override returns (bool) {
+    ) public view override returns (bool) {
         // verify nonce has not been executed before
         if (executedOrders[_co.nonce]) return false;
 
@@ -449,14 +449,19 @@ contract Engine is IEngine, Multicallable, EIP712, ERC721Receivable {
     /// @inheritdoc IEngine
     function verifyConditions(ConditionalOrder calldata _co)
         public
+        view
         override
         returns (bool)
     {
         uint256 length = _co.conditions.length;
         if (length > MAX_CONDITIONS) revert MaxConditionSizeExceeded();
         for (uint256 i = 0; i < length;) {
-            (bool success, bytes memory response) =
-                address(this).call(_co.conditions[i]);
+            bool success;
+            bytes memory response;
+
+            /// @dev staticcall to prevent state changes in the case a condition is malicious
+            (success, response) = address(this).staticcall(_co.conditions[i]);
+
             if (!success || !abi.decode(response, (bool))) return false;
 
             unchecked {
