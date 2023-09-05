@@ -364,6 +364,97 @@ contract VerifyConditions is ConditionalOrderTest {
 
         assertFalse(isVerified);
     }
+
+    function test_verifyConditions_public_non_condition_isAccountDelegate()
+        public
+    {
+        bytes[] memory conditions = new bytes[](1);
+        conditions[0] = abi.encodeWithSelector(
+            IEngine.isAccountDelegate.selector, accountId, address(engine)
+        );
+
+        IEngine.OrderDetails memory orderDetails;
+
+        IEngine.ConditionalOrder memory co = IEngine.ConditionalOrder({
+            orderDetails: orderDetails,
+            signer: signer,
+            nonce: 0,
+            requireVerified: true,
+            trustedExecutor: address(0),
+            conditions: conditions
+        });
+
+        bool isVerified = engine.verifyConditions(co);
+
+        assertTrue(isVerified);
+    }
+
+    function test_verifyConditions_external_non_condition_getAccountStats()
+        public
+    {
+        bytes[] memory conditions = new bytes[](1);
+        conditions[0] =
+            abi.encodeWithSelector(IEngine.getAccountStats.selector, accountId);
+
+        IEngine.OrderDetails memory orderDetails;
+
+        IEngine.ConditionalOrder memory co = IEngine.ConditionalOrder({
+            orderDetails: orderDetails,
+            signer: signer,
+            nonce: 0,
+            requireVerified: true,
+            trustedExecutor: address(0),
+            conditions: conditions
+        });
+
+        bool isVerified = engine.verifyConditions(co);
+
+        assertFalse(isVerified);
+    }
+
+    function test_verifyConditions_internal_non_condition_getSynthAddress()
+        public
+    {
+        bytes[] memory conditions = new bytes[](1);
+        conditions[0] = abi.encodeWithSignature(
+            "_getSynthAddress(uint128 _synthMarketId)", SETH_SPOT_MARKET_ID
+        );
+
+        IEngine.OrderDetails memory orderDetails;
+
+        IEngine.ConditionalOrder memory co = IEngine.ConditionalOrder({
+            orderDetails: orderDetails,
+            signer: signer,
+            nonce: 0,
+            requireVerified: true,
+            trustedExecutor: address(0),
+            conditions: conditions
+        });
+
+        bool isVerified = engine.verifyConditions(co);
+
+        assertFalse(isVerified);
+    }
+
+    function test_verifyConditions_modify_state_createAccount() public {
+        bytes[] memory conditions = new bytes[](1);
+        conditions[0] = abi.encodeWithSignature("createAccount()");
+
+        IEngine.OrderDetails memory orderDetails;
+
+        IEngine.ConditionalOrder memory co = IEngine.ConditionalOrder({
+            orderDetails: orderDetails,
+            signer: signer,
+            nonce: 0,
+            requireVerified: true,
+            trustedExecutor: address(0),
+            conditions: conditions
+        });
+
+        bool isVerified = engine.verifyConditions(co);
+
+        assertFalse(isVerified);
+    }
 }
 
 contract Execute is ConditionalOrderTest {
