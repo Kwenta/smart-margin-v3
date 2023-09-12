@@ -311,8 +311,10 @@ contract VerifyConditions is ConditionalOrderTest {
         bytes[] memory conditions = new bytes[](5);
         conditions[0] = isTimestampAfter(0);
         conditions[1] = isTimestampBefore(type(uint256).max);
-        conditions[2] = isPriceAbove(PYTH_ETH_USD_ASSET_ID, 0);
-        conditions[3] = isPriceBelow(PYTH_ETH_USD_ASSET_ID, type(int64).max);
+        conditions[2] = isPriceAbove(PYTH_ETH_USD_ASSET_ID, 0, type(uint64).max);
+        conditions[3] = isPriceBelow(
+            PYTH_ETH_USD_ASSET_ID, type(int64).max, type(uint64).max
+        );
         conditions[4] = isMarketOpen(SETH_PERPS_MARKET_ID);
 
         IEngine.OrderDetails memory orderDetails;
@@ -345,8 +347,8 @@ contract VerifyConditions is ConditionalOrderTest {
         bytes[] memory conditions = new bytes[](5);
         conditions[0] = isTimestampAfter(0);
         conditions[1] = isTimestampBefore(type(uint256).max);
-        conditions[2] = isPriceAbove(PYTH_ETH_USD_ASSET_ID, 0);
-        conditions[3] = isPriceBelow(PYTH_ETH_USD_ASSET_ID, 0); // false
+        conditions[2] = isPriceAbove(PYTH_ETH_USD_ASSET_ID, 0, type(uint64).max);
+        conditions[3] = isPriceBelow(PYTH_ETH_USD_ASSET_ID, 0, type(uint64).max); // false
         conditions[4] = isMarketOpen(SETH_PERPS_MARKET_ID);
 
         IEngine.OrderDetails memory orderDetails;
@@ -1125,43 +1127,59 @@ contract Conditions is ConditionalOrderTest {
     function test_isPriceAbove() public {
         int64 mock_price = 173_078_000_000;
         bytes32 mock_assetId = PYTH_ETH_USD_ASSET_ID;
+        uint64 mock_confidenceInterval = 45_999_999;
         mock_pyth_getPrice({
             pyth: address(pyth),
             id: mock_assetId,
             price: 173_078_000_000,
-            conf: 45_999_999,
+            conf: mock_confidenceInterval,
             expo: -8
         });
 
-        bool isAbove = engine.isPriceAbove(mock_assetId, mock_price - 1);
+        bool isAbove =
+            engine.isPriceAbove(mock_assetId, mock_price - 1, mock_confidenceInterval);
         assertTrue(isAbove);
 
-        isAbove = engine.isPriceAbove(mock_assetId, mock_price);
+        isAbove =
+            engine.isPriceAbove(mock_assetId, mock_price, mock_confidenceInterval);
         assertFalse(isAbove);
 
-        isAbove = engine.isPriceAbove(mock_assetId, mock_price + 1);
+        isAbove =
+            engine.isPriceAbove(mock_assetId, mock_price + 1, mock_confidenceInterval);
+        assertFalse(isAbove);
+
+        isAbove =
+            engine.isPriceAbove(mock_assetId, mock_price - 1, mock_confidenceInterval - 1);
         assertFalse(isAbove);
     }
 
     function test_isPriceBelow() public {
         int64 mock_price = 173_078_000_000;
         bytes32 mock_assetId = PYTH_ETH_USD_ASSET_ID;
+        uint64 mock_confidenceInterval = 45_999_999;
         mock_pyth_getPrice({
             pyth: address(pyth),
             id: mock_assetId,
             price: 173_078_000_000,
-            conf: 45_999_999,
+            conf: mock_confidenceInterval,
             expo: -8
         });
 
-        bool isBelow = engine.isPriceBelow(mock_assetId, mock_price - 1);
+        bool isBelow =
+            engine.isPriceBelow(mock_assetId, mock_price - 1, mock_confidenceInterval);
         assertFalse(isBelow);
 
-        isBelow = engine.isPriceBelow(mock_assetId, mock_price);
+        isBelow =
+            engine.isPriceBelow(mock_assetId, mock_price, mock_confidenceInterval);
         assertFalse(isBelow);
 
-        isBelow = engine.isPriceBelow(mock_assetId, mock_price + 1);
+        isBelow =
+            engine.isPriceBelow(mock_assetId, mock_price + 1, mock_confidenceInterval);
         assertTrue(isBelow);
+
+        isBelow =
+            engine.isPriceBelow(mock_assetId, mock_price + 1, mock_confidenceInterval - 1);
+        assertFalse(isBelow);
     }
 
     function test_isMarketOpen() public {
