@@ -72,16 +72,6 @@ interface IEngine {
     error ZeroAddress();
 
     /*//////////////////////////////////////////////////////////////
-                             CREATE ACCOUNT
-    //////////////////////////////////////////////////////////////*/
-
-    /// @notice create an account
-    /// @dev the msg sender will be the owner of the account
-    /// @dev the Engine will have admin rights over the account
-    /// @return accountId the id of the account created
-    function createAccount() external returns (uint128 accountId);
-
-    /*//////////////////////////////////////////////////////////////
                                  STATS
     //////////////////////////////////////////////////////////////*/
 

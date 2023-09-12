@@ -4,10 +4,8 @@ pragma solidity 0.8.18;
 import {ConditionalOrderHashLib} from
     "src/libraries/ConditionalOrderHashLib.sol";
 import {EIP712} from "src/utils/EIP712.sol";
-import {ERC721Receivable} from "src/utils/ERC721Receivable.sol";
 import {IEngine, IPerpsMarketProxy} from "src/interfaces/IEngine.sol";
 import {IERC20} from "src/interfaces/tokens/IERC20.sol";
-import {IERC721} from "src/interfaces/tokens/IERC721.sol";
 import {IPyth, PythStructs} from "src/interfaces/oracles/IPyth.sol";
 import {ISpotMarketProxy} from "src/interfaces/synthetix/ISpotMarketProxy.sol";
 import {MathLib} from "src/libraries/MathLib.sol";
@@ -17,7 +15,7 @@ import {SignatureCheckerLib} from "src/libraries/SignatureCheckerLib.sol";
 /// @title Kwenta Smart Margin v3: Engine contract
 /// @notice Responsible for interacting with Synthetix v3 perps markets
 /// @author JaredBorders (jaredborders@pm.me)
-contract Engine is IEngine, Multicallable, EIP712, ERC721Receivable {
+contract Engine is IEngine, Multicallable, EIP712 {
     using MathLib for int128;
     using MathLib for int256;
     using MathLib for uint256;
@@ -104,19 +102,6 @@ contract Engine is IEngine, Multicallable, EIP712, ERC721Receivable {
         SPOT_MARKET_PROXY = ISpotMarketProxy(_spotMarketProxy);
         SUSD = IERC20(_sUSDProxy);
         ORACLE = IPyth(_oracle);
-    }
-
-    /*//////////////////////////////////////////////////////////////
-                             CREATE ACCOUNT
-    //////////////////////////////////////////////////////////////*/
-
-    /// @inheritdoc IEngine
-    function createAccount() external override returns (uint128 accountId) {
-        accountId = PERPS_MARKET_PROXY.createAccount();
-
-        IERC721 accountNftToken =
-            IERC721(PERPS_MARKET_PROXY.getAccountTokenAddress());
-        accountNftToken.safeTransferFrom(address(this), msg.sender, accountId);
     }
 
     /*//////////////////////////////////////////////////////////////
