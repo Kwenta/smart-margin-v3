@@ -49,4 +49,34 @@ contract Conditions {
     {
         return abi.encodeWithSelector(Engine.isMarketOpen.selector, _marketId);
     }
+
+    function isPositionSizeAbove(
+        uint128 _accountId,
+        uint128 _marketId,
+        int128 _size
+    ) public pure returns (bytes memory) {
+        return abi.encodeWithSelector(
+            Engine.isPositionSizeAbove.selector, _accountId, _marketId, _size
+        );
+    }
+
+    function isPositionSizeBelow(
+        uint128 _accountId,
+        uint128 _marketId,
+        int128 _size
+    ) public pure returns (bytes memory) {
+        return abi.encodeWithSelector(
+            Engine.isPositionSizeBelow.selector, _accountId, _marketId, _size
+        );
+    }
+
+    function isOrderFeeBelow(uint128 _marketId, int128 _sizeDelta, uint256 _fee)
+        public
+        pure
+        returns (bytes memory)
+    {
+        return abi.encodeWithSelector(
+            Engine.isOrderFeeBelow.selector, _marketId, _sizeDelta, _fee
+        );
+    }
 }

@@ -51,7 +51,7 @@ contract Engine is IEngine, Multicallable, EIP712 {
     uint256 internal constant MAX_BPS = 10_000;
 
     /// @notice max number of conditions that can be defined for a conditional order
-    uint256 internal constant MAX_CONDITIONS = 5;
+    uint256 internal constant MAX_CONDITIONS = 8;
 
     /*//////////////////////////////////////////////////////////////
                                IMMUTABLES
@@ -523,5 +523,44 @@ contract Engine is IEngine, Multicallable, EIP712 {
     {
         return
             PERPS_MARKET_PROXY.getMaxMarketSize(_marketId) == 0 ? false : true;
+    }
+
+    /// @inheritdoc IEngine
+    function isPositionSizeAbove(
+        uint128 _accountId,
+        uint128 _marketId,
+        int128 _size
+    ) public view override returns (bool) {
+        (,, int128 positionSize) =
+            PERPS_MARKET_PROXY.getOpenPosition(_accountId, _marketId);
+
+        return positionSize > _size;
+    }
+
+    /// @inheritdoc IEngine
+    function isPositionSizeBelow(
+        uint128 _accountId,
+        uint128 _marketId,
+        int128 _size
+    ) public view override returns (bool) {
+        (,, int128 positionSize) =
+            PERPS_MARKET_PROXY.getOpenPosition(_accountId, _marketId);
+
+        return positionSize < _size;
+    }
+
+    /// @inheritdoc IEngine
+    function isOrderFeeBelow(uint128 _marketId, int128 _sizeDelta, uint256 _fee)
+        public
+        view
+        override
+        returns (bool)
+    {
+        (uint256 orderFees,) = PERPS_MARKET_PROXY.computeOrderFees({
+            marketId: _marketId,
+            sizeDelta: _sizeDelta
+        });
+
+        return orderFees < _fee;
     }
 }

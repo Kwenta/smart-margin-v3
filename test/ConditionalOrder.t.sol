@@ -277,7 +277,7 @@ contract VerifySignature is ConditionalOrderTest {
 
 contract VerifyConditions is ConditionalOrderTest {
     function test_max_condition_size_exceeded() public {
-        bytes[] memory conditions = new bytes[](6); // exceeds max size of 5
+        bytes[] memory conditions = new bytes[](100); // 100 far exceeds max
 
         IEngine.OrderDetails memory orderDetails;
 
@@ -308,7 +308,14 @@ contract VerifyConditions is ConditionalOrderTest {
             expo: -8
         });
 
-        bytes[] memory conditions = new bytes[](5);
+        mock_getOpenPosition({
+            perpsMarketProxy: address(perpsMarketProxy),
+            accountId: accountId,
+            marketId: SETH_PERPS_MARKET_ID,
+            positionSize: 1 ether
+        });
+
+        bytes[] memory conditions = new bytes[](8);
         conditions[0] = isTimestampAfter(0);
         conditions[1] = isTimestampBefore(type(uint256).max);
         conditions[2] = isPriceAbove(PYTH_ETH_USD_ASSET_ID, 0, type(uint64).max);
@@ -316,6 +323,12 @@ contract VerifyConditions is ConditionalOrderTest {
             PYTH_ETH_USD_ASSET_ID, type(int64).max, type(uint64).max
         );
         conditions[4] = isMarketOpen(SETH_PERPS_MARKET_ID);
+        conditions[5] = isPositionSizeAbove(accountId, SETH_PERPS_MARKET_ID, 0);
+        conditions[6] = isPositionSizeBelow(
+            accountId, SETH_PERPS_MARKET_ID, type(int64).max
+        );
+        conditions[7] =
+            isOrderFeeBelow(SETH_PERPS_MARKET_ID, 1, type(uint256).max);
 
         IEngine.OrderDetails memory orderDetails;
 
@@ -1136,20 +1149,24 @@ contract Conditions is ConditionalOrderTest {
             expo: -8
         });
 
-        bool isAbove =
-            engine.isPriceAbove(mock_assetId, mock_price - 1, mock_confidenceInterval);
+        bool isAbove = engine.isPriceAbove(
+            mock_assetId, mock_price - 1, mock_confidenceInterval
+        );
         assertTrue(isAbove);
 
-        isAbove =
-            engine.isPriceAbove(mock_assetId, mock_price, mock_confidenceInterval);
+        isAbove = engine.isPriceAbove(
+            mock_assetId, mock_price, mock_confidenceInterval
+        );
         assertFalse(isAbove);
 
-        isAbove =
-            engine.isPriceAbove(mock_assetId, mock_price + 1, mock_confidenceInterval);
+        isAbove = engine.isPriceAbove(
+            mock_assetId, mock_price + 1, mock_confidenceInterval
+        );
         assertFalse(isAbove);
 
-        isAbove =
-            engine.isPriceAbove(mock_assetId, mock_price - 1, mock_confidenceInterval - 1);
+        isAbove = engine.isPriceAbove(
+            mock_assetId, mock_price - 1, mock_confidenceInterval - 1
+        );
         assertFalse(isAbove);
     }
 
@@ -1165,20 +1182,24 @@ contract Conditions is ConditionalOrderTest {
             expo: -8
         });
 
-        bool isBelow =
-            engine.isPriceBelow(mock_assetId, mock_price - 1, mock_confidenceInterval);
+        bool isBelow = engine.isPriceBelow(
+            mock_assetId, mock_price - 1, mock_confidenceInterval
+        );
         assertFalse(isBelow);
 
-        isBelow =
-            engine.isPriceBelow(mock_assetId, mock_price, mock_confidenceInterval);
+        isBelow = engine.isPriceBelow(
+            mock_assetId, mock_price, mock_confidenceInterval
+        );
         assertFalse(isBelow);
 
-        isBelow =
-            engine.isPriceBelow(mock_assetId, mock_price + 1, mock_confidenceInterval);
+        isBelow = engine.isPriceBelow(
+            mock_assetId, mock_price + 1, mock_confidenceInterval
+        );
         assertTrue(isBelow);
 
-        isBelow =
-            engine.isPriceBelow(mock_assetId, mock_price + 1, mock_confidenceInterval - 1);
+        isBelow = engine.isPriceBelow(
+            mock_assetId, mock_price + 1, mock_confidenceInterval - 1
+        );
         assertFalse(isBelow);
     }
 
@@ -1192,5 +1213,77 @@ contract Conditions is ConditionalOrderTest {
 
         isOpen = engine.isMarketOpen(SETH_PERPS_MARKET_ID);
         assertFalse(isOpen);
+    }
+
+    function test_isPositionSizeAbove() public {
+        int128 mock_positionSize = 1 ether;
+        mock_getOpenPosition({
+            perpsMarketProxy: address(perpsMarketProxy),
+            accountId: accountId,
+            marketId: SETH_PERPS_MARKET_ID,
+            positionSize: mock_positionSize
+        });
+
+        bool isAbove = engine.isPositionSizeAbove(
+            accountId, SETH_PERPS_MARKET_ID, mock_positionSize - 1
+        );
+        assertTrue(isAbove);
+
+        isAbove = engine.isPositionSizeAbove(
+            accountId, SETH_PERPS_MARKET_ID, mock_positionSize
+        );
+        assertFalse(isAbove);
+
+        isAbove = engine.isPositionSizeAbove(
+            accountId, SETH_PERPS_MARKET_ID, mock_positionSize + 1
+        );
+        assertFalse(isAbove);
+    }
+
+    function test_isPositionSizeBelow() public {
+        int128 mock_positionSize = 1 ether;
+        mock_getOpenPosition({
+            perpsMarketProxy: address(perpsMarketProxy),
+            accountId: accountId,
+            marketId: SETH_PERPS_MARKET_ID,
+            positionSize: mock_positionSize
+        });
+
+        bool isBelow = engine.isPositionSizeBelow(
+            accountId, SETH_PERPS_MARKET_ID, mock_positionSize - 1
+        );
+        assertFalse(isBelow);
+
+        isBelow = engine.isPositionSizeBelow(
+            accountId, SETH_PERPS_MARKET_ID, mock_positionSize
+        );
+        assertFalse(isBelow);
+
+        isBelow = engine.isPositionSizeBelow(
+            accountId, SETH_PERPS_MARKET_ID, mock_positionSize + 1
+        );
+        assertTrue(isBelow);
+    }
+
+    function test_isOrderFeeBelow() public {
+        int128 sizeDelta = 1 ether;
+        (uint256 orderFees,) = perpsMarketProxy.computeOrderFees({
+            marketId: SETH_PERPS_MARKET_ID,
+            sizeDelta: sizeDelta
+        });
+
+        bool isBelow = engine.isOrderFeeBelow(
+            SETH_PERPS_MARKET_ID, sizeDelta, orderFees - 1
+        );
+        assertFalse(isBelow);
+
+        isBelow =
+            engine.isOrderFeeBelow(SETH_PERPS_MARKET_ID, sizeDelta, orderFees);
+        assertFalse(isBelow);
+
+        isBelow = engine.isOrderFeeBelow(
+            SETH_PERPS_MARKET_ID, sizeDelta, orderFees + 1
+        );
+        assertTrue(isBelow);
     }
 }

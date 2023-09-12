@@ -212,7 +212,7 @@ interface IEngine {
 
     /// @notice determine if current timestamp is after the given timestamp
     /// @param _timestamp the timestamp to compare against
-    /// @return true if current timestamp is after the given timestamp, false otherwise
+    /// @return true if current timestamp is after the given `_timestamp`, false otherwise
     function isTimestampAfter(uint256 _timestamp)
         external
         view
@@ -220,7 +220,7 @@ interface IEngine {
 
     /// @notice determine if current timestamp is before the given timestamp
     /// @param _timestamp the timestamp to compare against
-    /// @return true if current timestamp is before the given timestamp, false otherwise
+    /// @return true if current timestamp is before the given `_timestamp`, false otherwise
     function isTimestampBefore(uint256 _timestamp)
         external
         view
@@ -243,7 +243,7 @@ interface IEngine {
     ///
     /// thus, the price of the asset is $122.7625 +/- $0.015
     ///
-    /// @return true if the current price of the asset is above the given price, false otherwise
+    /// @return true if the current price of the asset is above the given `_price`, false otherwise
     function isPriceAbove(
         bytes32 _assetId,
         int64 _price,
@@ -267,7 +267,7 @@ interface IEngine {
     ///
     /// thus, the price of the asset is $122.7625 +/- $0.015
     ///
-    /// @return true if the current price of the asset is below the given price, false otherwise
+    /// @return true if the current price of the asset is below the given `_price`, false otherwise
     function isPriceBelow(
         bytes32 _assetId,
         int64 _price,
@@ -279,4 +279,38 @@ interface IEngine {
     /// @param _marketId the id of the market to check
     /// @return true if the market is open, false otherwise
     function isMarketOpen(uint128 _marketId) external view returns (bool);
+
+    /// @notice determine if the account's (identified by the given accountId)
+    /// position size in the given market is above a given size
+    /// @param _accountId the id of the account to check
+    /// @param _marketId the id of the market to check
+    /// @param _size the size to compare against
+    /// @return true if the account's position size in the given market is above the given '_size`, false otherwise
+    function isPositionSizeAbove(
+        uint128 _accountId,
+        uint128 _marketId,
+        int128 _size
+    ) external view returns (bool);
+
+    /// @notice determine if the account's (identified by the given accountId)
+    /// position size in the given market is below a given size
+    /// @param _accountId the id of the account to check
+    /// @param _marketId the id of the market to check
+    /// @param _size the size to compare against
+    /// @return true if the account's position size in the given market is below the given '_size`, false otherwise
+    function isPositionSizeBelow(
+        uint128 _accountId,
+        uint128 _marketId,
+        int128 _size
+    ) external view returns (bool);
+
+    /// @notice determine if the order fee for the given market and size delta is above a given fee
+    /// @param _marketId the id of the market to check
+    /// @param _sizeDelta the size delta to check
+    /// @param _fee the fee to compare against
+    /// @return true if the order fee for the given market and size delta is below the given `_fee`, false otherwise
+    function isOrderFeeBelow(uint128 _marketId, int128 _sizeDelta, uint256 _fee)
+        external
+        view
+        returns (bool);
 }
