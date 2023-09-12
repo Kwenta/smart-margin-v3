@@ -423,14 +423,8 @@ contract Engine is IEngine, Multicallable, EIP712 {
         override
         returns (bool)
     {
-        if (
-            isAccountOwner(_co.orderDetails.accountId, _co.signer)
-                || isAccountDelegate(_co.orderDetails.accountId, _co.signer)
-        ) {
-            return true;
-        }
-
-        return false;
+        return isAccountOwner(_co.orderDetails.accountId, _co.signer)
+            || isAccountDelegate(_co.orderDetails.accountId, _co.signer);
     }
 
     /// @inheritdoc IEngine
