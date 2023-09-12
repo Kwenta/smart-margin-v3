@@ -68,6 +68,9 @@ interface IEngine {
     /// @dev used to prevent griefing attacks
     error MaxConditionSizeExceeded();
 
+    /// @notice thrown when address is zero
+    error ZeroAddress();
+
     /*//////////////////////////////////////////////////////////////
                              CREATE ACCOUNT
     //////////////////////////////////////////////////////////////*/
@@ -201,7 +204,7 @@ interface IEngine {
     ) external view returns (bool);
 
     /// @notice verify array of conditions defined in the conditional order
-    /// @dev 
+    /// @dev
     ///     1. all conditions are defined by the conditional order creator
     ///     2. conditions are encoded function selectors and parameters
     ///     3. each function defined in the condition contract must return a truthy value

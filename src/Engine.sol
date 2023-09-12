@@ -95,6 +95,11 @@ contract Engine is IEngine, Multicallable, EIP712, ERC721Receivable {
         address _sUSDProxy,
         address _oracle
     ) {
+        if (_perpsMarketProxy == address(0)) revert ZeroAddress();
+        if (_spotMarketProxy == address(0)) revert ZeroAddress();
+        if (_sUSDProxy == address(0)) revert ZeroAddress();
+        if (_oracle == address(0)) revert ZeroAddress();
+
         PERPS_MARKET_PROXY = IPerpsMarketProxy(_perpsMarketProxy);
         SPOT_MARKET_PROXY = ISpotMarketProxy(_spotMarketProxy);
         SUSD = IERC20(_sUSDProxy);
