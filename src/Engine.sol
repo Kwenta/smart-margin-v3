@@ -522,8 +522,7 @@ contract Engine is IEngine, Multicallable, EIP712 {
         override
         returns (bool)
     {
-        return
-            PERPS_MARKET_PROXY.getMaxMarketSize(_marketId) == 0 ? false : true;
+        return PERPS_MARKET_PROXY.getMaxMarketSize(_marketId) != 0;
     }
 
     /// @inheritdoc IEngine
