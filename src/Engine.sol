@@ -333,14 +333,14 @@ contract Engine is IEngine, Multicallable, EIP712 {
             /// @dev reduce only orders can only reduce position size (i.e. approach size of zero) and
             /// cannot cross that boundary (i.e. short -> long or long -> short)
             if (sizeDelta.abs128() > positionSize.abs128()) {
-                /// @dev if the value of sizeDelta was used to verify `isOrderFeeBelow` 
-                /// condition prior to it being truncated *here*, the actual order fee 
-                /// (see below) will always be less than the order fee estimated during 
-                /// that condition check. 
+                /// @dev if the value of sizeDelta was used to verify `isOrderFeeBelow`
+                /// condition prior to it being truncated *here*, the actual order fee
+                /// (see below) will always be less than the order fee estimated during
+                /// that condition check.
                 /// @custom:integrator This is important to understand because if a reduce-only order
-                /// sets size delta to type(int128).min/max (to basically close a position), 
-                /// the order fee will appear to be extremely large during the condition check, but will be 
-                /// much smaller when the order is actually executed due to the size delta being 
+                /// sets size delta to type(int128).min/max (to basically close a position),
+                /// the order fee will appear to be extremely large during the condition check, but will be
+                /// much smaller when the order is actually executed due to the size delta being
                 /// truncated to the current position size *here*.
                 sizeDelta = -positionSize;
             }
