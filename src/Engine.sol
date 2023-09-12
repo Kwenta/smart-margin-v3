@@ -438,11 +438,9 @@ contract Engine is IEngine, Multicallable, EIP712 {
         ConditionalOrder calldata _co,
         bytes calldata _signature
     ) public view override returns (bool) {
-        bool isValid = _signature.isValidSignatureNowCalldata(
+        return _signature.isValidSignatureNowCalldata(
             _hashTypedData(_co.hash()), _co.signer
         );
-
-        return isValid;
     }
 
     /// @inheritdoc IEngine
