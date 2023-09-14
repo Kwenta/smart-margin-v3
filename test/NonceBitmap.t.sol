@@ -96,9 +96,7 @@ contract NonceBitmap is Bootstrap, ConditionalOrderSignature {
 
         vm.prank(signer);
 
-        engine.invalidateUnorderedNonces(
-            accountId, uint248(nonce >> 8), mask
-        );
+        engine.invalidateUnorderedNonces(accountId, uint248(nonce >> 8), mask);
 
         hasBeenUsed = engine.hasUnorderedNonceBeenUsed({
             _accountId: accountId,
