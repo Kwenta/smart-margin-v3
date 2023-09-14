@@ -32,6 +32,7 @@ contract ConditionalOrderTest is
         synthMinter.mint_sUSD(signer, AMOUNT);
 
         vm.startPrank(signer);
+
         accountId = perpsMarketProxy.createAccount();
 
         perpsMarketProxy.grantPermission({
@@ -402,29 +403,6 @@ contract VerifyConditions is ConditionalOrderTest {
         bool isVerified = engine.verifyConditions(co);
 
         assertTrue(isVerified);
-    }
-
-    function test_verifyConditions_external_non_condition_getAccountStats()
-        public
-    {
-        bytes[] memory conditions = new bytes[](1);
-        conditions[0] =
-            abi.encodeWithSelector(IEngine.getAccountStats.selector, accountId);
-
-        IEngine.OrderDetails memory orderDetails;
-
-        IEngine.ConditionalOrder memory co = IEngine.ConditionalOrder({
-            orderDetails: orderDetails,
-            signer: signer,
-            nonce: 0,
-            requireVerified: true,
-            trustedExecutor: address(0),
-            conditions: conditions
-        });
-
-        bool isVerified = engine.verifyConditions(co);
-
-        assertFalse(isVerified);
     }
 
     function test_verifyConditions_internal_non_condition_getSynthAddress()

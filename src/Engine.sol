@@ -73,11 +73,10 @@ contract Engine is IEngine, Multicallable, EIP712 {
                                  STATE
     //////////////////////////////////////////////////////////////*/
 
-    /// @notice mapping that stores stats for an account
-    mapping(uint128 accountId => AccountStats) internal accountStats;
-
-    /// @notice mapping that stores if an order with a given nonce has been executed
-    mapping(uint128 nonce => bool) public executedOrders;
+    /// @notice bit mapping that stores whether a conditional order nonce has been executed
+    /// @dev nonce is specific to the account id associated with the conditional order
+    mapping(uint128 accountId => mapping(uint256 index => uint256 bitmap))
+        public nonceBitmap;
 
     /*//////////////////////////////////////////////////////////////
                               CONSTRUCTOR
@@ -105,36 +104,6 @@ contract Engine is IEngine, Multicallable, EIP712 {
     }
 
     /*//////////////////////////////////////////////////////////////
-                                 STATS
-    //////////////////////////////////////////////////////////////*/
-
-    /// @inheritdoc IEngine
-    function getAccountStats(uint128 _accountId)
-        external
-        view
-        override
-        returns (AccountStats memory)
-    {
-        return accountStats[_accountId];
-    }
-
-    /// @notice update the stats of an account
-    /// @param _accountId the account to update
-    /// @param _fees the fees to add to the account
-    /// @param _volume the volume to add to the account
-    /// @dev only callable by a validated margin engine
-    function _updateAccountStats(
-        uint128 _accountId,
-        uint128 _fees,
-        uint128 _volume
-    ) internal {
-        AccountStats storage stats = accountStats[_accountId];
-
-        stats.totalFees += _fees;
-        stats.totalVolume += _volume;
-    }
-
-    /*//////////////////////////////////////////////////////////////
                              AUTHENTICATION
     //////////////////////////////////////////////////////////////*/
 
@@ -158,6 +127,72 @@ contract Engine is IEngine, Multicallable, EIP712 {
         return PERPS_MARKET_PROXY.hasPermission(
             _accountId, ADMIN_PERMISSION, _caller
         );
+    }
+
+    function _isAccountOwnerOrDelegate(uint128 _accountId, address _caller)
+        internal
+        view
+        returns (bool)
+    {
+        return isAccountOwner(_accountId, _caller)
+            || isAccountDelegate(_accountId, _caller);
+    }
+
+    /*//////////////////////////////////////////////////////////////
+                            NONCE MANAGEMENT
+    //////////////////////////////////////////////////////////////*/
+
+    /// @inheritdoc IEngine
+    function invalidateUnorderedNonces(
+        uint128 _accountId,
+        uint256 _wordPos,
+        uint256 _mask
+    ) external {
+        if (_isAccountOwnerOrDelegate(_accountId, msg.sender)) {
+            nonceBitmap[_accountId][_wordPos] |= _mask;
+
+            emit UnorderedNonceInvalidation(_accountId, _wordPos, _mask);
+        } else {
+            revert Unauthorized();
+        }
+    }
+
+    /// @inheritdoc IEngine
+    function hasUnorderedNonceBeenUsed(uint128 _accountId, uint256 _nonce)
+        public
+        view
+        returns (bool)
+    {
+        (uint256 wordPos, uint256 bitPos) = _bitmapPositions(_nonce);
+        uint256 bit = 1 << bitPos;
+        return nonceBitmap[_accountId][wordPos] & bit != 0;
+    }
+
+    /// @notice fetch the index of the bitmap and the bit position within
+    /// the bitmap. used for *unordered* nonces
+    /// @param _nonce the nonce to get the associated word and bit positions
+    /// @return wordPos the word position **or index** into the nonceBitmap
+    /// @return bitPos the bit position
+    /// @dev The first 248 bits of the nonce value is the index of the desired bitmap
+    /// @dev The last 8 bits of the nonce value is the position of the bit in the bitmap
+    function _bitmapPositions(uint256 _nonce)
+        internal
+        pure
+        returns (uint256 wordPos, uint256 bitPos)
+    {
+        wordPos = uint248(_nonce >> 8);
+        bitPos = uint8(_nonce);
+    }
+
+    /// @notice checks whether a nonce is taken and sets the bit at the bit position in the bitmap at the word position
+    /// @param _accountId the account id to use the nonce at
+    /// @param _nonce The nonce to spend
+    function _useUnorderedNonce(uint128 _accountId, uint256 _nonce) internal {
+        (uint256 wordPos, uint256 bitPos) = _bitmapPositions(_nonce);
+        uint256 bit = 1 << bitPos;
+        uint256 flipped = nonceBitmap[_accountId][wordPos] ^= bit;
+
+        if (flipped & bit == 0) revert InvalidNonce();
     }
 
     /*//////////////////////////////////////////////////////////////
@@ -244,10 +279,7 @@ contract Engine is IEngine, Multicallable, EIP712 {
         returns (IPerpsMarketProxy.Data memory retOrder, uint256 fees)
     {
         /// @dev only the account owner can withdraw collateral
-        if (
-            isAccountOwner(_accountId, msg.sender)
-                || isAccountDelegate(_accountId, msg.sender)
-        ) {
+        if (_isAccountOwnerOrDelegate(_accountId, msg.sender)) {
             (retOrder, fees) = _commitOrder({
                 _perpsMarketId: _perpsMarketId,
                 _accountId: _accountId,
@@ -282,8 +314,6 @@ contract Engine is IEngine, Multicallable, EIP712 {
                 referrer: _referrer
             })
         );
-
-        _updateAccountStats(_accountId, fees.castU128(), _sizeDelta.abs128());
     }
 
     /*//////////////////////////////////////////////////////////////
@@ -306,8 +336,8 @@ contract Engine is IEngine, Multicallable, EIP712 {
         /// @dev check: (4) conditions are met || trusted executor is msg sender
         if (!canExecute(_co, _signature)) revert CannotExecuteOrder();
 
-        /// @dev mark the nonce as executed; prevents replay
-        executedOrders[_co.nonce] = true;
+        /// @dev spend the nonce associated with the order; this prevents replay
+        _useUnorderedNonce(_co.orderDetails.accountId, _co.nonce);
 
         /// @notice get size delta from order details
         /// @dev up to the caller to not waste gas by passing in a size delta of zero
@@ -390,7 +420,9 @@ contract Engine is IEngine, Multicallable, EIP712 {
         bytes calldata _signature
     ) public view override returns (bool) {
         // verify nonce has not been executed before
-        if (executedOrders[_co.nonce]) return false;
+        if (hasUnorderedNonceBeenUsed(_co.orderDetails.accountId, _co.nonce)) {
+            return false;
+        }
 
         // verify signer is authorized to interact with the account
         if (!verifySigner(_co)) return false;
@@ -423,8 +455,7 @@ contract Engine is IEngine, Multicallable, EIP712 {
         override
         returns (bool)
     {
-        return isAccountOwner(_co.orderDetails.accountId, _co.signer)
-            || isAccountDelegate(_co.orderDetails.accountId, _co.signer);
+        return _isAccountOwnerOrDelegate(_co.orderDetails.accountId, _co.signer);
     }
 
     /// @inheritdoc IEngine

@@ -10,14 +10,6 @@ interface IEngine {
                                  TYPES
     //////////////////////////////////////////////////////////////*/
 
-    /// @notice stats for an account
-    struct AccountStats {
-        // totalFees the total fees paid by the account
-        uint128 totalFees;
-        // totalVolume the total volume traded by the account
-        uint128 totalVolume;
-    }
-
     /// @notice order details used to create an order on a perps market within a conditional order
     struct OrderDetails {
         // order market id
@@ -45,7 +37,7 @@ interface IEngine {
         // address of the signer of the order
         address signer;
         // an incrementing value indexed per order
-        uint128 nonce;
+        uint256 nonce;
         // option to require all extra conditions to be verified on-chain
         bool requireVerified;
         // address that can execute the order if requireVerified is false
@@ -71,17 +63,17 @@ interface IEngine {
     /// @notice thrown when address is zero
     error ZeroAddress();
 
+    /// @notice thrown when attempting to re-use a nonce
+    error InvalidNonce();
+
     /*//////////////////////////////////////////////////////////////
-                                 STATS
+                                 EVENTS
     //////////////////////////////////////////////////////////////*/
 
-    /// @notice get the stats for an account
-    /// @param _accountId the account to get stats for
-    /// @return stats the stats for the account
-    function getAccountStats(uint128 _accountId)
-        external
-        view
-        returns (AccountStats memory);
+    /// @notice emitted when the account owner or delegate successfully invalidates an unordered nonce
+    event UnorderedNonceInvalidation(
+        uint128 indexed accountId, uint256 word, uint256 mask
+    );
 
     /*//////////////////////////////////////////////////////////////
                              AUTHENTICATION
@@ -103,6 +95,30 @@ interface IEngine {
     /// @param _caller the address to check
     /// @return true if the msg.sender is a delegate of the account
     function isAccountDelegate(uint128 _accountId, address _caller)
+        external
+        view
+        returns (bool);
+
+    /*//////////////////////////////////////////////////////////////
+                            NONCE MANAGEMENT
+    //////////////////////////////////////////////////////////////*/
+
+    /// @notice invalidates the bits specified in mask for the bitmap at the word position
+    /// @dev the wordPos is maxed at type(uint248).max
+    /// @param _accountId the id of the account to invalidate the nonces for
+    /// @param _wordPos a number to index the nonceBitmap at
+    /// @param _mask a bitmap masked against msg.sender's current bitmap at the word position
+    function invalidateUnorderedNonces(
+        uint128 _accountId,
+        uint256 _wordPos,
+        uint256 _mask
+    ) external;
+
+    /// @notice check if the given nonce has been used
+    /// @param _accountId the id of the account to check
+    /// @param _nonce the nonce to check
+    /// @return true if the nonce has been used, false otherwise
+    function hasUnorderedNonceBeenUsed(uint128 _accountId, uint256 _nonce)
         external
         view
         returns (bool);

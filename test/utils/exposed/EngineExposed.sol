@@ -13,12 +13,6 @@ contract EngineExposed is Engine {
         address _oracle
     ) Engine(_perpsMarketProxy, _spotMarketProxy, _sUSDProxy, _oracle) {}
 
-    function updateAccountStats(uint128 accountId, uint256 fees, uint128 volume)
-        public
-    {
-        _updateAccountStats(accountId, fees.castU128(), volume);
-    }
-
     function getSynthAddress(uint128 synthMarketId)
         public
         view

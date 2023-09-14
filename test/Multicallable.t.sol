@@ -33,5 +33,7 @@ contract MulticallableTest is Bootstrap {
         );
 
         engine.multicall(data);
+
+        vm.stopPrank();
     }
 }
