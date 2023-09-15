@@ -168,6 +168,17 @@ interface IEngine {
                       CONDITIONAL ORDER MANAGEMENT
     //////////////////////////////////////////////////////////////*/
 
+    /// In order for a conditional order to be committed and then executed there are a number of requirements that need to be met:
+    ///
+    /// (1)     The account must have sufficient snxUSD collateral to handle the order
+    /// (2)     The account must not have another order committed
+    /// (3)     The order’s set `acceptablePrice` needs to be met both on committing the order and when it gets executed
+    ///         (users should choose a value for this that is likely to execute based on the conditions set)
+    /// (4)     The order can only be executed within Synthetix’s set settlement window
+    /// (5)     There must be a keeper that executes a conditional order
+    ///
+    /// @notice There is no guarantee a conditional order will be executed
+
     /// @notice execute a conditional order
     /// @param _co the conditional order
     /// @param _signature the signature of the conditional order
