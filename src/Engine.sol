@@ -21,7 +21,6 @@ contract Engine is IEngine, Multicallable, EIP712 {
     using MathLib for int256;
     using MathLib for uint256;
     using SignatureCheckerLib for bytes;
-    using ConditionalOrderHashLib for OrderDetails;
     using ConditionalOrderHashLib for ConditionalOrder;
 
     /*//////////////////////////////////////////////////////////////
