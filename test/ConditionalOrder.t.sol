@@ -381,41 +381,7 @@ contract VerifyConditions is ConditionalOrderTest {
         assertFalse(isVerified);
     }
 
-    function test_verifyConditions_public_non_condition_isAccountDelegate()
-        public
-    {
-        vm.prank(signer);
-
-        perpsMarketProxy.grantPermission({
-            accountId: accountId,
-            permission: PERPS_COMMIT_ASYNC_ORDER_PERMISSION,
-            user: DELEGATE_1
-        });
-
-        bytes[] memory conditions = new bytes[](1);
-        conditions[0] = abi.encodeWithSelector(
-            IEngine.isAccountDelegate.selector, accountId, DELEGATE_1
-        );
-
-        IEngine.OrderDetails memory orderDetails;
-
-        IEngine.ConditionalOrder memory co = IEngine.ConditionalOrder({
-            orderDetails: orderDetails,
-            signer: signer,
-            nonce: 0,
-            requireVerified: true,
-            trustedExecutor: address(0),
-            conditions: conditions
-        });
-
-        bool isVerified = engine.verifyConditions(co);
-
-        assertTrue(isVerified);
-    }
-
-    function test_verifyConditions_internal_non_condition_getSynthAddress()
-        public
-    {
+    function test_verifyConditions_InvalidConditionSelector() public {
         bytes[] memory conditions = new bytes[](1);
         conditions[0] = abi.encodeWithSignature(
             "_getSynthAddress(uint128 _synthMarketId)", SETH_SPOT_MARKET_ID
@@ -432,29 +398,13 @@ contract VerifyConditions is ConditionalOrderTest {
             conditions: conditions
         });
 
-        bool isVerified = engine.verifyConditions(co);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IEngine.InvalidConditionSelector.selector, bytes4(conditions[0])
+            )
+        );
 
-        assertFalse(isVerified);
-    }
-
-    function test_verifyConditions_modify_state_createAccount() public {
-        bytes[] memory conditions = new bytes[](1);
-        conditions[0] = abi.encodeWithSignature("createAccount()");
-
-        IEngine.OrderDetails memory orderDetails;
-
-        IEngine.ConditionalOrder memory co = IEngine.ConditionalOrder({
-            orderDetails: orderDetails,
-            signer: signer,
-            nonce: 0,
-            requireVerified: true,
-            trustedExecutor: address(0),
-            conditions: conditions
-        });
-
-        bool isVerified = engine.verifyConditions(co);
-
-        assertFalse(isVerified);
+        engine.verifyConditions(co);
     }
 }
 

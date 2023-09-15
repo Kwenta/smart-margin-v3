@@ -66,6 +66,9 @@ interface IEngine {
     /// @notice thrown when attempting to re-use a nonce
     error InvalidNonce();
 
+    /// @notice thrown when attempting to verify a condition identified by an invalid selector
+    error InvalidConditionSelector(bytes4 selector);
+
     /*//////////////////////////////////////////////////////////////
                                  EVENTS
     //////////////////////////////////////////////////////////////*/

@@ -48,6 +48,10 @@ contract Engine is IEngine, Multicallable, EIP712 {
     mapping(uint128 accountId => mapping(uint256 index => uint256 bitmap))
         public nonceBitmap;
 
+    /// @notice mapping of condition selector to whether the selector is valid
+    /// (i.e. can be called within Engine.verifyConditions)
+    mapping(bytes4 selector => bool) public conditionSelector;
+
     /*//////////////////////////////////////////////////////////////
                               CONSTRUCTOR
     //////////////////////////////////////////////////////////////*/
@@ -72,6 +76,20 @@ contract Engine is IEngine, Multicallable, EIP712 {
         SPOT_MARKET_PROXY = ISpotMarketProxy(_spotMarketProxy);
         SUSD = IERC20(_sUSDProxy);
         ORACLE = IPyth(_oracle);
+
+        _whitelistConditionSelectors();
+    }
+
+    /// @notice whitelist condition selectors
+    function _whitelistConditionSelectors() internal {
+        conditionSelector[IEngine.isTimestampAfter.selector] = true;
+        conditionSelector[IEngine.isTimestampBefore.selector] = true;
+        conditionSelector[IEngine.isPriceAbove.selector] = true;
+        conditionSelector[IEngine.isPriceBelow.selector] = true;
+        conditionSelector[IEngine.isMarketOpen.selector] = true;
+        conditionSelector[IEngine.isPositionSizeAbove.selector] = true;
+        conditionSelector[IEngine.isPositionSizeBelow.selector] = true;
+        conditionSelector[IEngine.isOrderFeeBelow.selector] = true;
     }
 
     /*//////////////////////////////////////////////////////////////
@@ -452,22 +470,26 @@ contract Engine is IEngine, Multicallable, EIP712 {
             revert MaxConditionSizeExceeded();
         }
 
-        /// @dev given that conditions are not "sanitized" prior to being called,
-        /// there exists a griefing vector where an infinite loop can be created
-        /// (i.e. a condition calls Engine.verifyConditions)
-        /// @custom:executor be aware and ensure that conditions are not malicious
-        /// to avoid wasting gas; recommend simulating call prior to executing
         for (uint256 i = 0; i < length;) {
             bool success;
             bytes memory response;
 
-            /// @dev staticcall to prevent state changes in the case a condition is malicious
-            (success, response) = address(this).staticcall(_co.conditions[i]);
+            bytes4 selector = bytes4(_co.conditions[i]);
 
-            if (!success || !abi.decode(response, (bool))) return false;
+            /// @dev checking if the selector is valid prevents the possibility of
+            /// a malicious condition from griefing the executor
+            if (conditionSelector[selector]) {
+                // @dev staticcall to prevent state changes in the case a condition is malicious
+                (success, response) =
+                    address(this).staticcall(_co.conditions[i]);
 
-            unchecked {
-                i++;
+                if (!success || !abi.decode(response, (bool))) return false;
+
+                unchecked {
+                    i++;
+                }
+            } else {
+                revert InvalidConditionSelector(selector);
             }
         }
 
