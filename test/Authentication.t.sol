@@ -97,7 +97,7 @@ contract AccountDelegate is AuthenticationTest {
         );
 
         // only admin and owner can grant permission
-        
+
         perpsMarketProxy.grantPermission({
             accountId: accountId,
             permission: PERPS_COMMIT_ASYNC_ORDER_PERMISSION,
