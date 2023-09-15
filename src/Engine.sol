@@ -3,7 +3,6 @@ pragma solidity 0.8.18;
 
 import {ConditionalOrderHashLib} from
     "src/libraries/ConditionalOrderHashLib.sol";
-import {Constants} from "src/libraries/Constants.sol";
 import {EIP712} from "src/utils/EIP712.sol";
 import {IEngine, IPerpsMarketProxy} from "src/interfaces/IEngine.sol";
 import {IERC20} from "src/interfaces/tokens/IERC20.sol";
@@ -22,6 +21,59 @@ contract Engine is IEngine, Multicallable, EIP712 {
     using MathLib for uint256;
     using SignatureCheckerLib for bytes;
     using ConditionalOrderHashLib for ConditionalOrder;
+
+    /*//////////////////////////////////////////////////////////////
+                               CONSTANTS
+    //////////////////////////////////////////////////////////////*/
+
+    /// @notice admins have permission to do everything that the account owner can
+    /// (including granting and revoking permissions for other addresses) except
+    /// for transferring account ownership
+    bytes32 internal constant ADMIN_PERMISSION = "ADMIN";
+
+    /// @notice the permission required to commit an async order
+    /// @dev this permission does not allow the permission holder to modify collateral
+    bytes32 internal constant PERPS_COMMIT_ASYNC_ORDER_PERMISSION =
+        "PERPS_COMMIT_ASYNC_ORDER";
+
+    /// @notice "0" synthMarketId represents sUSD in Synthetix v3
+    uint128 internal constant USD_SYNTH_ID = 0;
+
+    /// @notice max fee that can be charged for a conditional order execution
+    /// @dev 50 USD
+    uint256 internal constant UPPER_FEE_CAP = 50 ether;
+
+    /// @notice min fee that can be charged for a conditional order execution
+    /// @dev 2 USD
+    uint256 internal constant LOWER_FEE_CAP = 2 ether;
+
+    /// @notice percentage of the simulated order fee that is charged for a conditional order execution
+    /// @dev denoted in BPS (basis points) where 1% = 100 BPS and 100% = 10000 BPS
+    uint256 internal constant FEE_SCALING_FACTOR = 1000;
+
+    /// @notice max BPS
+    uint256 internal constant MAX_BPS = 10_000;
+
+    /// @notice max number of conditions that can be defined for a conditional order
+    uint256 internal constant MAX_CONDITIONS = 8;
+
+    /// @notice condition selector constant(s)
+    bytes4 internal constant isTimestampAfterSelector =
+        IEngine.isTimestampAfter.selector;
+    bytes4 internal constant isTimestampBeforeSelector =
+        IEngine.isTimestampBefore.selector;
+    bytes4 internal constant isPriceAboveSelector =
+        IEngine.isPriceAbove.selector;
+    bytes4 internal constant isPriceBelowSelector =
+        IEngine.isPriceBelow.selector;
+    bytes4 internal constant isMarketOpenSelector =
+        IEngine.isMarketOpen.selector;
+    bytes4 internal constant isPositionSizeAboveSelector =
+        IEngine.isPositionSizeAbove.selector;
+    bytes4 internal constant isPositionSizeBelowSelector =
+        IEngine.isPositionSizeBelow.selector;
+    bytes4 internal constant isOrderFeeBelowSelector =
+        IEngine.isOrderFeeBelow.selector;
 
     /*//////////////////////////////////////////////////////////////
                                IMMUTABLES
@@ -48,10 +100,6 @@ contract Engine is IEngine, Multicallable, EIP712 {
     mapping(uint128 accountId => mapping(uint256 index => uint256 bitmap))
         public nonceBitmap;
 
-    /// @notice mapping of condition selector to whether the selector is valid
-    /// (i.e. can be called within Engine.verifyConditions)
-    mapping(bytes4 selector => bool) public conditionSelector;
-
     /*//////////////////////////////////////////////////////////////
                               CONSTRUCTOR
     //////////////////////////////////////////////////////////////*/
@@ -76,20 +124,6 @@ contract Engine is IEngine, Multicallable, EIP712 {
         SPOT_MARKET_PROXY = ISpotMarketProxy(_spotMarketProxy);
         SUSD = IERC20(_sUSDProxy);
         ORACLE = IPyth(_oracle);
-
-        _whitelistConditionSelectors();
-    }
-
-    /// @notice whitelist condition selectors
-    function _whitelistConditionSelectors() internal {
-        conditionSelector[IEngine.isTimestampAfter.selector] = true;
-        conditionSelector[IEngine.isTimestampBefore.selector] = true;
-        conditionSelector[IEngine.isPriceAbove.selector] = true;
-        conditionSelector[IEngine.isPriceBelow.selector] = true;
-        conditionSelector[IEngine.isMarketOpen.selector] = true;
-        conditionSelector[IEngine.isPositionSizeAbove.selector] = true;
-        conditionSelector[IEngine.isPositionSizeBelow.selector] = true;
-        conditionSelector[IEngine.isOrderFeeBelow.selector] = true;
     }
 
     /*//////////////////////////////////////////////////////////////
@@ -114,7 +148,7 @@ contract Engine is IEngine, Multicallable, EIP712 {
         returns (bool)
     {
         return PERPS_MARKET_PROXY.hasPermission(
-            _accountId, Constants.PERPS_COMMIT_ASYNC_ORDER_PERMISSION, _caller
+            _accountId, PERPS_COMMIT_ASYNC_ORDER_PERMISSION, _caller
         );
     }
 
@@ -136,7 +170,7 @@ contract Engine is IEngine, Multicallable, EIP712 {
         uint128 _accountId,
         uint256 _wordPos,
         uint256 _mask
-    ) external {
+    ) external override {
         if (_isAccountOwnerOrDelegate(_accountId, msg.sender)) {
             nonceBitmap[_accountId][_wordPos] |= _mask;
 
@@ -150,6 +184,7 @@ contract Engine is IEngine, Multicallable, EIP712 {
     function hasUnorderedNonceBeenUsed(uint128 _accountId, uint256 _nonce)
         public
         view
+        override
         returns (bool)
     {
         (uint256 wordPos, uint256 bitPos) = _bitmapPositions(_nonce);
@@ -244,7 +279,7 @@ contract Engine is IEngine, Multicallable, EIP712 {
         view
         returns (address synthAddress)
     {
-        synthAddress = _synthMarketId == Constants.USD_SYNTH_ID
+        synthAddress = _synthMarketId == USD_SYNTH_ID
             ? address(SUSD)
             : SPOT_MARKET_PROXY.getSynth(_synthMarketId);
     }
@@ -373,14 +408,13 @@ contract Engine is IEngine, Multicallable, EIP712 {
         });
 
         /// @dev calculate conditional order fee based on scaled order fees
-        conditionalOrderFee =
-            (orderFees * Constants.FEE_SCALING_FACTOR) / Constants.MAX_BPS;
+        conditionalOrderFee = (orderFees * FEE_SCALING_FACTOR) / MAX_BPS;
 
         /// @dev ensure conditional order fee is within bounds
-        if (conditionalOrderFee < Constants.LOWER_FEE_CAP) {
-            conditionalOrderFee = Constants.LOWER_FEE_CAP;
-        } else if (conditionalOrderFee > Constants.UPPER_FEE_CAP) {
-            conditionalOrderFee = Constants.UPPER_FEE_CAP;
+        if (conditionalOrderFee < LOWER_FEE_CAP) {
+            conditionalOrderFee = LOWER_FEE_CAP;
+        } else if (conditionalOrderFee > UPPER_FEE_CAP) {
+            conditionalOrderFee = UPPER_FEE_CAP;
         }
 
         /// @dev withdraw conditional order fee from account prior to executing order
@@ -388,7 +422,7 @@ contract Engine is IEngine, Multicallable, EIP712 {
             _to: msg.sender,
             _synth: SUSD,
             _accountId: _co.orderDetails.accountId,
-            _synthMarketId: Constants.USD_SYNTH_ID,
+            _synthMarketId: USD_SYNTH_ID,
             _amount: -int256(conditionalOrderFee)
         });
 
@@ -466,7 +500,7 @@ contract Engine is IEngine, Multicallable, EIP712 {
         returns (bool)
     {
         uint256 length = _co.conditions.length;
-        if (length > Constants.MAX_CONDITIONS) {
+        if (length > MAX_CONDITIONS) {
             revert MaxConditionSizeExceeded();
         }
 
@@ -474,11 +508,21 @@ contract Engine is IEngine, Multicallable, EIP712 {
             bool success;
             bytes memory response;
 
+            // define condition selector intended to be called
             bytes4 selector = bytes4(_co.conditions[i]);
 
             /// @dev checking if the selector is valid prevents the possibility of
             /// a malicious condition from griefing the executor
-            if (conditionSelector[selector]) {
+            if (
+                selector == isTimestampAfterSelector
+                    || selector == isTimestampBeforeSelector
+                    || selector == isPriceAboveSelector
+                    || selector == isPriceBelowSelector
+                    || selector == isMarketOpenSelector
+                    || selector == isPositionSizeAboveSelector
+                    || selector == isPositionSizeBelowSelector
+                    || selector == isOrderFeeBelowSelector
+            ) {
                 // @dev staticcall to prevent state changes in the case a condition is malicious
                 (success, response) =
                     address(this).staticcall(_co.conditions[i]);

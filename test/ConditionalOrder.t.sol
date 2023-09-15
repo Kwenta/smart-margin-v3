@@ -496,7 +496,10 @@ contract Execute is ConditionalOrderTest {
         );
 
         uint256 marginPostConditionalOrderFee = AMOUNT
-            - (orderFees = orderFees * engineExposed.FEE_SCALING_FACTOR() / 10_000);
+            - (
+                orderFees =
+                    orderFees * engineExposed.expose_FEE_SCALING_FACTOR() / 10_000
+            );
 
         vm.expectRevert(
             abi.encodeWithSelector(
@@ -580,8 +583,8 @@ contract Fee is ConditionalOrderTest {
     }
 
     function test_fee_imposed_at_upper_fee_cap() public {
-        uint256 mocked_order_fees =
-            engineExposed.UPPER_FEE_CAP() * engineExposed.FEE_SCALING_FACTOR();
+        uint256 mocked_order_fees = engineExposed.expose_UPPER_FEE_CAP()
+            * engineExposed.expose_FEE_SCALING_FACTOR();
 
         mock_computeOrderFees({
             perpsMarketProxy: address(perpsMarketProxy),
@@ -619,13 +622,15 @@ contract Fee is ConditionalOrderTest {
 
         (,, uint256 conditionalOrderFee) = engine.execute(co, signature);
 
-        assertEq(engineExposed.UPPER_FEE_CAP(), conditionalOrderFee);
-        assertEq(engineExposed.UPPER_FEE_CAP(), sUSD.balanceOf(address(this)));
+        assertEq(engineExposed.expose_UPPER_FEE_CAP(), conditionalOrderFee);
+        assertEq(
+            engineExposed.expose_UPPER_FEE_CAP(), sUSD.balanceOf(address(this))
+        );
     }
 
     function test_fee_imposed_above_upper_fee_cap() public {
-        uint256 mocked_order_fees = engineExposed.UPPER_FEE_CAP()
-            * (engineExposed.FEE_SCALING_FACTOR() + 1);
+        uint256 mocked_order_fees = engineExposed.expose_UPPER_FEE_CAP()
+            * (engineExposed.expose_FEE_SCALING_FACTOR() + 1);
 
         mock_computeOrderFees({
             perpsMarketProxy: address(perpsMarketProxy),
@@ -663,12 +668,14 @@ contract Fee is ConditionalOrderTest {
 
         (,, uint256 conditionalOrderFee) = engine.execute(co, signature);
 
-        assertEq(engineExposed.UPPER_FEE_CAP(), conditionalOrderFee);
-        assertEq(engineExposed.UPPER_FEE_CAP(), sUSD.balanceOf(address(this)));
+        assertEq(engineExposed.expose_UPPER_FEE_CAP(), conditionalOrderFee);
+        assertEq(
+            engineExposed.expose_UPPER_FEE_CAP(), sUSD.balanceOf(address(this))
+        );
     }
 
     function test_fee_imposed_below_upper_fee_cap() public {
-        uint256 mocked_order_fees = engineExposed.UPPER_FEE_CAP();
+        uint256 mocked_order_fees = engineExposed.expose_UPPER_FEE_CAP();
 
         mock_computeOrderFees({
             perpsMarketProxy: address(perpsMarketProxy),
@@ -707,13 +714,17 @@ contract Fee is ConditionalOrderTest {
         (,, uint256 conditionalOrderFee) = engine.execute(co, signature);
 
         assertEq(
-            (engineExposed.UPPER_FEE_CAP() * engineExposed.FEE_SCALING_FACTOR())
-                / 10_000,
+            (
+                engineExposed.expose_UPPER_FEE_CAP()
+                    * engineExposed.expose_FEE_SCALING_FACTOR()
+            ) / 10_000,
             conditionalOrderFee
         );
         assertEq(
-            (engineExposed.UPPER_FEE_CAP() * engineExposed.FEE_SCALING_FACTOR())
-                / 10_000,
+            (
+                engineExposed.expose_UPPER_FEE_CAP()
+                    * engineExposed.expose_FEE_SCALING_FACTOR()
+            ) / 10_000,
             sUSD.balanceOf(address(this))
         );
     }
@@ -757,8 +768,10 @@ contract Fee is ConditionalOrderTest {
 
         (,, uint256 conditionalOrderFee) = engine.execute(co, signature);
 
-        assertEq(engineExposed.LOWER_FEE_CAP(), conditionalOrderFee);
-        assertEq(engineExposed.LOWER_FEE_CAP(), sUSD.balanceOf(address(this)));
+        assertEq(engineExposed.expose_LOWER_FEE_CAP(), conditionalOrderFee);
+        assertEq(
+            engineExposed.expose_LOWER_FEE_CAP(), sUSD.balanceOf(address(this))
+        );
     }
 
     function test_fee_imposed_fee_cannot_be_paid() public {
@@ -801,7 +814,8 @@ contract Fee is ConditionalOrderTest {
             sizeDelta: 10 ether
         });
 
-        orderFees = orderFees * engineExposed.FEE_SCALING_FACTOR() / 10_000;
+        orderFees =
+            orderFees * engineExposed.expose_FEE_SCALING_FACTOR() / 10_000;
 
         vm.expectRevert(
             abi.encodeWithSelector(
@@ -851,7 +865,10 @@ contract Fee is ConditionalOrderTest {
         );
 
         uint256 marginPostConditionalOrderFee = AMOUNT
-            - (orderFees = orderFees * engineExposed.FEE_SCALING_FACTOR() / 10_000);
+            - (
+                orderFees =
+                    orderFees * engineExposed.expose_FEE_SCALING_FACTOR() / 10_000
+            );
 
         vm.expectRevert(
             abi.encodeWithSelector(

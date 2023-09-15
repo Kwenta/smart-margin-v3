@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 pragma solidity 0.8.18;
 
-import {Engine, Constants, MathLib} from "src/Engine.sol";
+import {Engine, MathLib} from "src/Engine.sol";
 
 contract EngineExposed is Engine {
     using MathLib for uint256;
@@ -21,19 +21,19 @@ contract EngineExposed is Engine {
         return _getSynthAddress(synthMarketId);
     }
 
-    function UPPER_FEE_CAP() public pure returns (uint256) {
-        return Constants.UPPER_FEE_CAP;
+    function expose_UPPER_FEE_CAP() public pure returns (uint256) {
+        return UPPER_FEE_CAP;
     }
 
-    function LOWER_FEE_CAP() public pure returns (uint256) {
-        return Constants.LOWER_FEE_CAP;
+    function expose_LOWER_FEE_CAP() public pure returns (uint256) {
+        return LOWER_FEE_CAP;
     }
 
-    function FEE_SCALING_FACTOR() public pure returns (uint256) {
-        return Constants.FEE_SCALING_FACTOR;
+    function expose_FEE_SCALING_FACTOR() public pure returns (uint256) {
+        return FEE_SCALING_FACTOR;
     }
 
-    function MAX_BPS() public pure returns (uint256) {
-        return Constants.MAX_BPS;
+    function expose_MAX_BPS() public pure returns (uint256) {
+        return MAX_BPS;
     }
 }
