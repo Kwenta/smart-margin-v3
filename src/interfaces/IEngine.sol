@@ -91,6 +91,8 @@ interface IEngine {
 
     /// @notice check if the msg.sender is a delegate of the account
     /// identified by the accountId
+    /// @dev a delegate is an address that has been given
+    /// PERPS_COMMIT_ASYNC_ORDER_PERMISSION permission
     /// @param _accountId the id of the account to check
     /// @param _caller the address to check
     /// @return true if the msg.sender is a delegate of the account

@@ -384,9 +384,17 @@ contract VerifyConditions is ConditionalOrderTest {
     function test_verifyConditions_public_non_condition_isAccountDelegate()
         public
     {
+        vm.prank(signer);
+
+        perpsMarketProxy.grantPermission({
+            accountId: accountId,
+            permission: PERPS_COMMIT_ASYNC_ORDER_PERMISSION,
+            user: DELEGATE_1
+        });
+
         bytes[] memory conditions = new bytes[](1);
         conditions[0] = abi.encodeWithSelector(
-            IEngine.isAccountDelegate.selector, accountId, address(engine)
+            IEngine.isAccountDelegate.selector, accountId, DELEGATE_1
         );
 
         IEngine.OrderDetails memory orderDetails;

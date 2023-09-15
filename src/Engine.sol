@@ -96,7 +96,7 @@ contract Engine is IEngine, Multicallable, EIP712 {
         returns (bool)
     {
         return PERPS_MARKET_PROXY.hasPermission(
-            _accountId, Constants.ADMIN_PERMISSION, _caller
+            _accountId, Constants.PERPS_COMMIT_ASYNC_ORDER_PERMISSION, _caller
         );
     }
 
