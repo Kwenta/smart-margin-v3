@@ -451,6 +451,12 @@ contract Engine is IEngine, Multicallable, EIP712 {
         if (length > Constants.MAX_CONDITIONS) {
             revert MaxConditionSizeExceeded();
         }
+
+        /// @dev given that conditions are not "sanitized" prior to being called,
+        /// there exists a griefing vector where an infinite loop can be created
+        /// (i.e. a condition calls Engine.verifyConditions)
+        /// @custom:executor be aware and ensure that conditions are not malicious
+        /// to avoid wasting gas; recommend simulating call prior to executing
         for (uint256 i = 0; i < length;) {
             bool success;
             bytes memory response;
