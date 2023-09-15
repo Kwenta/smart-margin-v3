@@ -3,6 +3,7 @@ pragma solidity 0.8.18;
 
 import {ConditionalOrderHashLib} from
     "src/libraries/ConditionalOrderHashLib.sol";
+import {Constants} from "src/libraries/Constants.sol";
 import {EIP712} from "src/utils/EIP712.sol";
 import {IEngine, IPerpsMarketProxy} from "src/interfaces/IEngine.sol";
 import {IERC20} from "src/interfaces/tokens/IERC20.sol";
@@ -22,36 +23,6 @@ contract Engine is IEngine, Multicallable, EIP712 {
     using SignatureCheckerLib for bytes;
     using ConditionalOrderHashLib for OrderDetails;
     using ConditionalOrderHashLib for ConditionalOrder;
-
-    /*//////////////////////////////////////////////////////////////
-                               CONSTANTS
-    //////////////////////////////////////////////////////////////*/
-
-    /// @notice admins have permission to do everything that the account owner can
-    /// (including granting and revoking permissions for other addresses) except
-    /// for transferring account ownership
-    bytes32 internal constant ADMIN_PERMISSION = "ADMIN";
-
-    /// @notice "0" synthMarketId represents sUSD in Synthetix v3
-    uint128 internal constant USD_SYNTH_ID = 0;
-
-    /// @notice max fee that can be charged for a conditional order execution
-    /// @dev 50 USD
-    uint256 public constant UPPER_FEE_CAP = 50 ether;
-
-    /// @notice min fee that can be charged for a conditional order execution
-    /// @dev 2 USD
-    uint256 public constant LOWER_FEE_CAP = 2 ether;
-
-    /// @notice percentage of the simulated order fee that is charged for a conditional order execution
-    /// @dev denoted in BPS (basis points) where 1% = 100 BPS and 100% = 10000 BPS
-    uint256 public constant FEE_SCALING_FACTOR = 1000;
-
-    /// @notice max BPS
-    uint256 internal constant MAX_BPS = 10_000;
-
-    /// @notice max number of conditions that can be defined for a conditional order
-    uint256 internal constant MAX_CONDITIONS = 8;
 
     /*//////////////////////////////////////////////////////////////
                                IMMUTABLES
@@ -125,7 +96,7 @@ contract Engine is IEngine, Multicallable, EIP712 {
         returns (bool)
     {
         return PERPS_MARKET_PROXY.hasPermission(
-            _accountId, ADMIN_PERMISSION, _caller
+            _accountId, Constants.ADMIN_PERMISSION, _caller
         );
     }
 
@@ -255,7 +226,7 @@ contract Engine is IEngine, Multicallable, EIP712 {
         view
         returns (address synthAddress)
     {
-        synthAddress = _synthMarketId == USD_SYNTH_ID
+        synthAddress = _synthMarketId == Constants.USD_SYNTH_ID
             ? address(SUSD)
             : SPOT_MARKET_PROXY.getSynth(_synthMarketId);
     }
@@ -384,13 +355,14 @@ contract Engine is IEngine, Multicallable, EIP712 {
         });
 
         /// @dev calculate conditional order fee based on scaled order fees
-        conditionalOrderFee = (orderFees * FEE_SCALING_FACTOR) / MAX_BPS;
+        conditionalOrderFee =
+            (orderFees * Constants.FEE_SCALING_FACTOR) / Constants.MAX_BPS;
 
         /// @dev ensure conditional order fee is within bounds
-        if (conditionalOrderFee < LOWER_FEE_CAP) {
-            conditionalOrderFee = LOWER_FEE_CAP;
-        } else if (conditionalOrderFee > UPPER_FEE_CAP) {
-            conditionalOrderFee = UPPER_FEE_CAP;
+        if (conditionalOrderFee < Constants.LOWER_FEE_CAP) {
+            conditionalOrderFee = Constants.LOWER_FEE_CAP;
+        } else if (conditionalOrderFee > Constants.UPPER_FEE_CAP) {
+            conditionalOrderFee = Constants.UPPER_FEE_CAP;
         }
 
         /// @dev withdraw conditional order fee from account prior to executing order
@@ -398,7 +370,7 @@ contract Engine is IEngine, Multicallable, EIP712 {
             _to: msg.sender,
             _synth: SUSD,
             _accountId: _co.orderDetails.accountId,
-            _synthMarketId: USD_SYNTH_ID,
+            _synthMarketId: Constants.USD_SYNTH_ID,
             _amount: -int256(conditionalOrderFee)
         });
 
@@ -476,7 +448,9 @@ contract Engine is IEngine, Multicallable, EIP712 {
         returns (bool)
     {
         uint256 length = _co.conditions.length;
-        if (length > MAX_CONDITIONS) revert MaxConditionSizeExceeded();
+        if (length > Constants.MAX_CONDITIONS) {
+            revert MaxConditionSizeExceeded();
+        }
         for (uint256 i = 0; i < length;) {
             bool success;
             bytes memory response;

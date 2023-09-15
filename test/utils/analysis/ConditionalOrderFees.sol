@@ -18,12 +18,12 @@ contract ConditionalOrderTest is Bootstrap {
             });
 
             uint256 conditional_order_fee =
-                orderFees * engine.FEE_SCALING_FACTOR() / 10_000;
+                orderFees * engineExposed.FEE_SCALING_FACTOR() / 10_000;
 
-            if (conditional_order_fee < engine.LOWER_FEE_CAP()) {
-                console2.log("%s,", engine.LOWER_FEE_CAP() / 1e18);
-            } else if (conditional_order_fee > engine.UPPER_FEE_CAP()) {
-                console2.log("%s,", engine.UPPER_FEE_CAP() / 1e18);
+            if (conditional_order_fee < engineExposed.LOWER_FEE_CAP()) {
+                console2.log("%s,", engineExposed.LOWER_FEE_CAP() / 1e18);
+            } else if (conditional_order_fee > engineExposed.UPPER_FEE_CAP()) {
+                console2.log("%s,", engineExposed.UPPER_FEE_CAP() / 1e18);
             } else {
                 console2.log("%s,", conditional_order_fee / 1e18);
             }
