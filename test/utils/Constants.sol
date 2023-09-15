@@ -13,6 +13,9 @@ contract Constants {
 
     bytes32 internal constant ADMIN_PERMISSION = "ADMIN";
 
+    bytes32 internal constant PERPS_COMMIT_ASYNC_ORDER_PERMISSION =
+        "PERPS_COMMIT_ASYNC_ORDER";
+
     address internal constant MOCK_MARGIN_ENGINE = address(0xE1);
 
     address internal constant ACTOR = address(0xa1);

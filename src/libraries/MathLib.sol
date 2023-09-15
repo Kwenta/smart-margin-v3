@@ -14,7 +14,7 @@ library MathLib {
             /// shr(127, x):
             /// shifts the number x to the right by 127 bits:
             /// IF the number is negative, the leftmost bit (bit 127) will be 1
-            /// IF the number is positive,the leftmost bit (bit 127) will be 0
+            /// IF the number is positive, the leftmost bit (bit 127) will be 0
             let y := shr(127, x)
 
             /// sub(xor(x, y), y):

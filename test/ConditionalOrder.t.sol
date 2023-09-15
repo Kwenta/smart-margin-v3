@@ -381,33 +381,7 @@ contract VerifyConditions is ConditionalOrderTest {
         assertFalse(isVerified);
     }
 
-    function test_verifyConditions_public_non_condition_isAccountDelegate()
-        public
-    {
-        bytes[] memory conditions = new bytes[](1);
-        conditions[0] = abi.encodeWithSelector(
-            IEngine.isAccountDelegate.selector, accountId, address(engine)
-        );
-
-        IEngine.OrderDetails memory orderDetails;
-
-        IEngine.ConditionalOrder memory co = IEngine.ConditionalOrder({
-            orderDetails: orderDetails,
-            signer: signer,
-            nonce: 0,
-            requireVerified: true,
-            trustedExecutor: address(0),
-            conditions: conditions
-        });
-
-        bool isVerified = engine.verifyConditions(co);
-
-        assertTrue(isVerified);
-    }
-
-    function test_verifyConditions_internal_non_condition_getSynthAddress()
-        public
-    {
+    function test_verifyConditions_InvalidConditionSelector() public {
         bytes[] memory conditions = new bytes[](1);
         conditions[0] = abi.encodeWithSignature(
             "_getSynthAddress(uint128 _synthMarketId)", SETH_SPOT_MARKET_ID
@@ -424,29 +398,13 @@ contract VerifyConditions is ConditionalOrderTest {
             conditions: conditions
         });
 
-        bool isVerified = engine.verifyConditions(co);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IEngine.InvalidConditionSelector.selector, bytes4(conditions[0])
+            )
+        );
 
-        assertFalse(isVerified);
-    }
-
-    function test_verifyConditions_modify_state_createAccount() public {
-        bytes[] memory conditions = new bytes[](1);
-        conditions[0] = abi.encodeWithSignature("createAccount()");
-
-        IEngine.OrderDetails memory orderDetails;
-
-        IEngine.ConditionalOrder memory co = IEngine.ConditionalOrder({
-            orderDetails: orderDetails,
-            signer: signer,
-            nonce: 0,
-            requireVerified: true,
-            trustedExecutor: address(0),
-            conditions: conditions
-        });
-
-        bool isVerified = engine.verifyConditions(co);
-
-        assertFalse(isVerified);
+        engine.verifyConditions(co);
     }
 }
 
@@ -538,7 +496,10 @@ contract Execute is ConditionalOrderTest {
         );
 
         uint256 marginPostConditionalOrderFee = AMOUNT
-            - (orderFees = orderFees * engine.FEE_SCALING_FACTOR() / 10_000);
+            - (
+                orderFees =
+                    orderFees * engineExposed.expose_FEE_SCALING_FACTOR() / 10_000
+            );
 
         vm.expectRevert(
             abi.encodeWithSelector(
@@ -622,8 +583,8 @@ contract Fee is ConditionalOrderTest {
     }
 
     function test_fee_imposed_at_upper_fee_cap() public {
-        uint256 mocked_order_fees =
-            engine.UPPER_FEE_CAP() * engine.FEE_SCALING_FACTOR();
+        uint256 mocked_order_fees = engineExposed.expose_UPPER_FEE_CAP()
+            * engineExposed.expose_FEE_SCALING_FACTOR();
 
         mock_computeOrderFees({
             perpsMarketProxy: address(perpsMarketProxy),
@@ -661,13 +622,15 @@ contract Fee is ConditionalOrderTest {
 
         (,, uint256 conditionalOrderFee) = engine.execute(co, signature);
 
-        assertEq(engine.UPPER_FEE_CAP(), conditionalOrderFee);
-        assertEq(engine.UPPER_FEE_CAP(), sUSD.balanceOf(address(this)));
+        assertEq(engineExposed.expose_UPPER_FEE_CAP(), conditionalOrderFee);
+        assertEq(
+            engineExposed.expose_UPPER_FEE_CAP(), sUSD.balanceOf(address(this))
+        );
     }
 
     function test_fee_imposed_above_upper_fee_cap() public {
-        uint256 mocked_order_fees =
-            engine.UPPER_FEE_CAP() * (engine.FEE_SCALING_FACTOR() + 1);
+        uint256 mocked_order_fees = engineExposed.expose_UPPER_FEE_CAP()
+            * (engineExposed.expose_FEE_SCALING_FACTOR() + 1);
 
         mock_computeOrderFees({
             perpsMarketProxy: address(perpsMarketProxy),
@@ -705,12 +668,14 @@ contract Fee is ConditionalOrderTest {
 
         (,, uint256 conditionalOrderFee) = engine.execute(co, signature);
 
-        assertEq(engine.UPPER_FEE_CAP(), conditionalOrderFee);
-        assertEq(engine.UPPER_FEE_CAP(), sUSD.balanceOf(address(this)));
+        assertEq(engineExposed.expose_UPPER_FEE_CAP(), conditionalOrderFee);
+        assertEq(
+            engineExposed.expose_UPPER_FEE_CAP(), sUSD.balanceOf(address(this))
+        );
     }
 
     function test_fee_imposed_below_upper_fee_cap() public {
-        uint256 mocked_order_fees = engine.UPPER_FEE_CAP();
+        uint256 mocked_order_fees = engineExposed.expose_UPPER_FEE_CAP();
 
         mock_computeOrderFees({
             perpsMarketProxy: address(perpsMarketProxy),
@@ -749,11 +714,17 @@ contract Fee is ConditionalOrderTest {
         (,, uint256 conditionalOrderFee) = engine.execute(co, signature);
 
         assertEq(
-            (engine.UPPER_FEE_CAP() * engine.FEE_SCALING_FACTOR()) / 10_000,
+            (
+                engineExposed.expose_UPPER_FEE_CAP()
+                    * engineExposed.expose_FEE_SCALING_FACTOR()
+            ) / 10_000,
             conditionalOrderFee
         );
         assertEq(
-            (engine.UPPER_FEE_CAP() * engine.FEE_SCALING_FACTOR()) / 10_000,
+            (
+                engineExposed.expose_UPPER_FEE_CAP()
+                    * engineExposed.expose_FEE_SCALING_FACTOR()
+            ) / 10_000,
             sUSD.balanceOf(address(this))
         );
     }
@@ -797,8 +768,10 @@ contract Fee is ConditionalOrderTest {
 
         (,, uint256 conditionalOrderFee) = engine.execute(co, signature);
 
-        assertEq(engine.LOWER_FEE_CAP(), conditionalOrderFee);
-        assertEq(engine.LOWER_FEE_CAP(), sUSD.balanceOf(address(this)));
+        assertEq(engineExposed.expose_LOWER_FEE_CAP(), conditionalOrderFee);
+        assertEq(
+            engineExposed.expose_LOWER_FEE_CAP(), sUSD.balanceOf(address(this))
+        );
     }
 
     function test_fee_imposed_fee_cannot_be_paid() public {
@@ -841,7 +814,8 @@ contract Fee is ConditionalOrderTest {
             sizeDelta: 10 ether
         });
 
-        orderFees = orderFees * engine.FEE_SCALING_FACTOR() / 10_000;
+        orderFees =
+            orderFees * engineExposed.expose_FEE_SCALING_FACTOR() / 10_000;
 
         vm.expectRevert(
             abi.encodeWithSelector(
@@ -891,7 +865,10 @@ contract Fee is ConditionalOrderTest {
         );
 
         uint256 marginPostConditionalOrderFee = AMOUNT
-            - (orderFees = orderFees * engine.FEE_SCALING_FACTOR() / 10_000);
+            - (
+                orderFees =
+                    orderFees * engineExposed.expose_FEE_SCALING_FACTOR() / 10_000
+            );
 
         vm.expectRevert(
             abi.encodeWithSelector(

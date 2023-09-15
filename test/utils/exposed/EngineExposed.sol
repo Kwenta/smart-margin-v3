@@ -20,4 +20,20 @@ contract EngineExposed is Engine {
     {
         return _getSynthAddress(synthMarketId);
     }
+
+    function expose_UPPER_FEE_CAP() public pure returns (uint256) {
+        return UPPER_FEE_CAP;
+    }
+
+    function expose_LOWER_FEE_CAP() public pure returns (uint256) {
+        return LOWER_FEE_CAP;
+    }
+
+    function expose_FEE_SCALING_FACTOR() public pure returns (uint256) {
+        return FEE_SCALING_FACTOR;
+    }
+
+    function expose_MAX_BPS() public pure returns (uint256) {
+        return MAX_BPS;
+    }
 }

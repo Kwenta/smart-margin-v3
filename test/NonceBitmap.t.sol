@@ -127,7 +127,7 @@ contract NonceBitmap is Bootstrap, ConditionalOrderSignature {
 
         perpsMarketProxy.grantPermission({
             accountId: accountId,
-            permission: ADMIN_PERMISSION,
+            permission: PERPS_COMMIT_ASYNC_ORDER_PERMISSION,
             user: NEW_ACTOR
         });
 
