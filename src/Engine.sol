@@ -56,6 +56,7 @@ contract Engine is IEngine, Multicallable, EIP712 {
     /// @param _perpsMarketProxy Synthetix v3 perps market proxy contract
     /// @param _spotMarketProxy Synthetix v3 spot market proxy contract
     /// @param _sUSDProxy Synthetix v3 sUSD contract
+    /// @param _oracle pyth oracle contract used to get asset prices
     constructor(
         address _perpsMarketProxy,
         address _spotMarketProxy,
