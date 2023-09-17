@@ -26,11 +26,6 @@ contract Engine is IEngine, Multicallable, EIP712 {
                                CONSTANTS
     //////////////////////////////////////////////////////////////*/
 
-    /// @notice admins have permission to do everything that the account owner can
-    /// (including granting and revoking permissions for other addresses) except
-    /// for transferring account ownership
-    bytes32 internal constant ADMIN_PERMISSION = "ADMIN";
-
     /// @notice the permission required to commit an async order
     /// @dev this permission does not allow the permission holder to modify collateral
     bytes32 internal constant PERPS_COMMIT_ASYNC_ORDER_PERMISSION =
