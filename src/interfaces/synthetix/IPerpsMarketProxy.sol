@@ -62,6 +62,16 @@ interface IPerpsMarketProxy {
         view
         returns (bool hasPermission);
 
+    /// @notice Returns `true` if `target` is authorized to `permission` for account `accountId`.
+    /// @param accountId The id of the account whose permission is being queried.
+    /// @param permission The bytes32 identifier of the permission.
+    /// @param target The target address whose permission is being queried.
+    /// @return isAuthorized A boolean with the response of the query.
+    function isAuthorized(uint128 accountId, bytes32 permission, address target)
+        external
+        view
+        returns (bool isAuthorized);
+
     /*//////////////////////////////////////////////////////////////
                            ASYNC ORDER MODULE
     //////////////////////////////////////////////////////////////*/
