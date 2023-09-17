@@ -137,7 +137,7 @@ contract Engine is IEngine, Multicallable, EIP712 {
 
     /// @inheritdoc IEngine
     function isAccountDelegate(uint128 _accountId, address _caller)
-        public
+        external
         view
         override
         returns (bool)
@@ -152,8 +152,9 @@ contract Engine is IEngine, Multicallable, EIP712 {
         view
         returns (bool)
     {
-        return isAccountOwner(_accountId, _caller)
-            || isAccountDelegate(_accountId, _caller);
+        return PERPS_MARKET_PROXY.isAuthorized(
+            _accountId, PERPS_COMMIT_ASYNC_ORDER_PERMISSION, _caller
+        );
     }
 
     /*//////////////////////////////////////////////////////////////
