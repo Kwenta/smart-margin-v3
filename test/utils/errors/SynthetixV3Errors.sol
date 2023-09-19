@@ -101,4 +101,7 @@ contract SynthetixV3Errors {
         uint128 accountId, bytes32 permission, address target
     );
     error InsufficientBalance(uint256 required, uint256 existing);
+    error InsufficientSynthCollateral(
+        uint128 synthMarketId, uint256 collateralAmount, uint256 withdrawAmount
+    );
 }

@@ -243,7 +243,8 @@ contract WithdrawCollateral is CollateralTest {
 
         vm.expectRevert(
             abi.encodeWithSelector(
-                InsufficientCollateralAvailableForWithdraw.selector,
+                InsufficientSynthCollateral.selector,
+                SUSD_SPOT_MARKET_ID,
                 AMOUNT,
                 AMOUNT + 1
             )

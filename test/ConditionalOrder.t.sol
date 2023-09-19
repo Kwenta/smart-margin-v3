@@ -845,7 +845,8 @@ contract Fee is ConditionalOrderTest {
 
         vm.expectRevert(
             abi.encodeWithSelector(
-                InsufficientCollateralAvailableForWithdraw.selector,
+                InsufficientSynthCollateral.selector,
+                SUSD_SPOT_MARKET_ID,
                 0,
                 orderFees
             )

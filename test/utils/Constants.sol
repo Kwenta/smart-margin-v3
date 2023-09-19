@@ -2,7 +2,7 @@
 pragma solidity 0.8.18;
 
 contract Constants {
-    uint256 internal constant GOERLI_BLOCK_NUMBER = 13_995_234;
+    uint256 internal constant GOERLI_BLOCK_NUMBER = 14_862_158;
 
     address internal constant OWNER = address(0x01);
 
@@ -43,5 +43,5 @@ contract Constants {
     uint256 internal constant AMOUNT = 10_000 ether;
 
     address internal constant MARKET_CONFIGURATION_MODULE =
-        0x1e1Bde584F428dE4a47865C5c07b2F5173cDcB10;
+        0xE3b87A4c0E5F77504D6fa7656Cd8Caf2Ef331162;
 }
