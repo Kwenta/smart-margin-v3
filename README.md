@@ -2,7 +2,7 @@
 
 [![Github Actions][gha-badge]][gha]
 [![Foundry][foundry-badge]][foundry]
-[![License: MIT][license-badge]][license]
+[![License: GPL-3.0][license-badge]][license]
 
 [gha]: https://github.com/Kwenta/smart-margin-v3/actions
 [gha-badge]: https://github.com/Kwenta/smart-margin-v3/actions/workflows/test.yml/badge.svg
