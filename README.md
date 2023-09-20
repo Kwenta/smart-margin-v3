@@ -74,8 +74,10 @@ npm run decode-custom-error -- <error hash 0x...>
 
 > See `deployments/` folder
 
-1. Optimism deployments found in `deployments/Optimism/`
-2. Optimism Goerli deployments found in `deployments/OptimismGoerli/`
+1. Optimism deployments found in `deployments/Optimism.json`
+2. Optimism Goerli deployments found in `deployments/OptimismGoerli.json`
+3. Base deployments found in `deployments/Base.json`
+4. Base Goerli deployments found in `deployments/BaseGoerli.json`
 
 ## Audits
 
