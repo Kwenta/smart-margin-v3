@@ -6,7 +6,7 @@ import {ConditionalOrderSignature} from
     "test/utils/ConditionalOrderSignature.sol";
 import {IEngine} from "src/interfaces/IEngine.sol";
 
-contract NonceBitmap is Bootstrap, ConditionalOrderSignature {
+contract NonceBitmapTest is Bootstrap, ConditionalOrderSignature {
     address signer;
     uint256 signerPrivateKey;
 

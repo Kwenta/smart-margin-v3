@@ -2,7 +2,6 @@
 pragma solidity 0.8.18;
 
 import {Bootstrap, IPerpsMarketProxy} from "test/utils/Bootstrap.sol";
-import {IEngine} from "src/interfaces/IEngine.sol";
 import {SynthetixMock} from "test/utils/mocks/SynthetixMock.sol";
 
 contract AsyncOrderTest is Bootstrap, SynthetixMock {
