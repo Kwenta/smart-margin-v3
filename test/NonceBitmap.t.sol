@@ -142,4 +142,21 @@ contract NonceBitmapTest is Bootstrap, ConditionalOrderSignature {
 
         assertTrue(hasBeenUsed);
     }
+
+    function test_fuzz_invalidateUnorderedNonces(uint256 nonce) public {
+        uint256 wordPos = uint248(nonce >> 8);
+        uint256 bitPos = uint8(nonce);
+        uint256 mask = 1 << bitPos;
+
+        vm.prank(signer);
+
+        engine.invalidateUnorderedNonces(accountId, wordPos, mask);
+
+        bool hasBeenUsed = engine.hasUnorderedNonceBeenUsed({
+            _accountId: accountId,
+            _nonce: nonce
+        });
+
+        assertTrue(hasBeenUsed);
+    }
 }
