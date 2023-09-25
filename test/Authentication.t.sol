@@ -52,7 +52,7 @@ contract AccountDelegate is AuthenticationTest {
 
         perpsMarketProxy.grantPermission({
             accountId: accountId,
-            permission: ADMIN_PERMISSION,
+            permission: PERPS_COMMIT_ASYNC_ORDER_PERMISSION,
             user: NEW_ACTOR
         });
 
@@ -70,7 +70,7 @@ contract AccountDelegate is AuthenticationTest {
 
         perpsMarketProxy.grantPermission({
             accountId: accountId,
-            permission: ADMIN_PERMISSION,
+            permission: PERPS_COMMIT_ASYNC_ORDER_PERMISSION,
             user: NEW_ACTOR
         });
 
@@ -96,9 +96,11 @@ contract AccountDelegate is AuthenticationTest {
             )
         );
 
+        // only admin and owner can grant permission
+
         perpsMarketProxy.grantPermission({
             accountId: accountId,
-            permission: ADMIN_PERMISSION,
+            permission: PERPS_COMMIT_ASYNC_ORDER_PERMISSION,
             user: NEW_ACTOR
         });
     }

@@ -30,6 +30,5 @@ jobs:
               with:
                   files: ./lcov.info
                   name: codecov-unit
-                  # will fail until repo is public
-                  # fail_ci_if_error: true
+                  fail_ci_if_error: true
                   verbose: true

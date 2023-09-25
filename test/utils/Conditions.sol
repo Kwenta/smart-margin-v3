@@ -22,23 +22,23 @@ contract Conditions {
             abi.encodeWithSelector(Engine.isTimestampBefore.selector, timestamp);
     }
 
-    function isPriceAbove(bytes32 _assetId, int64 _price)
-        public
-        pure
-        returns (bytes memory)
-    {
+    function isPriceAbove(
+        bytes32 _assetId,
+        int64 _price,
+        uint64 _confidenceInterval
+    ) public pure returns (bytes memory) {
         return abi.encodeWithSelector(
-            Engine.isPriceAbove.selector, _assetId, _price
+            Engine.isPriceAbove.selector, _assetId, _price, _confidenceInterval
         );
     }
 
-    function isPriceBelow(bytes32 _assetId, int64 _price)
-        public
-        pure
-        returns (bytes memory)
-    {
+    function isPriceBelow(
+        bytes32 _assetId,
+        int64 _price,
+        uint64 _confidenceInterval
+    ) public pure returns (bytes memory) {
         return abi.encodeWithSelector(
-            Engine.isPriceBelow.selector, _assetId, _price
+            Engine.isPriceBelow.selector, _assetId, _price, _confidenceInterval
         );
     }
 
@@ -48,5 +48,35 @@ contract Conditions {
         returns (bytes memory)
     {
         return abi.encodeWithSelector(Engine.isMarketOpen.selector, _marketId);
+    }
+
+    function isPositionSizeAbove(
+        uint128 _accountId,
+        uint128 _marketId,
+        int128 _size
+    ) public pure returns (bytes memory) {
+        return abi.encodeWithSelector(
+            Engine.isPositionSizeAbove.selector, _accountId, _marketId, _size
+        );
+    }
+
+    function isPositionSizeBelow(
+        uint128 _accountId,
+        uint128 _marketId,
+        int128 _size
+    ) public pure returns (bytes memory) {
+        return abi.encodeWithSelector(
+            Engine.isPositionSizeBelow.selector, _accountId, _marketId, _size
+        );
+    }
+
+    function isOrderFeeBelow(uint128 _marketId, int128 _sizeDelta, uint256 _fee)
+        public
+        pure
+        returns (bytes memory)
+    {
+        return abi.encodeWithSelector(
+            Engine.isOrderFeeBelow.selector, _marketId, _sizeDelta, _fee
+        );
     }
 }

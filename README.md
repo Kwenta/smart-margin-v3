@@ -2,7 +2,7 @@
 
 [![Github Actions][gha-badge]][gha]
 [![Foundry][foundry-badge]][foundry]
-[![License: MIT][license-badge]][license]
+[![License: GPL-3.0][license-badge]][license]
 
 [gha]: https://github.com/Kwenta/smart-margin-v3/actions
 [gha-badge]: https://github.com/Kwenta/smart-margin-v3/actions/workflows/test.yml/badge.svg
@@ -23,22 +23,20 @@ Please refer to the project [wiki](https://github.com/Kwenta/smart-margin-v3/wik
 src/
 ├── Engine.sol
 ├── interfaces
-│   ├── IEngine.sol
-│   ├── oracles
-│   │   └── IPyth.sol
-│   ├── synthetix
-│   │   ├── IPerpsMarketProxy.sol
-│   │   └── ISpotMarketProxy.sol
-│   └── tokens
-│       ├── IERC20.sol
-│       └── IERC721.sol
+│   ├── IEngine.sol
+│   ├── oracles
+│   │   └── IPyth.sol
+│   ├── synthetix
+│   │   ├── IPerpsMarketProxy.sol
+│   │   └── ISpotMarketProxy.sol
+│   └── tokens
+│       └── IERC20.sol
 ├── libraries
-│   ├── ConditionalOrderHashLib.sol
-│   ├── MathLib.sol
-│   └── SignatureCheckerLib.sol
+│   ├── ConditionalOrderHashLib.sol
+│   ├── MathLib.sol
+│   └── SignatureCheckerLib.sol
 └── utils
     ├── EIP712.sol
-    ├── ERC721Receivable.sol
     └── Multicallable.sol
 ```
 
@@ -76,8 +74,10 @@ npm run decode-custom-error -- <error hash 0x...>
 
 > See `deployments/` folder
 
-1. Optimism deployments found in `deployments/Optimism/`
-2. Optimism Goerli deployments found in `deployments/OptimismGoerli/`
+1. Optimism deployments found in `deployments/Optimism.json`
+2. Optimism Goerli deployments found in `deployments/OptimismGoerli.json`
+3. Base deployments found in `deployments/Base.json`
+4. Base Goerli deployments found in `deployments/BaseGoerli.json`
 
 ## Audits
 

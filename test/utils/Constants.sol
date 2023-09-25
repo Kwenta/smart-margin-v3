@@ -2,7 +2,7 @@
 pragma solidity 0.8.18;
 
 contract Constants {
-    uint256 internal constant GOERLI_BLOCK_NUMBER = 13_995_234;
+    uint256 internal constant GOERLI_BLOCK_NUMBER = 14_862_158;
 
     address internal constant OWNER = address(0x01);
 
@@ -12,6 +12,9 @@ contract Constants {
         0xF510a2Ff7e9DD7e18629137adA4eb56B9c13E885;
 
     bytes32 internal constant ADMIN_PERMISSION = "ADMIN";
+
+    bytes32 internal constant PERPS_COMMIT_ASYNC_ORDER_PERMISSION =
+        "PERPS_COMMIT_ASYNC_ORDER";
 
     address internal constant MOCK_MARGIN_ENGINE = address(0xE1);
 
@@ -43,5 +46,5 @@ contract Constants {
     uint256 internal constant AMOUNT = 10_000 ether;
 
     address internal constant MARKET_CONFIGURATION_MODULE =
-        0x1e1Bde584F428dE4a47865C5c07b2F5173cDcB10;
+        0xE3b87A4c0E5F77504D6fa7656Cd8Caf2Ef331162;
 }

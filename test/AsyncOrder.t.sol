@@ -51,12 +51,6 @@ contract CommitOrder is AsyncOrderTest {
 
         // fees
         assertTrue(fees != 0);
-
-        // account stats
-        IEngine.AccountStats memory accountStats =
-            engine.getAccountStats(accountId);
-        assertEq(accountStats.totalFees, fees);
-        assertEq(accountStats.totalVolume, 1 ether);
     }
 
     function test_commitOrder_invalid_market() public {
