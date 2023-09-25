@@ -168,6 +168,11 @@ contract Engine is IEngine, Multicallable, EIP712 {
         uint256 _mask
     ) external override {
         if (_isAccountOwnerOrDelegate(_accountId, msg.sender)) {
+            /// @dev using bitwise OR to set the bit at the bit position
+            /// bitmap          = .......10001
+            /// mask            = .......00110
+            /// bitmap | mask   = .......10111
+            /// notice all set bits in the mask are now set in the bitmap
             nonceBitmap[_accountId][_wordPos] |= _mask;
 
             emit UnorderedNonceInvalidation(_accountId, _wordPos, _mask);
@@ -184,7 +189,23 @@ contract Engine is IEngine, Multicallable, EIP712 {
         returns (bool)
     {
         (uint256 wordPos, uint256 bitPos) = _bitmapPositions(_nonce);
+
+        /// @dev given bitPos == 2
+        /// .......00001 becomes .......00100
         uint256 bit = 1 << bitPos;
+
+        /// @dev given wordPos == 0 and *assume* some bits at
+        /// other bit positions were already set (but not the bit at the bit position)
+        /// bit             = .......00100
+        /// bitmap          = .......10001
+        /// bitmap & bit    = .......00000
+        /// thus in this case, bitmap & bit == 0 (nonce has not been used)
+        ///
+        /// @dev if the bit at the bit position was already set, then the nonce has been used before
+        /// bit             = .......00100
+        /// bitmap          = .......10101 (notice the bit at the bit position is already set)
+        /// bitmap & bit    = .......00100
+        /// thus in this case, bitmap & bit != 0 (nonce has been used)
         return nonceBitmap[_accountId][wordPos] & bit != 0;
     }
 
@@ -200,7 +221,12 @@ contract Engine is IEngine, Multicallable, EIP712 {
         pure
         returns (uint256 wordPos, uint256 bitPos)
     {
+        // shift _nonce to the right by 8 bits and cast to uint248
+        /// @dev wordPos == 0 if 0 <= _nonce <= 255, 1 if 256 <= _nonce <= 511, etc.
         wordPos = uint248(_nonce >> 8);
+
+        // cast the last 8 bits of _nonce to uint8
+        /// @dev 0 <= bitPos <= 255
         bitPos = uint8(_nonce);
     }
 
@@ -209,9 +235,36 @@ contract Engine is IEngine, Multicallable, EIP712 {
     /// @param _nonce The nonce to spend
     function _useUnorderedNonce(uint128 _accountId, uint256 _nonce) internal {
         (uint256 wordPos, uint256 bitPos) = _bitmapPositions(_nonce);
+
+        /// @dev given bitPos == 2
+        /// .......00001 becomes .......00100
         uint256 bit = 1 << bitPos;
+
+        /// @dev given wordPos == 0 and *assume* some bits at
+        /// other bit positions were already set (but not the bit at the bit position)
+        /// bit             = .......00100
+        /// bitmap          = .......10001
+        /// flipped         = .......10101
         uint256 flipped = nonceBitmap[_accountId][wordPos] ^= bit;
 
+        /// @dev is the bit at the bit position was already set, then the nonce has been used before
+        /// (refer to the example above, but this time assume the bit at the bit position was already set)
+        /// bit             = .......00100
+        /// bitmap          = .......10101 (notice the bit at the bit position is already set)
+        /// flipped         = .......10001
+        /// thus in this case, flipped & bit == 0
+        /// flipped         = .......10001
+        /// bit             = .......00100
+        /// flipped & bit   = .......00000
+        ///
+        /// @dev if the bit at the bit position was not already set, then the nonce has not been used before
+        /// bit             = .......00100
+        /// bitmap          = .......10001 (notice the bit at the bit position is (not set)
+        /// flipped         = .......10101
+        /// thus in this case, flipped & bit != 0
+        /// flipped         = .......10101
+        /// bit             = .......00100
+        /// flipped & bit   = .......00100
         if (flipped & bit == 0) revert InvalidNonce();
     }
 
