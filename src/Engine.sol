@@ -4,6 +4,7 @@ pragma solidity 0.8.18;
 import {ConditionalOrderHashLib} from
     "src/libraries/ConditionalOrderHashLib.sol";
 import {EIP712} from "src/utils/EIP712.sol";
+import {EIP7412} from "src/utils/EIP7412.sol";
 import {IEngine, IPerpsMarketProxy} from "src/interfaces/IEngine.sol";
 import {IERC20} from "src/interfaces/tokens/IERC20.sol";
 import {IPyth, PythStructs} from "src/interfaces/oracles/IPyth.sol";
@@ -15,7 +16,7 @@ import {SignatureCheckerLib} from "src/libraries/SignatureCheckerLib.sol";
 /// @title Kwenta Smart Margin v3: Engine contract
 /// @notice Responsible for interacting with Synthetix v3 perps markets
 /// @author JaredBorders (jaredborders@pm.me)
-contract Engine is IEngine, Multicallable, EIP712 {
+contract Engine is IEngine, Multicallable, EIP712, EIP7412 {
     using MathLib for int128;
     using MathLib for int256;
     using MathLib for uint256;
