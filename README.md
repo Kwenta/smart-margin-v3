@@ -27,6 +27,7 @@ src/
 │   ├── oracles
 │   │   └── IPyth.sol
 │   ├── synthetix
+│   │   ├── IERC7412.sol
 │   │   ├── IPerpsMarketProxy.sol
 │   │   └── ISpotMarketProxy.sol
 │   └── tokens
@@ -37,6 +38,8 @@ src/
 │   └── SignatureCheckerLib.sol
 └── utils
     ├── EIP712.sol
+    ├── EIP7412.sol
+    ├── ERC2771Context.sol
     └── Multicallable.sol
 ```
 
