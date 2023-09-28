@@ -18,13 +18,15 @@ contract Setup is Script {
         address perpsMarketProxy,
         address spotMarketProxy,
         address sUSDProxy,
-        address oracle
+        address oracle,
+        address trustedForwarder
     ) public returns (Engine engine) {
         engine = new Engine({
             _perpsMarketProxy: perpsMarketProxy,
             _spotMarketProxy: spotMarketProxy,
             _sUSDProxy: sUSDProxy,
-            _oracle: oracle
+            _oracle: oracle,
+            _trustedForwarder: trustedForwarder
         });
     }
 }
@@ -41,7 +43,8 @@ contract DeployBase is Setup, BaseParameters {
             perpsMarketProxy: PERPS_MARKET_PROXY,
             spotMarketProxy: SPOT_MARKET_PROXY,
             sUSDProxy: USD_PROXY,
-            oracle: PYTH
+            oracle: PYTH,
+            trustedForwarder: TRUSTED_FORWARDER
         });
 
         vm.stopBroadcast();
@@ -60,7 +63,8 @@ contract DeployBaseGoerli is Setup, BaseGoerliParameters {
             perpsMarketProxy: PERPS_MARKET_PROXY,
             spotMarketProxy: SPOT_MARKET_PROXY,
             sUSDProxy: USD_PROXY,
-            oracle: PYTH
+            oracle: PYTH,
+            trustedForwarder: TRUSTED_FORWARDER
         });
 
         vm.stopBroadcast();
@@ -79,7 +83,8 @@ contract DeployOptimism is Setup, OptimismParameters {
             perpsMarketProxy: PERPS_MARKET_PROXY,
             spotMarketProxy: SPOT_MARKET_PROXY,
             sUSDProxy: USD_PROXY,
-            oracle: PYTH
+            oracle: PYTH,
+            trustedForwarder: TRUSTED_FORWARDER
         });
 
         vm.stopBroadcast();
@@ -98,7 +103,8 @@ contract DeployOptimismGoerli is Setup, OptimismGoerliParameters {
             perpsMarketProxy: PERPS_MARKET_PROXY,
             spotMarketProxy: SPOT_MARKET_PROXY,
             sUSDProxy: USD_PROXY,
-            oracle: PYTH
+            oracle: PYTH,
+            trustedForwarder: TRUSTED_FORWARDER
         });
 
         vm.stopBroadcast();

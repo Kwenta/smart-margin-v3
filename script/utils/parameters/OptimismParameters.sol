@@ -11,4 +11,7 @@ contract OptimismParameters {
         0xb2F30A7C980f052f02563fb518dcc39e6bf38175;
 
     address public constant PYTH = 0xff1a0f4744e8582DF1aE09D5611b887B6a12925C;
+
+    /// @custom:todo Optimism doesn't have a trusted forwarder yet
+    address public constant TRUSTED_FORWARDER = address(0);
 }
