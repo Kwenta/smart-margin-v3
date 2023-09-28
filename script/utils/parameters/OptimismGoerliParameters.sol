@@ -14,5 +14,6 @@ contract OptimismGoerliParameters {
     address public constant PYTH = 0xff1a0f4744e8582DF1aE09D5611b887B6a12925C;
 
     /// @custom:todo Optimism Goerli doesn't have a trusted forwarder yet
-    address public constant TRUSTED_FORWARDER = 0xAE788aaf52780741E12BF79Ad684B91Bb0EF4D92;
+    address public constant TRUSTED_FORWARDER =
+        0xAE788aaf52780741E12BF79Ad684B91Bb0EF4D92;
 }

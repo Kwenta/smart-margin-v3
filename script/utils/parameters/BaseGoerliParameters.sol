@@ -13,5 +13,6 @@ contract BaseGoerliParameters {
 
     address public constant PYTH = 0x5955C1478F0dAD753C7E2B4dD1b4bC530C64749f;
 
-    address public constant TRUSTED_FORWARDER = 0xAE788aaf52780741E12BF79Ad684B91Bb0EF4D92;
+    address public constant TRUSTED_FORWARDER =
+        0xAE788aaf52780741E12BF79Ad684B91Bb0EF4D92;
 }
