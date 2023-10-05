@@ -107,14 +107,16 @@ contract BootstrapOptimism is Setup, OptimismParameters {
             perpsMarketProxy: PERPS_MARKET_PROXY,
             spotMarketProxy: SPOT_MARKET_PROXY,
             sUSDProxy: USD_PROXY,
-            oracle: PYTH
+            oracle: PYTH,
+            trustedForwarder: TRUSTED_FORWARDER
         });
 
         EngineExposed engineExposed = new EngineExposed({
             _perpsMarketProxy: PERPS_MARKET_PROXY,
             _spotMarketProxy: SPOT_MARKET_PROXY,
             _sUSDProxy: USD_PROXY,
-            _oracle: PYTH
+            _oracle: PYTH,
+            _trustedForwarder: TRUSTED_FORWARDER
         });
 
         return (
@@ -137,14 +139,16 @@ contract BootstrapOptimismGoerli is Setup, OptimismGoerliParameters {
             perpsMarketProxy: PERPS_MARKET_PROXY,
             spotMarketProxy: SPOT_MARKET_PROXY,
             sUSDProxy: USD_PROXY,
-            oracle: PYTH
+            oracle: PYTH,
+            trustedForwarder: TRUSTED_FORWARDER
         });
 
         EngineExposed engineExposed = new EngineExposed({
             _perpsMarketProxy: PERPS_MARKET_PROXY,
             _spotMarketProxy: SPOT_MARKET_PROXY,
             _sUSDProxy: USD_PROXY,
-            _oracle: PYTH
+            _oracle: PYTH,
+            _trustedForwarder: TRUSTED_FORWARDER
         });
 
         return (
