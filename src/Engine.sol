@@ -36,21 +36,6 @@ contract Engine is IEngine, Multicallable, EIP712, EIP7412, ERC2771Context {
     /// @notice "0" synthMarketId represents sUSD in Synthetix v3
     uint128 internal constant USD_SYNTH_ID = 0;
 
-    /// @notice max fee that can be charged for a conditional order execution
-    /// @dev 50 USD
-    uint256 internal constant UPPER_FEE_CAP = 50 ether;
-
-    /// @notice min fee that can be charged for a conditional order execution
-    /// @dev 2 USD
-    uint256 internal constant LOWER_FEE_CAP = 2 ether;
-
-    /// @notice percentage of the simulated order fee that is charged for a conditional order execution
-    /// @dev denoted in BPS (basis points) where 1% = 100 BPS and 100% = 10000 BPS
-    uint256 internal constant FEE_SCALING_FACTOR = 1000;
-
-    /// @notice max BPS
-    uint256 internal constant MAX_BPS = 10_000;
-
     /// @notice max number of conditions that can be defined for a conditional order
     uint256 internal constant MAX_CONDITIONS = 8;
 
@@ -96,6 +81,11 @@ contract Engine is IEngine, Multicallable, EIP712, EIP7412, ERC2771Context {
     /// @dev nonce is specific to the account id associated with the conditional order
     mapping(uint128 accountId => mapping(uint256 index => uint256 bitmap))
         public nonceBitmap;
+
+    /// @notice mapping of account id to ETH balance
+    /// @dev ETH can be deposited/withdrawn from the 
+    /// Engine contract to pay for fee(s) (conditional order execution, etc.)
+    mapping(uint128 accountId => uint256 ethBalance) public ethBalances;
 
     /*//////////////////////////////////////////////////////////////
                               CONSTRUCTOR
@@ -160,6 +150,49 @@ contract Engine is IEngine, Multicallable, EIP712, EIP7412, ERC2771Context {
         return PERPS_MARKET_PROXY.isAuthorized(
             _accountId, PERPS_COMMIT_ASYNC_ORDER_PERMISSION, _caller
         );
+    }
+
+    /*//////////////////////////////////////////////////////////////
+                             ETH MANAGEMENT
+    //////////////////////////////////////////////////////////////*/
+
+    /// @custom:todo discuss whether reentrancy guard is needed
+    /// @custom:todo discuss whether msg.value is safe to use given ERC 2771 context
+    /// @custom:todo discuss whether multicall is needed?
+    /// @custom:todo should smv3 deploy its own trusted forwarder contract *instead*?
+    /// @custom:todo with the trusted forwarder that can call multiple functions in a single transaction,
+    /// is there concern for double spend attacks?
+
+    /// @inheritdoc IEngine
+    function depositEth(uint128 _accountId) external payable override {
+        ethBalances[_accountId] += msg.value;
+
+        emit EthDeposit(_accountId, msg.value);
+    }
+
+     /// @inheritdoc IEngine
+    function withdrawEth(uint128 _accountId, uint256 _amount) external override {
+        address payable caller = payable(_msgSender());
+
+        if (!isAccountOwner(_accountId, caller)) revert Unauthorized();
+
+        _withdrawEth(caller, _accountId, _amount);
+
+        emit EthWithdraw(_accountId, _amount);
+    }
+
+    /// @notice debit ETH from the account and transfer it to the caller
+    /// @dev UNSAFE to call directly; use `withdrawEth` instead
+    /// @param _caller the caller of the function
+    /// @param _accountId the account id to debit ETH from
+    function _withdrawEth(address _caller, uint128 _accountId, uint256 _amount) internal {
+        if (_amount > ethBalances[_accountId]) revert InsufficientEthBalance();
+
+        ethBalances[_accountId] -= _amount;
+
+        (bool sent,) = _caller.call{value: _amount}("");
+
+        if (!sent) revert EthTransferFailed();
     }
 
     /*//////////////////////////////////////////////////////////////
@@ -401,7 +434,7 @@ contract Engine is IEngine, Multicallable, EIP712, EIP7412, ERC2771Context {
     //////////////////////////////////////////////////////////////*/
 
     /// @inheritdoc IEngine
-    function execute(ConditionalOrder calldata _co, bytes calldata _signature)
+    function execute(ConditionalOrder calldata _co, bytes calldata _signature, uint256 _fee)
         external
         override
         returns (
@@ -409,15 +442,23 @@ contract Engine is IEngine, Multicallable, EIP712, EIP7412, ERC2771Context {
             uint256 fees,
             uint256 conditionalOrderFee
         )
-    {
-        /// @dev check: (1) nonce has not been executed before
-        /// @dev check: (2) signer is authorized to interact with the account
-        /// @dev check: (3) signature for the order was signed by the signer
-        /// @dev check: (4) conditions are met || trusted executor is msg sender
-        if (!canExecute(_co, _signature)) revert CannotExecuteOrder();
+    {   
+        /// @dev check: (1) fee does not exceed the max fee set by the conditional order
+        /// @dev check: (2) fee does not exceed balance credited to the account
+        /// @dev check: (3) nonce has not been executed before
+        /// @dev check: (4) signer is authorized to interact with the account
+        /// @dev check: (5) signature for the order was signed by the signer
+        /// @dev check: (6) conditions are met || trusted executor is msg sender
+        if (!canExecute(_co, _signature, _fee)) revert CannotExecuteOrder();
 
         /// @dev spend the nonce associated with the order; this prevents replay
         _useUnorderedNonce(_co.orderDetails.accountId, _co.nonce);
+
+        /// @dev impose a fee for executing the conditional order
+        /// @dev the fee is denoted in ETH and is paid to the caller (conditional order executor)
+        /// @dev the fee does not exceed the max fee set by the conditional order and
+        /// this is enforced by the `canExecute` function
+        _withdrawEth(_msgSender(), _co.orderDetails.accountId, _co.orderDetails.accountId);
 
         /// @notice get size delta from order details
         /// @dev up to the caller to not waste gas by passing in a size delta of zero
@@ -456,32 +497,6 @@ contract Engine is IEngine, Multicallable, EIP712, EIP7412, ERC2771Context {
             }
         }
 
-        /// @dev fetch estimated order fees to be used to
-        /// calculate conditional order fee
-        (uint256 orderFees,) = PERPS_MARKET_PROXY.computeOrderFees({
-            marketId: _co.orderDetails.marketId,
-            sizeDelta: sizeDelta
-        });
-
-        /// @dev calculate conditional order fee based on scaled order fees
-        conditionalOrderFee = (orderFees * FEE_SCALING_FACTOR) / MAX_BPS;
-
-        /// @dev ensure conditional order fee is within bounds
-        if (conditionalOrderFee < LOWER_FEE_CAP) {
-            conditionalOrderFee = LOWER_FEE_CAP;
-        } else if (conditionalOrderFee > UPPER_FEE_CAP) {
-            conditionalOrderFee = UPPER_FEE_CAP;
-        }
-
-        /// @dev withdraw conditional order fee from account prior to executing order
-        _withdrawCollateral({
-            _to: _msgSender(),
-            _synth: SUSD,
-            _accountId: _co.orderDetails.accountId,
-            _synthMarketId: USD_SYNTH_ID,
-            _amount: -int256(conditionalOrderFee)
-        });
-
         /// @dev execute the order
         (retOrder, fees) = _commitOrder({
             _perpsMarketId: _co.orderDetails.marketId,
@@ -497,8 +512,15 @@ contract Engine is IEngine, Multicallable, EIP712, EIP7412, ERC2771Context {
     /// @inheritdoc IEngine
     function canExecute(
         ConditionalOrder calldata _co,
-        bytes calldata _signature
+        bytes calldata _signature,
+        uint256 _fee
     ) public view override returns (bool) {
+        // verify fee does not exceed the max fee set by the conditional order
+        if (_fee > _co.maxExecutorFee) return false;
+
+        // verify account has enough credit (ETH) to pay the fee
+        if (_fee > ethBalances[_co.orderDetails.accountId]) return false;
+
         // verify nonce has not been executed before
         if (hasUnorderedNonceBeenUsed(_co.orderDetails.accountId, _co.nonce)) {
             return false;

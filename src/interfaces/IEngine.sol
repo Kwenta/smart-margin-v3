@@ -42,6 +42,8 @@ interface IEngine {
         bool requireVerified;
         // address that can execute the order if requireVerified is false
         address trustedExecutor;
+        // max fee denominated in ETH that can be paid to the executor
+        uint256 maxExecutorFee;
         // array of extra conditions to be met
         bytes[] conditions;
     }
@@ -68,15 +70,34 @@ interface IEngine {
 
     /// @notice thrown when attempting to verify a condition identified by an invalid selector
     error InvalidConditionSelector(bytes4 selector);
+    
+    /// @notice thrown when attempting to debit an account with insufficient balance
+    error InsufficientEthBalance();
+
+    /// @notice thrown when attempting to transfer eth fails
+    error EthTransferFailed();
 
     /*//////////////////////////////////////////////////////////////
                                  EVENTS
     //////////////////////////////////////////////////////////////*/
 
     /// @notice emitted when the account owner or delegate successfully invalidates an unordered nonce
+    /// @param accountId the id of the account that was invalidated
+    /// @param word the word position of the bitmap that was invalidated
+    /// @param mask the mask used to invalidate the bitmap
     event UnorderedNonceInvalidation(
         uint128 indexed accountId, uint256 word, uint256 mask
     );
+    
+    /// @notice emitted when eth is deposited into the engine and credited to an account
+    /// @param accountId the id of the account that was credited
+    /// @param amount the amount of eth deposited
+    event EthDeposit(uint128 indexed accountId, uint256 amount);
+
+    /// @notice emitted when eth is withdrawn from the engine and debited from an account
+    /// @param accountId the id of the account that was debited
+    /// @param amount the amount of eth withdrawn
+    event EthWithdraw(uint128 indexed accountId, uint256 amount);
 
     /*//////////////////////////////////////////////////////////////
                              AUTHENTICATION
@@ -103,6 +124,19 @@ interface IEngine {
         external
         view
         returns (bool);
+    
+    /*//////////////////////////////////////////////////////////////
+                             ETH MANAGEMENT
+    //////////////////////////////////////////////////////////////*/
+
+    /// @notice deposit eth into the engine and credit the account identified by the accountId
+    /// @param _accountId the id of the account to credit
+    function depositEth(uint128 _accountId) external payable;
+
+    /// @notice withdraw eth from the engine and debit the account identified by the accountId
+    /// @param _accountId the id of the account to debit
+    /// @param _amount the amount of eth to withdraw
+    function withdrawEth(uint128 _accountId, uint256 _amount) external;
 
     /*//////////////////////////////////////////////////////////////
                             NONCE MANAGEMENT
@@ -171,24 +205,17 @@ interface IEngine {
                       CONDITIONAL ORDER MANAGEMENT
     //////////////////////////////////////////////////////////////*/
 
-    /// In order for a conditional order to be committed and then executed there are a number of requirements that need to be met:
-    ///
-    /// (1)     The account must have sufficient snxUSD collateral to handle the order
-    /// (2)     The account must not have another order committed
-    /// (3)     The order’s set `acceptablePrice` needs to be met both on committing the order and when it gets executed
-    ///         (users should choose a value for this that is likely to execute based on the conditions set)
-    /// (4)     The order can only be executed within Synthetix’s set settlement window
-    /// (5)     There must be a keeper that executes a conditional order
-    ///
-    /// @notice There is no guarantee a conditional order will be executed
+    /// @custom:docs for in-depth documentation of conditional order mechanism, 
+    /// please refer to https://github.com/Kwenta/smart-margin-v3/wiki/Conditional-Orders
 
     /// @notice execute a conditional order
     /// @param _co the conditional order
     /// @param _signature the signature of the conditional order
+    /// @param _fee the fee paid to executor for the conditional order
     /// @return retOrder the order committed
     /// @return fees the fees paid for the order to Synthetix
     /// @return conditionalOrderFee the fee paid to executor for the conditional order
-    function execute(ConditionalOrder calldata _co, bytes calldata _signature)
+    function execute(ConditionalOrder calldata _co, bytes calldata _signature, uint256 _fee)
         external
         returns (
             IPerpsMarketProxy.Data memory retOrder,
@@ -196,16 +223,17 @@ interface IEngine {
             uint256 conditionalOrderFee
         );
 
-    /// @notice checks if the order can be executed based on defined conditions
-    /// @dev this function does NOT check if the order can be executed based on the account's balance
-    /// (i.e. does not check if enough USD is available to pay for the order fee nor does it check
-    /// if enough collateral is available to cover the order)
-    /// @param _co the conditional order
+    /// @notice checks if the conditional order can be executed
+    /// @param _co the conditional order which details the order to be executed and the conditions to be met
     /// @param _signature the signature of the conditional order
-    /// @return true if the order can be executed based on defined conditions, false otherwise
+    /// @param _fee the executor specified fee for the executing the conditional order
+    /// @dev if the fee is greater than the maxExecutorFee defined in the conditional order, 
+    /// or if the account lacks sufficient ETH credit to pay the fee, canExecute will return false
+    /// @return true if the order can be executed, false otherwise
     function canExecute(
         ConditionalOrder calldata _co,
-        bytes calldata _signature
+        bytes calldata _signature,
+        uint256 _fee
     ) external view returns (bool);
 
     /// @notice verify the conditional order signer is the owner or delegate of the account
