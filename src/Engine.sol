@@ -162,6 +162,7 @@ contract Engine is IEngine, Multicallable, EIP712, EIP7412, ERC2771Context {
     /// @custom:todo should smv3 deploy its own trusted forwarder contract *instead*?
     /// @custom:todo with the trusted forwarder that can call multiple functions in a single transaction,
     /// is there concern for double spend attacks?
+    /// @custom:todo discuss seperate contract for depositing/withdrawing ETH?
 
     /// @inheritdoc IEngine
     function depositEth(uint128 _accountId) external payable override {
@@ -458,7 +459,7 @@ contract Engine is IEngine, Multicallable, EIP712, EIP7412, ERC2771Context {
         /// @dev the fee is denoted in ETH and is paid to the caller (conditional order executor)
         /// @dev the fee does not exceed the max fee set by the conditional order and
         /// this is enforced by the `canExecute` function
-        _withdrawEth(_msgSender(), _co.orderDetails.accountId, _co.orderDetails.accountId);
+        _withdrawEth(_msgSender(), _co.orderDetails.accountId, _fee);
 
         /// @notice get size delta from order details
         /// @dev up to the caller to not waste gas by passing in a size delta of zero
