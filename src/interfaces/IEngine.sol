@@ -70,7 +70,7 @@ interface IEngine {
 
     /// @notice thrown when attempting to verify a condition identified by an invalid selector
     error InvalidConditionSelector(bytes4 selector);
-    
+
     /// @notice thrown when attempting to debit an account with insufficient balance
     error InsufficientEthBalance();
 
@@ -88,7 +88,7 @@ interface IEngine {
     event UnorderedNonceInvalidation(
         uint128 indexed accountId, uint256 word, uint256 mask
     );
-    
+
     /// @notice emitted when eth is deposited into the engine and credited to an account
     /// @param accountId the id of the account that was credited
     /// @param amount the amount of eth deposited
@@ -124,7 +124,7 @@ interface IEngine {
         external
         view
         returns (bool);
-    
+
     /*//////////////////////////////////////////////////////////////
                              ETH MANAGEMENT
     //////////////////////////////////////////////////////////////*/
@@ -205,7 +205,7 @@ interface IEngine {
                       CONDITIONAL ORDER MANAGEMENT
     //////////////////////////////////////////////////////////////*/
 
-    /// @custom:docs for in-depth documentation of conditional order mechanism, 
+    /// @custom:docs for in-depth documentation of conditional order mechanism,
     /// please refer to https://github.com/Kwenta/smart-margin-v3/wiki/Conditional-Orders
 
     /// @notice execute a conditional order
@@ -215,7 +215,11 @@ interface IEngine {
     /// @return retOrder the order committed
     /// @return fees the fees paid for the order to Synthetix
     /// @return conditionalOrderFee the fee paid to executor for the conditional order
-    function execute(ConditionalOrder calldata _co, bytes calldata _signature, uint256 _fee)
+    function execute(
+        ConditionalOrder calldata _co,
+        bytes calldata _signature,
+        uint256 _fee
+    )
         external
         returns (
             IPerpsMarketProxy.Data memory retOrder,
@@ -227,7 +231,7 @@ interface IEngine {
     /// @param _co the conditional order which details the order to be executed and the conditions to be met
     /// @param _signature the signature of the conditional order
     /// @param _fee the executor specified fee for the executing the conditional order
-    /// @dev if the fee is greater than the maxExecutorFee defined in the conditional order, 
+    /// @dev if the fee is greater than the maxExecutorFee defined in the conditional order,
     /// or if the account lacks sufficient ETH credit to pay the fee, canExecute will return false
     /// @return true if the order can be executed, false otherwise
     function canExecute(

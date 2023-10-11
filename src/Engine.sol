@@ -83,7 +83,7 @@ contract Engine is IEngine, Multicallable, EIP712, EIP7412, ERC2771Context {
         public nonceBitmap;
 
     /// @notice mapping of account id to ETH balance
-    /// @dev ETH can be deposited/withdrawn from the 
+    /// @dev ETH can be deposited/withdrawn from the
     /// Engine contract to pay for fee(s) (conditional order execution, etc.)
     mapping(uint128 accountId => uint256 ethBalance) public ethBalances;
 
@@ -171,8 +171,11 @@ contract Engine is IEngine, Multicallable, EIP712, EIP7412, ERC2771Context {
         emit EthDeposit(_accountId, msg.value);
     }
 
-     /// @inheritdoc IEngine
-    function withdrawEth(uint128 _accountId, uint256 _amount) external override {
+    /// @inheritdoc IEngine
+    function withdrawEth(uint128 _accountId, uint256 _amount)
+        external
+        override
+    {
         address payable caller = payable(_msgSender());
 
         if (!isAccountOwner(_accountId, caller)) revert Unauthorized();
@@ -186,7 +189,9 @@ contract Engine is IEngine, Multicallable, EIP712, EIP7412, ERC2771Context {
     /// @dev UNSAFE to call directly; use `withdrawEth` instead
     /// @param _caller the caller of the function
     /// @param _accountId the account id to debit ETH from
-    function _withdrawEth(address _caller, uint128 _accountId, uint256 _amount) internal {
+    function _withdrawEth(address _caller, uint128 _accountId, uint256 _amount)
+        internal
+    {
         if (_amount > ethBalances[_accountId]) revert InsufficientEthBalance();
 
         ethBalances[_accountId] -= _amount;
@@ -435,7 +440,11 @@ contract Engine is IEngine, Multicallable, EIP712, EIP7412, ERC2771Context {
     //////////////////////////////////////////////////////////////*/
 
     /// @inheritdoc IEngine
-    function execute(ConditionalOrder calldata _co, bytes calldata _signature, uint256 _fee)
+    function execute(
+        ConditionalOrder calldata _co,
+        bytes calldata _signature,
+        uint256 _fee
+    )
         external
         override
         returns (
@@ -443,7 +452,7 @@ contract Engine is IEngine, Multicallable, EIP712, EIP7412, ERC2771Context {
             uint256 fees,
             uint256 conditionalOrderFee
         )
-    {   
+    {
         /// @dev check: (1) fee does not exceed the max fee set by the conditional order
         /// @dev check: (2) fee does not exceed balance credited to the account
         /// @dev check: (3) nonce has not been executed before
