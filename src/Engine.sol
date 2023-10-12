@@ -189,9 +189,11 @@ contract Engine is IEngine, Multicallable, EIP712, EIP7412, ERC2771Context {
     /// @dev UNSAFE to call directly; use `withdrawEth` instead
     /// @param _caller the caller of the function
     /// @param _accountId the account id to debit ETH from
-    function _withdrawEth(address _caller, uint128 _accountId, uint256 _amount)
-        internal
-    {
+    function _withdrawEth(
+        address payable _caller,
+        uint128 _accountId,
+        uint256 _amount
+    ) internal {
         if (_amount > ethBalances[_accountId]) revert InsufficientEthBalance();
 
         ethBalances[_accountId] -= _amount;
@@ -447,11 +449,7 @@ contract Engine is IEngine, Multicallable, EIP712, EIP7412, ERC2771Context {
     )
         external
         override
-        returns (
-            IPerpsMarketProxy.Data memory retOrder,
-            uint256 fees,
-            uint256 conditionalOrderFee
-        )
+        returns (IPerpsMarketProxy.Data memory retOrder, uint256 fees)
     {
         /// @dev check: (1) fee does not exceed the max fee set by the conditional order
         /// @dev check: (2) fee does not exceed balance credited to the account
@@ -468,7 +466,7 @@ contract Engine is IEngine, Multicallable, EIP712, EIP7412, ERC2771Context {
         /// @dev the fee is denoted in ETH and is paid to the caller (conditional order executor)
         /// @dev the fee does not exceed the max fee set by the conditional order and
         /// this is enforced by the `canExecute` function
-        _withdrawEth(_msgSender(), _co.orderDetails.accountId, _fee);
+        _withdrawEth(payable(_msgSender()), _co.orderDetails.accountId, _fee);
 
         /// @notice get size delta from order details
         /// @dev up to the caller to not waste gas by passing in a size delta of zero
@@ -482,12 +480,12 @@ contract Engine is IEngine, Multicallable, EIP712, EIP7412, ERC2771Context {
 
             // ensure position exists; reduce only orders cannot increase position size
             if (positionSize == 0) {
-                return (retOrder, 0, 0);
+                return (retOrder, 0);
             }
 
             // ensure incoming size delta is NOT the same sign; i.e. reduce only orders cannot increase position size
             if (positionSize.isSameSign(sizeDelta)) {
-                return (retOrder, 0, 0);
+                return (retOrder, 0);
             }
 
             // ensure incoming size delta is not larger than current position size
