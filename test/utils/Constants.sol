@@ -47,4 +47,8 @@ contract Constants {
 
     address internal constant MARKET_CONFIGURATION_MODULE =
         0xE3b87A4c0E5F77504D6fa7656Cd8Caf2Ef331162;
+
+    uint256 internal constant ZERO_CO_FEE = 0;
+
+    uint256 internal constant CO_FEE = 100 wei;
 }

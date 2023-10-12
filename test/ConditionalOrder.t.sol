@@ -82,7 +82,7 @@ contract CanExecute is ConditionalOrderTest {
             domainSeparator: engine.DOMAIN_SEPARATOR()
         });
 
-        bool canExec = engine.canExecute(co, signature, 0);
+        bool canExec = engine.canExecute(co, signature, ZERO_CO_FEE);
 
         assertTrue(canExec);
     }
@@ -115,10 +115,10 @@ contract CanExecute is ConditionalOrderTest {
             domainSeparator: engine.DOMAIN_SEPARATOR()
         });
 
-        engine.execute(co, signature, 0);
+        engine.execute(co, signature, ZERO_CO_FEE);
 
         // nonce is now used; cannot execute again
-        bool canExec = engine.canExecute(co, signature, 0);
+        bool canExec = engine.canExecute(co, signature, ZERO_CO_FEE);
 
         assertFalse(canExec);
     }
@@ -153,7 +153,7 @@ contract CanExecute is ConditionalOrderTest {
 
         vm.prank(BAD_ACTOR);
 
-        bool canExec = engine.canExecute(co, signature, 0);
+        bool canExec = engine.canExecute(co, signature, ZERO_CO_FEE);
 
         assertFalse(canExec);
     }
@@ -449,7 +449,7 @@ contract Execute is ConditionalOrderTest {
         });
 
         (IPerpsMarketProxy.Data memory retOrder, uint256 fees) =
-            engine.execute(co, signature, 0);
+            engine.execute(co, signature, ZERO_CO_FEE);
 
         // retOrder
         assertTrue(retOrder.settlementTime != 0);
@@ -501,7 +501,7 @@ contract Execute is ConditionalOrderTest {
             abi.encodeWithSelector(IEngine.CannotExecuteOrder.selector)
         );
 
-        engine.execute(co, signature, 0);
+        engine.execute(co, signature, ZERO_CO_FEE);
     }
 }
 
@@ -544,7 +544,7 @@ contract ReduceOnly is ConditionalOrderTest {
             domainSeparator: engine.DOMAIN_SEPARATOR()
         });
 
-        (, uint256 fees) = engine.execute(co, signature, 0);
+        (, uint256 fees) = engine.execute(co, signature, ZERO_CO_FEE);
 
         // confirms that the reduce-only order was executed
         assertTrue(fees > 0);
@@ -578,7 +578,7 @@ contract ReduceOnly is ConditionalOrderTest {
             domainSeparator: engine.DOMAIN_SEPARATOR()
         });
 
-        (, uint256 fees) = engine.execute(co, signature, 0);
+        (, uint256 fees) = engine.execute(co, signature, ZERO_CO_FEE);
 
         assertEq(0, fees);
     }
@@ -615,7 +615,7 @@ contract ReduceOnly is ConditionalOrderTest {
             domainSeparator: engine.DOMAIN_SEPARATOR()
         });
 
-        (, uint256 fees) = engine.execute(co, signature, 0);
+        (, uint256 fees) = engine.execute(co, signature, ZERO_CO_FEE);
 
         assertEq(0, fees);
     }
@@ -652,7 +652,7 @@ contract ReduceOnly is ConditionalOrderTest {
             domainSeparator: engine.DOMAIN_SEPARATOR()
         });
 
-        (, uint256 fees) = engine.execute(co, signature, 0);
+        (, uint256 fees) = engine.execute(co, signature, ZERO_CO_FEE);
 
         // confirms that the reduce-only order was executed
         /// @dev max sizeDelta used proves prices was truncated
@@ -691,7 +691,7 @@ contract ReduceOnly is ConditionalOrderTest {
             domainSeparator: engine.DOMAIN_SEPARATOR()
         });
 
-        (, uint256 fees) = engine.execute(co, signature, 0);
+        (, uint256 fees) = engine.execute(co, signature, ZERO_CO_FEE);
 
         // confirms that the reduce-only order was executed
         /// @dev max sizeDelta used proves prices was truncated
