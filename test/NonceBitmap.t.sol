@@ -61,6 +61,7 @@ contract NonceBitmapTest is Bootstrap, ConditionalOrderSignature {
             nonce: nonce,
             requireVerified: false,
             trustedExecutor: address(this),
+            maxExecutorFee: type(uint256).max,
             conditions: new bytes[](0)
         });
 
@@ -70,7 +71,7 @@ contract NonceBitmapTest is Bootstrap, ConditionalOrderSignature {
             domainSeparator: engine.DOMAIN_SEPARATOR()
         });
 
-        bool canExec = engine.canExecute(co, signature);
+        bool canExec = engine.canExecute(co, signature, 0);
 
         assertTrue(canExec);
 
@@ -78,7 +79,7 @@ contract NonceBitmapTest is Bootstrap, ConditionalOrderSignature {
 
         engine.invalidateUnorderedNonces(accountId, uint248(nonce >> 8), mask);
 
-        canExec = engine.canExecute(co, signature);
+        canExec = engine.canExecute(co, signature, 0);
 
         assertFalse(canExec);
     }

@@ -33,6 +33,8 @@ contract Bootstrap is Test, Constants, Conditions, SynthetixV3Errors {
     SynthMinter public synthMinter;
     uint128 public accountId;
 
+    receive() external payable {}
+
     function initializeOptimismGoerli() public {
         BootstrapOptimismGoerli bootstrap = new BootstrapOptimismGoerli();
         (
