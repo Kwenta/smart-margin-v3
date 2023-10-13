@@ -11,13 +11,12 @@ import {IERC20} from "src/interfaces/tokens/IERC20.sol";
 import {IPyth, PythStructs} from "src/interfaces/oracles/IPyth.sol";
 import {ISpotMarketProxy} from "src/interfaces/synthetix/ISpotMarketProxy.sol";
 import {MathLib} from "src/libraries/MathLib.sol";
-import {Multicallable} from "src/utils/Multicallable.sol";
 import {SignatureCheckerLib} from "src/libraries/SignatureCheckerLib.sol";
 
 /// @title Kwenta Smart Margin v3: Engine contract
 /// @notice Responsible for interacting with Synthetix v3 perps markets
 /// @author JaredBorders (jaredborders@pm.me)
-contract Engine is IEngine, Multicallable, EIP712, EIP7412, ERC2771Context {
+contract Engine is IEngine, EIP712, EIP7412, ERC2771Context {
     using MathLib for int128;
     using MathLib for int256;
     using MathLib for uint256;
@@ -156,14 +155,6 @@ contract Engine is IEngine, Multicallable, EIP712, EIP7412, ERC2771Context {
                              ETH MANAGEMENT
     //////////////////////////////////////////////////////////////*/
 
-    /// @custom:todo discuss whether reentrancy guard is needed
-    /// @custom:todo discuss whether msg.value is safe to use given ERC 2771 context
-    /// @custom:todo discuss whether multicall is needed?
-    /// @custom:todo should smv3 deploy its own trusted forwarder contract *instead*?
-    /// @custom:todo with the trusted forwarder that can call multiple functions in a single transaction,
-    /// is there concern for double spend attacks?
-    /// @custom:todo discuss seperate contract for depositing/withdrawing ETH?
-
     /// @inheritdoc IEngine
     function depositEth(uint128 _accountId) external payable override {
         ethBalances[_accountId] += msg.value;
@@ -196,6 +187,7 @@ contract Engine is IEngine, Multicallable, EIP712, EIP7412, ERC2771Context {
     ) internal {
         if (_amount > ethBalances[_accountId]) revert InsufficientEthBalance();
 
+        // decrement the ETH balance of the account prior to transferring ETH to the caller
         ethBalances[_accountId] -= _amount;
 
         (bool sent,) = _caller.call{value: _amount}("");
