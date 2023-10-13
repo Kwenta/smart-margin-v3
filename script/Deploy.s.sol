@@ -26,9 +26,14 @@ contract Setup is Script {
         address spotMarketProxy,
         address sUSDProxy,
         address oracle
-    ) public returns (Engine engine) {
-        TrustedMulticallForwarder trustedForwarderContract =
-            new TrustedMulticallForwarder();
+    )
+        public
+        returns (
+            Engine engine,
+            TrustedMulticallForwarder trustedForwarderContract
+        )
+    {
+        trustedForwarderContract = new TrustedMulticallForwarder();
 
         engine = new Engine({
             _perpsMarketProxy: perpsMarketProxy,
