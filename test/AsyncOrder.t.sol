@@ -32,7 +32,7 @@ contract CommitOrder is AsyncOrderTest {
             _perpsMarketId: SETH_PERPS_MARKET_ID,
             _accountId: accountId,
             _sizeDelta: 1 ether,
-            _settlementStrategyId: 0,
+            _settlementStrategyId: SETTLEMENT_STRATEGY_ID,
             _acceptablePrice: type(uint256).max,
             _trackingCode: TRACKING_CODE,
             _referrer: REFERRER
@@ -65,7 +65,7 @@ contract CommitOrder is AsyncOrderTest {
             _perpsMarketId: INVALID_PERPS_MARKET_ID,
             _accountId: accountId,
             _sizeDelta: 1 ether,
-            _settlementStrategyId: 0,
+            _settlementStrategyId: SETTLEMENT_STRATEGY_ID,
             _acceptablePrice: type(uint256).max,
             _trackingCode: TRACKING_CODE,
             _referrer: REFERRER
@@ -95,7 +95,7 @@ contract CommitOrder is AsyncOrderTest {
             _perpsMarketId: SETH_PERPS_MARKET_ID,
             _accountId: accountId,
             _sizeDelta: sizeDelta,
-            _settlementStrategyId: 0,
+            _settlementStrategyId: SETTLEMENT_STRATEGY_ID,
             _acceptablePrice: type(uint256).max,
             _trackingCode: TRACKING_CODE,
             _referrer: REFERRER

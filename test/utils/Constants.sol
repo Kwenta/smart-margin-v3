@@ -11,6 +11,18 @@ contract Constants {
     address internal constant REFERRER =
         0xF510a2Ff7e9DD7e18629137adA4eb56B9c13E885;
 
+    int128 internal constant SIZE_DELTA = 1 ether;
+
+    int128 internal constant INVALID_SIZE_DELTA = type(int128).max;
+
+    uint256 internal constant ACCEPTABLE_PRICE = type(uint256).max;
+
+    uint256 internal constant INVALID_ACCEPTABLE_PRICE = 0;
+
+    uint128 internal constant SETTLEMENT_STRATEGY_ID = 0;
+
+    uint128 internal constant INVALID_SETTLEMENT_STRATEGY_ID = type(uint128).max;
+
     bytes32 internal constant ADMIN_PERMISSION = "ADMIN";
 
     bytes32 internal constant PERPS_COMMIT_ASYNC_ORDER_PERMISSION =

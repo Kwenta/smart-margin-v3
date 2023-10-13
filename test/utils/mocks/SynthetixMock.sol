@@ -63,4 +63,18 @@ contract SynthetixMock is Test {
             abi.encode()
         );
     }
+
+    function mock_getAccountOwner(
+        address perpsMarketProxy,
+        uint128 accountId,
+        address owner
+    ) public {
+        vm.mockCall(
+            perpsMarketProxy,
+            abi.encodeWithSelector(
+                IPerpsMarketProxy.getAccountOwner.selector, accountId
+            ),
+            abi.encode(owner)
+        );
+    }
 }
