@@ -54,8 +54,12 @@ contract ConditionalOrderTest is
 }
 
 contract CanExecute is ConditionalOrderTest {
-    function test_canExecute_true() public {
-        IEngine.OrderDetails memory orderDetails = IEngine.OrderDetails({
+    IEngine.OrderDetails public orderDetails;
+    IEngine.ConditionalOrder public co;
+    bytes public signature;
+
+    function _defineConditionalOrder() internal {
+        orderDetails = IEngine.OrderDetails({
             marketId: SETH_PERPS_MARKET_ID,
             accountId: accountId,
             sizeDelta: SIZE_DELTA,
@@ -66,7 +70,7 @@ contract CanExecute is ConditionalOrderTest {
             referrer: REFERRER
         });
 
-        IEngine.ConditionalOrder memory co = IEngine.ConditionalOrder({
+        co = IEngine.ConditionalOrder({
             orderDetails: orderDetails,
             signer: signer,
             nonce: 0,
@@ -76,44 +80,52 @@ contract CanExecute is ConditionalOrderTest {
             conditions: new bytes[](0)
         });
 
-        bytes memory signature = getConditionalOrderSignature({
+        signature = getConditionalOrderSignature({
             co: co,
             privateKey: signerPrivateKey,
             domainSeparator: engine.DOMAIN_SEPARATOR()
         });
+    }
+
+    function test_canExecute_true() public {
+        _defineConditionalOrder();
 
         bool canExec = engine.canExecute(co, signature, ZERO_CO_FEE);
 
         assertTrue(canExec);
     }
 
-    function test_canExecute_false_nonce_used() public {
-        IEngine.OrderDetails memory orderDetails = IEngine.OrderDetails({
-            marketId: SETH_PERPS_MARKET_ID,
-            accountId: accountId,
-            sizeDelta: SIZE_DELTA,
-            settlementStrategyId: SETTLEMENT_STRATEGY_ID,
-            acceptablePrice: ACCEPTABLE_PRICE,
-            isReduceOnly: false,
-            trackingCode: TRACKING_CODE,
-            referrer: REFERRER
-        });
+    function test_canExecute_false_maxExecutorFee_exceeded() public {
+        _defineConditionalOrder();
 
-        IEngine.ConditionalOrder memory co = IEngine.ConditionalOrder({
-            orderDetails: orderDetails,
-            signer: signer,
-            nonce: 0,
-            requireVerified: false,
-            trustedExecutor: address(this),
-            maxExecutorFee: type(uint256).max,
-            conditions: new bytes[](0)
-        });
+        co.maxExecutorFee = 0; // 0 max fee (i.e. any non-zero fee is too high)
 
-        bytes memory signature = getConditionalOrderSignature({
+        signature = getConditionalOrderSignature({
             co: co,
             privateKey: signerPrivateKey,
             domainSeparator: engine.DOMAIN_SEPARATOR()
         });
+
+        // CO_FEE is non-zero, so it exceeds the maxExecutorFee
+        bool canExec = engine.canExecute(co, signature, CO_FEE);
+
+        assertFalse(canExec);
+    }
+
+    function test_canExecute_false_insufficent_account_credit() public {
+        _defineConditionalOrder();
+
+        // ensure the account has no credit
+        assertEq(engine.ethBalances(accountId), 0);
+
+        // CO_FEE is non-zero, and the account has no credit
+        bool canExec = engine.canExecute(co, signature, CO_FEE);
+
+        assertFalse(canExec);
+    }
+
+    function test_canExecute_false_nonce_used() public {
+        _defineConditionalOrder();
 
         engine.execute(co, signature, ZERO_CO_FEE);
 
@@ -123,33 +135,38 @@ contract CanExecute is ConditionalOrderTest {
         assertFalse(canExec);
     }
 
-    function test_canExecute_false_trusted_executor() public {
-        IEngine.OrderDetails memory orderDetails = IEngine.OrderDetails({
-            marketId: SETH_PERPS_MARKET_ID,
-            accountId: accountId,
-            sizeDelta: SIZE_DELTA,
-            settlementStrategyId: SETTLEMENT_STRATEGY_ID,
-            acceptablePrice: ACCEPTABLE_PRICE,
-            isReduceOnly: false,
-            trackingCode: TRACKING_CODE,
-            referrer: REFERRER
-        });
+    function test_canExecute_false_invalid_signer() public {
+        _defineConditionalOrder();
 
-        IEngine.ConditionalOrder memory co = IEngine.ConditionalOrder({
-            orderDetails: orderDetails,
-            signer: signer,
-            nonce: 0,
-            requireVerified: false,
-            trustedExecutor: address(this),
-            maxExecutorFee: type(uint256).max,
-            conditions: new bytes[](0)
-        });
+        co.signer = BAD_ACTOR;
 
-        bytes memory signature = getConditionalOrderSignature({
+        signature = getConditionalOrderSignature({
             co: co,
             privateKey: signerPrivateKey,
             domainSeparator: engine.DOMAIN_SEPARATOR()
         });
+
+        bool canExec = engine.canExecute(co, signature, ZERO_CO_FEE);
+
+        assertFalse(canExec);
+    }
+
+    function test_canExecute_false_invalid_signature() public {
+        _defineConditionalOrder();
+
+        signature = getConditionalOrderSignature({
+            co: co,
+            privateKey: bad_signerPrivateKey,
+            domainSeparator: engine.DOMAIN_SEPARATOR()
+        });
+
+        bool canExec = engine.canExecute(co, signature, ZERO_CO_FEE);
+
+        assertFalse(canExec);
+    }
+
+    function test_canExecute_false_trusted_executor() public {
+        _defineConditionalOrder();
 
         vm.prank(BAD_ACTOR);
 
