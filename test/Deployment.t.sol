@@ -13,7 +13,7 @@ contract DeploymentTest is Test, Setup {
     }
 
     function test_deploy() public {
-        Engine engine = setup.deploySystem({
+        (Engine engine,) = setup.deploySystem({
             perpsMarketProxy: address(0x1),
             spotMarketProxy: address(0x2),
             sUSDProxy: address(0x3),

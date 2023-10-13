@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 pragma solidity 0.8.18;
 
-import {Bootstrap} from "test/utils/Bootstrap.sol";
+import {Bootstrap, TrustedMulticallForwarder} from "test/utils/Bootstrap.sol";
 import {IEngine} from "src/interfaces/IEngine.sol";
 import {SynthetixMock} from "test/utils/mocks/SynthetixMock.sol";
 
@@ -25,6 +25,50 @@ contract Deposit is EthManagementTest {
 
         assertEq(engine.ethBalances(accountId), AMOUNT);
         assertEq(address(engine).balance, AMOUNT);
+    }
+
+    function test_depositEth_via_trustedForwarder() public {
+        TrustedMulticallForwarder.Call3Value memory call =
+        TrustedMulticallForwarder.Call3Value(
+            address(engine),
+            true,
+            AMOUNT,
+            abi.encodeWithSelector(engine.depositEth.selector, accountId)
+        );
+
+        TrustedMulticallForwarder.Call3Value[] memory calls =
+            new TrustedMulticallForwarder.Call3Value[](2);
+
+        calls[0] = call;
+        calls[1] = call;
+
+        trustedForwarderContract.aggregate3Value{value: AMOUNT * 2}(calls);
+
+        assertEq(engine.ethBalances(accountId), AMOUNT * 2);
+    }
+
+    function test_depositEth_via_trustedForwarder_value_mismatch() public {
+        TrustedMulticallForwarder.Call3Value memory call =
+        TrustedMulticallForwarder.Call3Value(
+            address(engine),
+            true,
+            AMOUNT,
+            abi.encodeWithSelector(engine.depositEth.selector, accountId)
+        );
+
+        TrustedMulticallForwarder.Call3Value[] memory calls =
+            new TrustedMulticallForwarder.Call3Value[](2);
+
+        calls[0] = call;
+        calls[1] = call;
+
+        vm.expectRevert("Multicall3: value mismatch");
+
+        // msg.value is AMOUNT, but since two calls spend AMOUNT each, the accumulated
+        // msg.value is AMOUNT * 2. This should fail.
+        trustedForwarderContract.aggregate3Value{value: AMOUNT}(calls);
+
+        assertEq(engine.ethBalances(accountId), 0);
     }
 
     function test_depositEth_fuzz(
