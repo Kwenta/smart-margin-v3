@@ -14,7 +14,7 @@ library ConditionalOrderHashLib {
 
     /// @notice pre-computed keccak256(ConditionalOrder struct)
     bytes32 public constant _CONDITIONAL_ORDER_TYPEHASH = keccak256(
-        "ConditionalOrder(OrderDetails orderDetails,address signer,uint128 nonce,bool requireVerified,address trustedExecutor,bytes[] conditions)OrderDetails(uint128 marketId,uint128 accountId,int128 sizeDelta,uint128 settlementStrategyId,uint256 acceptablePrice,bool isReduceOnly,bytes32 trackingCode,address referrer)"
+        "ConditionalOrder(OrderDetails orderDetails,address signer,uint128 nonce,bool requireVerified,address trustedExecutor,uint256 maxExecutorFee,bytes[] conditions)OrderDetails(uint128 marketId,uint128 accountId,int128 sizeDelta,uint128 settlementStrategyId,uint256 acceptablePrice,bool isReduceOnly,bytes32 trackingCode,address referrer)"
     );
 
     /// @notice hash the OrderDetails struct
