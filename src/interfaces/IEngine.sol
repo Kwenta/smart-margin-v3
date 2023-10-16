@@ -205,7 +205,86 @@ interface IEngine {
                       CONDITIONAL ORDER MANAGEMENT
     //////////////////////////////////////////////////////////////*/
 
-    /// @custom:docs for in-depth documentation of conditional order mechanism,
+    /// Conditional Orders
+    ///
+    /// tldr:
+    /// Conditional Orders (co's) are signed objects that define an async order
+    /// and the conditions that must be met for the order to be executed.
+    ///
+    /// deep dive:
+    /// co's are composed of 8 main parts:
+    /// 1. The async order details which are defined in the OrderDetails struct
+    ///    (the order that is being submitted to Synthetix perps v3 market)
+    /// 2. isReduceOnly flag which indicates if the order can only reduce
+    ///    the position size and is also defined in the OrderDetails struct
+    /// 3. The signer of the co which must be the account owner or delegate
+    ///    and is included in the ConditionalOrder struct.
+    ///    THIS DATA IS ALWAYS CHECKED ON-CHAIN
+    /// 4. The nonce of the co which is included in the ConditionalOrder struct.
+    ///    The nonce is specific to the account id and is used to prevent replay attacks.
+    ///    The nonce is not specific to an address, but rather an account id.
+    ///    THIS DATA IS ALWAYS CHECKED ON-CHAIN
+    /// 5. The requireVerified flag which is included in the ConditionalOrder struct.
+    ///    If requireVerified is true, all conditions defined in the co must be satisfied on-chain.
+    ///    If requireVerified is false, the co can ONLY be executed by the trustedExecutor.
+    ///    Notice that the conditions are not checked on-chain if requireVerified is false but are
+    ///    expected to be checked off-chain by the trustedExecutor. This saves a significant amount gas.
+    /// 6. The trustedExecutor address which is included in the ConditionalOrder struct.
+    ///    The trustedExecutor is the address that can execute the co if requireVerified is false.
+    ///    If requireVerified is true, the trustedExecutor is ignored/not used.
+    /// 7. The maxExecutorFee which is included in the ConditionalOrder struct.
+    ///    The maxExecutorFee is the maximum fee that can be imposed by the address that
+    ///    successfully executes the co (trustedExecutor or not). This max fee is denominated in ETH and is
+    ///    enforced on-chain. If the maxExecutorFee is greater than the fee specified
+    ///    by the executor, the co will *not* be executed.
+    /// 8. The conditions which are included in the ConditionalOrder struct.
+    ///    Conditions are encoded function selectors and parameters that are used to determine
+    ///    if the co can be executed. Conditions are checked on-chain if requireVerified is true.
+    ///    If requireVerified is false, conditions are expected to be checked off-chain by the trustedExecutor.
+    ///    Conditions are stictly limited selectors defined in the Engine contract
+    ///    (ex: isTimestampBeforeSelector, isPriceAboveSelector, etc.)
+    ///
+    /// co's are not creaed on-chain. They are composed and signed off-chain. The signature
+    /// is then passed to the Engine contract along with the co. The Engine contract then
+    /// verifies the signature along with many other "things" to determine if the co can be executed.
+    ///
+    /// Checklist:
+    /// In *every* case of co execution, the logic of validating the co is:
+    ///
+    /// 1. Check if the fee specified by the executor is less than or equal to the maxExecutorFee
+    /// 2. Check if the account has sufficient ETH credit to pay the fee
+    ///    (see ETH MANAGEMENT for how that can be accomplished)
+    /// 3. Check if the nonce has been used (see NONCE MANAGEMENT for how that can be accomplished)
+    /// 4. Check if the signer is the owner or delegate of the account
+    /// 5. Check if the signature is valid for the given co and signer
+    /// 6. IF requireVerified is true, check if all conditions are met
+    ///    ELSE IF requireVerified is false, check if the msg.sender is the trustedExecutor
+    ///
+    /// All of these checks are carried out via a call to the Engine's canExecute function
+    /// that returns true or false. If canExecute returns true, the co can be executed.
+    /// If canExecute returns false, the co cannot be executed.
+    /// This function is expected to be used off-chain to determine if the co can be executed.
+    /// It will be called within the Engine's execute function to determine if the co can be executed
+    /// and if it returns true, the co will be executed. If it returns false, the co will not be executed
+    /// and the transaction will revert with CannotExecuteOrder().
+    ///
+    /// The Engine contract does not store co's. It only stores the nonceBitmaps for each account.
+    /// The Engine does hold and account for ETH credit and can modify the ETH credit of an account.
+    ///
+    /// ETH Management:
+    /// With the introduction of co's, the Engine contract now holds ETH credit for accounts.
+    /// Using collateral to pay for fees is not ideal due to accounting risks associated with
+    /// orders that are close to max leverage. To mitigate this risk, the Engine contract
+    /// holds ETH credit for accounts. This ETH credit is used to pay for fees.
+    /// Furthermore, given the multi-colateral nature of the protocol, the Engine contract
+    /// does not need to handle scenarios where an account does not have sufficient
+    /// snxUSD collateral to pay the fee.
+    ///
+    /// Finally, the current approach to implementing Account Abstraction via ERC-4337
+    /// requires traders deposit ETH to the "protocol" prior to trading. This ETH can be
+    /// multipurposed to pay for fees. This is the approach taken by the Engine contract.
+
+    /// @custom:docs for more in-depth documentation of conditional order mechanism,
     /// please refer to https://github.com/Kwenta/smart-margin-v3/wiki/Conditional-Orders
 
     /// @notice execute a conditional order
