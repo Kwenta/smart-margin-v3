@@ -10,6 +10,10 @@ contract NonceBitmapTest is Bootstrap, ConditionalOrderSignature {
     address signer;
     uint256 signerPrivateKey;
 
+    event UnorderedNonceInvalidation(
+        uint128 indexed accountId, uint256 word, uint256 mask
+    );
+
     function setUp() public {
         vm.rollFork(GOERLI_BLOCK_NUMBER);
         initializeOptimismGoerli();
@@ -47,9 +51,9 @@ contract NonceBitmapTest is Bootstrap, ConditionalOrderSignature {
         IEngine.OrderDetails memory orderDetails = IEngine.OrderDetails({
             marketId: SETH_PERPS_MARKET_ID,
             accountId: accountId,
-            sizeDelta: 1 ether,
-            settlementStrategyId: 0,
-            acceptablePrice: type(uint256).max,
+            sizeDelta: SIZE_DELTA,
+            settlementStrategyId: SETTLEMENT_STRATEGY_ID,
+            acceptablePrice: ACCEPTABLE_PRICE,
             isReduceOnly: false,
             trackingCode: TRACKING_CODE,
             referrer: REFERRER
@@ -61,6 +65,7 @@ contract NonceBitmapTest is Bootstrap, ConditionalOrderSignature {
             nonce: nonce,
             requireVerified: false,
             trustedExecutor: address(this),
+            maxExecutorFee: type(uint256).max,
             conditions: new bytes[](0)
         });
 
@@ -70,7 +75,7 @@ contract NonceBitmapTest is Bootstrap, ConditionalOrderSignature {
             domainSeparator: engine.DOMAIN_SEPARATOR()
         });
 
-        bool canExec = engine.canExecute(co, signature);
+        bool canExec = engine.canExecute(co, signature, ZERO_CO_FEE);
 
         assertTrue(canExec);
 
@@ -78,9 +83,18 @@ contract NonceBitmapTest is Bootstrap, ConditionalOrderSignature {
 
         engine.invalidateUnorderedNonces(accountId, uint248(nonce >> 8), mask);
 
-        canExec = engine.canExecute(co, signature);
+        canExec = engine.canExecute(co, signature, ZERO_CO_FEE);
 
         assertFalse(canExec);
+    }
+
+    function test_invalidateUnorderedNonces_event() public {
+        vm.expectEmit(true, true, true, true);
+        emit UnorderedNonceInvalidation(accountId, 0, type(uint256).max);
+
+        vm.prank(signer);
+
+        engine.invalidateUnorderedNonces(accountId, 0, type(uint256).max);
     }
 
     function test_hasUnorderedNonceBeenUsed() public {

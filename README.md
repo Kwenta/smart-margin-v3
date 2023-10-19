@@ -38,9 +38,7 @@ src/
 │   └── SignatureCheckerLib.sol
 └── utils
     ├── EIP712.sol
-    ├── EIP7412.sol
-    ├── ERC2771Context.sol
-    └── Multicallable.sol
+    └── EIP7412.sol
 ```
 
 ## Tests

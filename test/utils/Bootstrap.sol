@@ -18,12 +18,15 @@ import {IPerpsMarketProxy} from "src/interfaces/synthetix/IPerpsMarketProxy.sol"
 import {ISpotMarketProxy} from "src/interfaces/synthetix/ISpotMarketProxy.sol";
 import {IPyth} from "src/interfaces/oracles/IPyth.sol";
 import {SynthMinter} from "test/utils/SynthMinter.sol";
+import {TrustedMulticallForwarder} from
+    "lib/trusted-multicall-forwarder/src/TrustedMulticallForwarder.sol";
 
 contract Bootstrap is Test, Constants, Conditions, SynthetixV3Errors {
     using console2 for *;
 
     Engine public engine;
     EngineExposed public engineExposed;
+    TrustedMulticallForwarder public trustedForwarderContract;
     IPerpsMarketProxy public perpsMarketProxy;
     ISpotMarketProxy public spotMarketProxy;
     IERC20 public sUSD;
@@ -33,6 +36,8 @@ contract Bootstrap is Test, Constants, Conditions, SynthetixV3Errors {
     SynthMinter public synthMinter;
     uint128 public accountId;
 
+    receive() external payable {}
+
     function initializeOptimismGoerli() public {
         BootstrapOptimismGoerli bootstrap = new BootstrapOptimismGoerli();
         (
@@ -41,11 +46,14 @@ contract Bootstrap is Test, Constants, Conditions, SynthetixV3Errors {
             address _perpesMarketProxyAddress,
             address _spotMarketProxyAddress,
             address _sUSDAddress,
-            address _pythAddress
+            address _pythAddress,
+            address _trustedForwarderAddress
         ) = bootstrap.init();
 
         engine = Engine(_engineAddress);
         engineExposed = EngineExposed(_engineExposedAddress);
+        trustedForwarderContract =
+            TrustedMulticallForwarder(_trustedForwarderAddress);
         perpsMarketProxy = IPerpsMarketProxy(_perpesMarketProxyAddress);
         spotMarketProxy = ISpotMarketProxy(_spotMarketProxyAddress);
         sUSD = IERC20(_sUSDAddress);
@@ -73,11 +81,14 @@ contract Bootstrap is Test, Constants, Conditions, SynthetixV3Errors {
             address _perpesMarketProxyAddress,
             address _spotMarketProxyAddress,
             address _sUSDAddress,
-            address _pythAddress
+            address _pythAddress,
+            address _trustedForwarderAddress
         ) = bootstrap.init();
 
         engine = Engine(_engineAddress);
         engineExposed = EngineExposed(_engineExposedAddress);
+        trustedForwarderContract =
+            TrustedMulticallForwarder(_trustedForwarderAddress);
         perpsMarketProxy = IPerpsMarketProxy(_perpesMarketProxyAddress);
         spotMarketProxy = ISpotMarketProxy(_spotMarketProxyAddress);
         sUSD = IERC20(_sUSDAddress);
@@ -101,14 +112,14 @@ contract Bootstrap is Test, Constants, Conditions, SynthetixV3Errors {
 contract BootstrapOptimism is Setup, OptimismParameters {
     function init()
         public
-        returns (address, address, address, address, address, address)
+        returns (address, address, address, address, address, address, address)
     {
-        Engine engine = Setup.deploySystem({
+        (Engine engine, TrustedMulticallForwarder trustedForwarderContract) =
+        Setup.deploySystem({
             perpsMarketProxy: PERPS_MARKET_PROXY,
             spotMarketProxy: SPOT_MARKET_PROXY,
             sUSDProxy: USD_PROXY,
-            oracle: PYTH,
-            trustedForwarder: TRUSTED_FORWARDER
+            oracle: PYTH
         });
 
         EngineExposed engineExposed = new EngineExposed({
@@ -116,7 +127,7 @@ contract BootstrapOptimism is Setup, OptimismParameters {
             _spotMarketProxy: SPOT_MARKET_PROXY,
             _sUSDProxy: USD_PROXY,
             _oracle: PYTH,
-            _trustedForwarder: TRUSTED_FORWARDER
+            _trustedForwarder: address(0x1)
         });
 
         return (
@@ -125,7 +136,8 @@ contract BootstrapOptimism is Setup, OptimismParameters {
             PERPS_MARKET_PROXY,
             SPOT_MARKET_PROXY,
             USD_PROXY,
-            PYTH
+            PYTH,
+            address(trustedForwarderContract)
         );
     }
 }
@@ -133,14 +145,14 @@ contract BootstrapOptimism is Setup, OptimismParameters {
 contract BootstrapOptimismGoerli is Setup, OptimismGoerliParameters {
     function init()
         public
-        returns (address, address, address, address, address, address)
+        returns (address, address, address, address, address, address, address)
     {
-        Engine engine = Setup.deploySystem({
+        (Engine engine, TrustedMulticallForwarder trustedForwarderContract) =
+        Setup.deploySystem({
             perpsMarketProxy: PERPS_MARKET_PROXY,
             spotMarketProxy: SPOT_MARKET_PROXY,
             sUSDProxy: USD_PROXY,
-            oracle: PYTH,
-            trustedForwarder: TRUSTED_FORWARDER
+            oracle: PYTH
         });
 
         EngineExposed engineExposed = new EngineExposed({
@@ -148,7 +160,7 @@ contract BootstrapOptimismGoerli is Setup, OptimismGoerliParameters {
             _spotMarketProxy: SPOT_MARKET_PROXY,
             _sUSDProxy: USD_PROXY,
             _oracle: PYTH,
-            _trustedForwarder: TRUSTED_FORWARDER
+            _trustedForwarder: address(0x1)
         });
 
         return (
@@ -157,7 +169,8 @@ contract BootstrapOptimismGoerli is Setup, OptimismGoerliParameters {
             PERPS_MARKET_PROXY,
             SPOT_MARKET_PROXY,
             USD_PROXY,
-            PYTH
+            PYTH,
+            address(trustedForwarderContract)
         );
     }
 }

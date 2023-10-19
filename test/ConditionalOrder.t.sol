@@ -54,103 +54,123 @@ contract ConditionalOrderTest is
 }
 
 contract CanExecute is ConditionalOrderTest {
-    function test_canExecute_true() public {
-        IEngine.OrderDetails memory orderDetails = IEngine.OrderDetails({
+    IEngine.OrderDetails public orderDetails;
+    IEngine.ConditionalOrder public co;
+    bytes public signature;
+
+    function _defineConditionalOrder() internal {
+        orderDetails = IEngine.OrderDetails({
             marketId: SETH_PERPS_MARKET_ID,
             accountId: accountId,
-            sizeDelta: 1 ether,
-            settlementStrategyId: 0,
-            acceptablePrice: type(uint256).max,
+            sizeDelta: SIZE_DELTA,
+            settlementStrategyId: SETTLEMENT_STRATEGY_ID,
+            acceptablePrice: ACCEPTABLE_PRICE,
             isReduceOnly: false,
             trackingCode: TRACKING_CODE,
             referrer: REFERRER
         });
 
-        IEngine.ConditionalOrder memory co = IEngine.ConditionalOrder({
+        co = IEngine.ConditionalOrder({
             orderDetails: orderDetails,
             signer: signer,
             nonce: 0,
             requireVerified: false,
             trustedExecutor: address(this),
+            maxExecutorFee: type(uint256).max,
             conditions: new bytes[](0)
         });
 
-        bytes memory signature = getConditionalOrderSignature({
+        signature = getConditionalOrderSignature({
             co: co,
             privateKey: signerPrivateKey,
             domainSeparator: engine.DOMAIN_SEPARATOR()
         });
+    }
 
-        bool canExec = engine.canExecute(co, signature);
+    function test_canExecute_true() public {
+        _defineConditionalOrder();
+
+        bool canExec = engine.canExecute(co, signature, ZERO_CO_FEE);
 
         assertTrue(canExec);
     }
 
-    function test_canExecute_false_nonce_used() public {
-        IEngine.OrderDetails memory orderDetails = IEngine.OrderDetails({
-            marketId: SETH_PERPS_MARKET_ID,
-            accountId: accountId,
-            sizeDelta: 1 ether,
-            settlementStrategyId: 0,
-            acceptablePrice: type(uint256).max,
-            isReduceOnly: false,
-            trackingCode: TRACKING_CODE,
-            referrer: REFERRER
-        });
+    function test_canExecute_false_maxExecutorFee_exceeded() public {
+        _defineConditionalOrder();
 
-        IEngine.ConditionalOrder memory co = IEngine.ConditionalOrder({
-            orderDetails: orderDetails,
-            signer: signer,
-            nonce: 0,
-            requireVerified: false,
-            trustedExecutor: address(this),
-            conditions: new bytes[](0)
-        });
+        co.maxExecutorFee = 0; // 0 max fee (i.e. any non-zero fee is too high)
 
-        bytes memory signature = getConditionalOrderSignature({
+        signature = getConditionalOrderSignature({
             co: co,
             privateKey: signerPrivateKey,
             domainSeparator: engine.DOMAIN_SEPARATOR()
         });
 
-        engine.execute(co, signature);
+        // CO_FEE is non-zero, so it exceeds the maxExecutorFee
+        bool canExec = engine.canExecute(co, signature, CO_FEE);
+
+        assertFalse(canExec);
+    }
+
+    function test_canExecute_false_insufficent_account_credit() public {
+        _defineConditionalOrder();
+
+        // ensure the account has no credit
+        assertEq(engine.ethBalances(accountId), 0);
+
+        // CO_FEE is non-zero, and the account has no credit
+        bool canExec = engine.canExecute(co, signature, CO_FEE);
+
+        assertFalse(canExec);
+    }
+
+    function test_canExecute_false_nonce_used() public {
+        _defineConditionalOrder();
+
+        engine.execute(co, signature, ZERO_CO_FEE);
 
         // nonce is now used; cannot execute again
-        bool canExec = engine.canExecute(co, signature);
+        bool canExec = engine.canExecute(co, signature, ZERO_CO_FEE);
+
+        assertFalse(canExec);
+    }
+
+    function test_canExecute_false_invalid_signer() public {
+        _defineConditionalOrder();
+
+        co.signer = BAD_ACTOR;
+
+        signature = getConditionalOrderSignature({
+            co: co,
+            privateKey: signerPrivateKey,
+            domainSeparator: engine.DOMAIN_SEPARATOR()
+        });
+
+        bool canExec = engine.canExecute(co, signature, ZERO_CO_FEE);
+
+        assertFalse(canExec);
+    }
+
+    function test_canExecute_false_invalid_signature() public {
+        _defineConditionalOrder();
+
+        signature = getConditionalOrderSignature({
+            co: co,
+            privateKey: bad_signerPrivateKey,
+            domainSeparator: engine.DOMAIN_SEPARATOR()
+        });
+
+        bool canExec = engine.canExecute(co, signature, ZERO_CO_FEE);
 
         assertFalse(canExec);
     }
 
     function test_canExecute_false_trusted_executor() public {
-        IEngine.OrderDetails memory orderDetails = IEngine.OrderDetails({
-            marketId: SETH_PERPS_MARKET_ID,
-            accountId: accountId,
-            sizeDelta: 1 ether,
-            settlementStrategyId: 0,
-            acceptablePrice: type(uint256).max,
-            isReduceOnly: false,
-            trackingCode: TRACKING_CODE,
-            referrer: REFERRER
-        });
-
-        IEngine.ConditionalOrder memory co = IEngine.ConditionalOrder({
-            orderDetails: orderDetails,
-            signer: signer,
-            nonce: 0,
-            requireVerified: false,
-            trustedExecutor: address(this),
-            conditions: new bytes[](0)
-        });
-
-        bytes memory signature = getConditionalOrderSignature({
-            co: co,
-            privateKey: signerPrivateKey,
-            domainSeparator: engine.DOMAIN_SEPARATOR()
-        });
+        _defineConditionalOrder();
 
         vm.prank(BAD_ACTOR);
 
-        bool canExec = engine.canExecute(co, signature);
+        bool canExec = engine.canExecute(co, signature, ZERO_CO_FEE);
 
         assertFalse(canExec);
     }
@@ -162,7 +182,7 @@ contract VerifySigner is ConditionalOrderTest {
             marketId: 0,
             accountId: accountId,
             sizeDelta: 0,
-            settlementStrategyId: 0,
+            settlementStrategyId: SETTLEMENT_STRATEGY_ID,
             acceptablePrice: 0,
             isReduceOnly: false,
             trackingCode: TRACKING_CODE,
@@ -175,6 +195,7 @@ contract VerifySigner is ConditionalOrderTest {
             nonce: 0,
             requireVerified: false,
             trustedExecutor: address(this),
+            maxExecutorFee: type(uint256).max,
             conditions: new bytes[](0)
         });
 
@@ -188,7 +209,7 @@ contract VerifySigner is ConditionalOrderTest {
             marketId: 0,
             accountId: accountId,
             sizeDelta: 0,
-            settlementStrategyId: 0,
+            settlementStrategyId: SETTLEMENT_STRATEGY_ID,
             acceptablePrice: 0,
             isReduceOnly: false,
             trackingCode: TRACKING_CODE,
@@ -201,6 +222,7 @@ contract VerifySigner is ConditionalOrderTest {
             nonce: 0,
             requireVerified: false,
             trustedExecutor: address(this),
+            maxExecutorFee: type(uint256).max,
             conditions: new bytes[](0)
         });
 
@@ -216,7 +238,7 @@ contract VerifySignature is ConditionalOrderTest {
             marketId: 0,
             accountId: 0,
             sizeDelta: 0,
-            settlementStrategyId: 0,
+            settlementStrategyId: SETTLEMENT_STRATEGY_ID,
             acceptablePrice: 0,
             isReduceOnly: false,
             trackingCode: TRACKING_CODE,
@@ -229,6 +251,7 @@ contract VerifySignature is ConditionalOrderTest {
             nonce: 0,
             requireVerified: false,
             trustedExecutor: address(this),
+            maxExecutorFee: type(uint256).max,
             conditions: new bytes[](0)
         });
 
@@ -248,7 +271,7 @@ contract VerifySignature is ConditionalOrderTest {
             marketId: 0,
             accountId: 0,
             sizeDelta: 0,
-            settlementStrategyId: 0,
+            settlementStrategyId: SETTLEMENT_STRATEGY_ID,
             acceptablePrice: 0,
             isReduceOnly: false,
             trackingCode: TRACKING_CODE,
@@ -261,6 +284,7 @@ contract VerifySignature is ConditionalOrderTest {
             nonce: 0,
             requireVerified: false,
             trustedExecutor: address(this),
+            maxExecutorFee: type(uint256).max,
             conditions: new bytes[](0)
         });
 
@@ -288,6 +312,7 @@ contract VerifyConditions is ConditionalOrderTest {
             nonce: 0,
             requireVerified: true,
             trustedExecutor: address(0),
+            maxExecutorFee: type(uint256).max,
             conditions: conditions
         });
 
@@ -339,6 +364,7 @@ contract VerifyConditions is ConditionalOrderTest {
             nonce: 0,
             requireVerified: true,
             trustedExecutor: address(0),
+            maxExecutorFee: type(uint256).max,
             conditions: conditions
         });
 
@@ -373,6 +399,7 @@ contract VerifyConditions is ConditionalOrderTest {
             nonce: 0,
             requireVerified: true,
             trustedExecutor: address(0),
+            maxExecutorFee: type(uint256).max,
             conditions: conditions
         });
 
@@ -395,6 +422,7 @@ contract VerifyConditions is ConditionalOrderTest {
             nonce: 0,
             requireVerified: true,
             trustedExecutor: address(0),
+            maxExecutorFee: type(uint256).max,
             conditions: conditions
         });
 
@@ -409,13 +437,17 @@ contract VerifyConditions is ConditionalOrderTest {
 }
 
 contract Execute is ConditionalOrderTest {
+    event ConditionalOrderExecuted(
+        IPerpsMarketProxy.Data order, uint256 synthetixFees, uint256 executorFee
+    );
+
     function test_execute_order_committed() public {
         IEngine.OrderDetails memory orderDetails = IEngine.OrderDetails({
             marketId: SETH_PERPS_MARKET_ID,
             accountId: accountId,
-            sizeDelta: 1 ether,
-            settlementStrategyId: 0,
-            acceptablePrice: type(uint256).max,
+            sizeDelta: SIZE_DELTA,
+            settlementStrategyId: SETTLEMENT_STRATEGY_ID,
+            acceptablePrice: ACCEPTABLE_PRICE,
             isReduceOnly: false,
             trackingCode: TRACKING_CODE,
             referrer: REFERRER
@@ -427,6 +459,7 @@ contract Execute is ConditionalOrderTest {
             nonce: 0,
             requireVerified: false,
             trustedExecutor: address(this),
+            maxExecutorFee: type(uint256).max,
             conditions: new bytes[](0)
         });
 
@@ -436,11 +469,8 @@ contract Execute is ConditionalOrderTest {
             domainSeparator: engine.DOMAIN_SEPARATOR()
         });
 
-        (
-            IPerpsMarketProxy.Data memory retOrder,
-            uint256 fees,
-            uint256 conditionalOrderFee
-        ) = engine.execute(co, signature);
+        (IPerpsMarketProxy.Data memory retOrder, uint256 fees) =
+            engine.execute(co, signature, ZERO_CO_FEE);
 
         // retOrder
         assertTrue(retOrder.settlementTime != 0);
@@ -454,18 +484,15 @@ contract Execute is ConditionalOrderTest {
 
         // fees
         assertTrue(fees != 0);
-
-        // conditionalOrderFee
-        assertTrue(conditionalOrderFee != 0);
     }
 
-    function test_execute_leverage_exceeded() public {
+    function test_execute_event() public {
         IEngine.OrderDetails memory orderDetails = IEngine.OrderDetails({
             marketId: SETH_PERPS_MARKET_ID,
             accountId: accountId,
-            sizeDelta: 50 ether,
-            settlementStrategyId: 0,
-            acceptablePrice: type(uint256).max,
+            sizeDelta: SIZE_DELTA,
+            settlementStrategyId: SETTLEMENT_STRATEGY_ID,
+            acceptablePrice: ACCEPTABLE_PRICE,
             isReduceOnly: false,
             trackingCode: TRACKING_CODE,
             referrer: REFERRER
@@ -477,6 +504,7 @@ contract Execute is ConditionalOrderTest {
             nonce: 0,
             requireVerified: false,
             trustedExecutor: address(this),
+            maxExecutorFee: type(uint256).max,
             conditions: new bytes[](0)
         });
 
@@ -486,39 +514,22 @@ contract Execute is ConditionalOrderTest {
             domainSeparator: engine.DOMAIN_SEPARATOR()
         });
 
-        (uint256 orderFees,) = perpsMarketProxy.computeOrderFees({
-            marketId: SETH_PERPS_MARKET_ID,
-            sizeDelta: 50 ether
-        });
+        IPerpsMarketProxy.Data memory emptyOrder;
 
-        uint256 requiredMargin = perpsMarketProxy.requiredMarginForOrder(
-            accountId, SETH_PERPS_MARKET_ID, 50 ether
-        );
+        // only checking that the event was emitted and not the values
+        vm.expectEmit(true, true, true, false);
+        emit ConditionalOrderExecuted(emptyOrder, 0, 0);
 
-        uint256 marginPostConditionalOrderFee = AMOUNT
-            - (
-                orderFees =
-                    orderFees * engineExposed.expose_FEE_SCALING_FACTOR() / 10_000
-            );
-
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                InsufficientMargin.selector,
-                marginPostConditionalOrderFee,
-                requiredMargin
-            )
-        );
-
-        engine.execute(co, signature);
+        engine.execute(co, signature, ZERO_CO_FEE);
     }
 
-    function test_execute_CannotExecuteOrder() public {
+    function test_execute_CannotExecuteOrder_too_leveraged() public {
         IEngine.OrderDetails memory orderDetails = IEngine.OrderDetails({
             marketId: SETH_PERPS_MARKET_ID,
             accountId: accountId,
-            sizeDelta: 50 ether,
-            settlementStrategyId: 0,
-            acceptablePrice: type(uint256).max,
+            sizeDelta: INVALID_SIZE_DELTA,
+            settlementStrategyId: SETTLEMENT_STRATEGY_ID,
+            acceptablePrice: ACCEPTABLE_PRICE,
             isReduceOnly: false,
             trackingCode: TRACKING_CODE,
             referrer: REFERRER
@@ -526,10 +537,81 @@ contract Execute is ConditionalOrderTest {
 
         IEngine.ConditionalOrder memory co = IEngine.ConditionalOrder({
             orderDetails: orderDetails,
-            signer: address(0),
+            signer: signer,
             nonce: 0,
             requireVerified: false,
             trustedExecutor: address(this),
+            maxExecutorFee: type(uint256).max,
+            conditions: new bytes[](0)
+        });
+
+        bytes memory signature = getConditionalOrderSignature({
+            co: co,
+            privateKey: signerPrivateKey,
+            domainSeparator: engine.DOMAIN_SEPARATOR()
+        });
+
+        try engine.execute(co, signature, ZERO_CO_FEE) {}
+        catch (bytes memory reason) {
+            assertEq(bytes4(reason), InsufficientMargin.selector);
+        }
+    }
+
+    function test_execute_CannotExecuteOrder_invalid_acceptablePrice() public {
+        IEngine.OrderDetails memory orderDetails = IEngine.OrderDetails({
+            marketId: SETH_PERPS_MARKET_ID,
+            accountId: accountId,
+            sizeDelta: SIZE_DELTA,
+            settlementStrategyId: SETTLEMENT_STRATEGY_ID,
+            acceptablePrice: INVALID_ACCEPTABLE_PRICE,
+            isReduceOnly: false,
+            trackingCode: TRACKING_CODE,
+            referrer: REFERRER
+        });
+
+        IEngine.ConditionalOrder memory co = IEngine.ConditionalOrder({
+            orderDetails: orderDetails,
+            signer: signer,
+            nonce: 0,
+            requireVerified: false,
+            trustedExecutor: address(this),
+            maxExecutorFee: type(uint256).max,
+            conditions: new bytes[](0)
+        });
+
+        bytes memory signature = getConditionalOrderSignature({
+            co: co,
+            privateKey: signerPrivateKey,
+            domainSeparator: engine.DOMAIN_SEPARATOR()
+        });
+
+        try engine.execute(co, signature, ZERO_CO_FEE) {}
+        catch (bytes memory reason) {
+            assertEq(bytes4(reason), AcceptablePriceExceeded.selector);
+        }
+    }
+
+    function test_execute_CannotExecuteOrder_invalid_settlementStrategyId()
+        public
+    {
+        IEngine.OrderDetails memory orderDetails = IEngine.OrderDetails({
+            marketId: SETH_PERPS_MARKET_ID,
+            accountId: accountId,
+            sizeDelta: SIZE_DELTA,
+            settlementStrategyId: INVALID_SETTLEMENT_STRATEGY_ID,
+            acceptablePrice: ACCEPTABLE_PRICE,
+            isReduceOnly: false,
+            trackingCode: TRACKING_CODE,
+            referrer: REFERRER
+        });
+
+        IEngine.ConditionalOrder memory co = IEngine.ConditionalOrder({
+            orderDetails: orderDetails,
+            signer: signer,
+            nonce: 0,
+            requireVerified: false,
+            trustedExecutor: address(this),
+            maxExecutorFee: type(uint256).max,
             conditions: new bytes[](0)
         });
 
@@ -540,23 +622,26 @@ contract Execute is ConditionalOrderTest {
         });
 
         vm.expectRevert(
-            abi.encodeWithSelector(IEngine.CannotExecuteOrder.selector)
+            abi.encodeWithSelector(
+                InvalidSettlementStrategy.selector,
+                INVALID_SETTLEMENT_STRATEGY_ID
+            )
         );
 
-        engine.execute(co, signature);
+        engine.execute(co, signature, ZERO_CO_FEE);
     }
 }
 
 contract Fee is ConditionalOrderTest {
     function test_fee_imposed() public {
-        assertEq(0, sUSD.balanceOf(address(this)));
+        engine.depositEth{value: 1 ether}(accountId);
 
         IEngine.OrderDetails memory orderDetails = IEngine.OrderDetails({
             marketId: SETH_PERPS_MARKET_ID,
             accountId: accountId,
-            sizeDelta: 10 ether,
-            settlementStrategyId: 0,
-            acceptablePrice: type(uint256).max,
+            sizeDelta: SIZE_DELTA,
+            settlementStrategyId: SETTLEMENT_STRATEGY_ID,
+            acceptablePrice: ACCEPTABLE_PRICE,
             isReduceOnly: false,
             trackingCode: TRACKING_CODE,
             referrer: REFERRER
@@ -568,6 +653,7 @@ contract Fee is ConditionalOrderTest {
             nonce: 0,
             requireVerified: false,
             trustedExecutor: address(this),
+            maxExecutorFee: type(uint256).max,
             conditions: new bytes[](0)
         });
 
@@ -577,29 +663,24 @@ contract Fee is ConditionalOrderTest {
             domainSeparator: engine.DOMAIN_SEPARATOR()
         });
 
-        (,, uint256 conditionalOrderFee) = engine.execute(co, signature);
+        uint256 preExecutorBalance = address(this).balance;
 
-        assertEq(sUSD.balanceOf(address(this)), conditionalOrderFee);
+        engine.execute(co, signature, CO_FEE);
+
+        uint256 postExecutorBalance = address(this).balance;
+
+        assertEq(preExecutorBalance + CO_FEE, postExecutorBalance);
     }
 
-    function test_fee_imposed_at_upper_fee_cap() public {
-        uint256 mocked_order_fees = engineExposed.expose_UPPER_FEE_CAP()
-            * engineExposed.expose_FEE_SCALING_FACTOR();
-
-        mock_computeOrderFees({
-            perpsMarketProxy: address(perpsMarketProxy),
-            marketId: SETH_PERPS_MARKET_ID,
-            sizeDelta: 1 ether,
-            orderFees: mocked_order_fees,
-            fillPrice: 1 ether
-        });
+    function test_fee_exceeds_account_credit() public {
+        engine.depositEth{value: CO_FEE - 1}(accountId);
 
         IEngine.OrderDetails memory orderDetails = IEngine.OrderDetails({
             marketId: SETH_PERPS_MARKET_ID,
             accountId: accountId,
-            sizeDelta: 1 ether,
-            settlementStrategyId: 0,
-            acceptablePrice: type(uint256).max,
+            sizeDelta: SIZE_DELTA,
+            settlementStrategyId: SETTLEMENT_STRATEGY_ID,
+            acceptablePrice: ACCEPTABLE_PRICE,
             isReduceOnly: false,
             trackingCode: TRACKING_CODE,
             referrer: REFERRER
@@ -611,6 +692,7 @@ contract Fee is ConditionalOrderTest {
             nonce: 0,
             requireVerified: false,
             trustedExecutor: address(this),
+            maxExecutorFee: type(uint256).max,
             conditions: new bytes[](0)
         });
 
@@ -620,32 +702,20 @@ contract Fee is ConditionalOrderTest {
             domainSeparator: engine.DOMAIN_SEPARATOR()
         });
 
-        (,, uint256 conditionalOrderFee) = engine.execute(co, signature);
+        vm.expectRevert(IEngine.CannotExecuteOrder.selector);
 
-        assertEq(engineExposed.expose_UPPER_FEE_CAP(), conditionalOrderFee);
-        assertEq(
-            engineExposed.expose_UPPER_FEE_CAP(), sUSD.balanceOf(address(this))
-        );
+        engine.execute(co, signature, CO_FEE);
     }
 
-    function test_fee_imposed_above_upper_fee_cap() public {
-        uint256 mocked_order_fees = engineExposed.expose_UPPER_FEE_CAP()
-            * (engineExposed.expose_FEE_SCALING_FACTOR() + 1);
-
-        mock_computeOrderFees({
-            perpsMarketProxy: address(perpsMarketProxy),
-            marketId: SETH_PERPS_MARKET_ID,
-            sizeDelta: 1 ether,
-            orderFees: mocked_order_fees,
-            fillPrice: 1 ether
-        });
+    function test_fee_exceeds_maxExecutorFee() public {
+        engine.depositEth{value: 1 ether}(accountId);
 
         IEngine.OrderDetails memory orderDetails = IEngine.OrderDetails({
             marketId: SETH_PERPS_MARKET_ID,
             accountId: accountId,
-            sizeDelta: 1 ether,
-            settlementStrategyId: 0,
-            acceptablePrice: type(uint256).max,
+            sizeDelta: SIZE_DELTA,
+            settlementStrategyId: SETTLEMENT_STRATEGY_ID,
+            acceptablePrice: ACCEPTABLE_PRICE,
             isReduceOnly: false,
             trackingCode: TRACKING_CODE,
             referrer: REFERRER
@@ -657,6 +727,7 @@ contract Fee is ConditionalOrderTest {
             nonce: 0,
             requireVerified: false,
             trustedExecutor: address(this),
+            maxExecutorFee: 0, // 0 max fee (i.e. any non-zero fee is too high)
             conditions: new bytes[](0)
         });
 
@@ -666,220 +737,9 @@ contract Fee is ConditionalOrderTest {
             domainSeparator: engine.DOMAIN_SEPARATOR()
         });
 
-        (,, uint256 conditionalOrderFee) = engine.execute(co, signature);
+        vm.expectRevert(IEngine.CannotExecuteOrder.selector);
 
-        assertEq(engineExposed.expose_UPPER_FEE_CAP(), conditionalOrderFee);
-        assertEq(
-            engineExposed.expose_UPPER_FEE_CAP(), sUSD.balanceOf(address(this))
-        );
-    }
-
-    function test_fee_imposed_below_upper_fee_cap() public {
-        uint256 mocked_order_fees = engineExposed.expose_UPPER_FEE_CAP();
-
-        mock_computeOrderFees({
-            perpsMarketProxy: address(perpsMarketProxy),
-            marketId: SETH_PERPS_MARKET_ID,
-            sizeDelta: 1 ether,
-            orderFees: mocked_order_fees,
-            fillPrice: 1 ether
-        });
-
-        IEngine.OrderDetails memory orderDetails = IEngine.OrderDetails({
-            marketId: SETH_PERPS_MARKET_ID,
-            accountId: accountId,
-            sizeDelta: 1 ether,
-            settlementStrategyId: 0,
-            acceptablePrice: type(uint256).max,
-            isReduceOnly: false,
-            trackingCode: TRACKING_CODE,
-            referrer: REFERRER
-        });
-
-        IEngine.ConditionalOrder memory co = IEngine.ConditionalOrder({
-            orderDetails: orderDetails,
-            signer: signer,
-            nonce: 0,
-            requireVerified: false,
-            trustedExecutor: address(this),
-            conditions: new bytes[](0)
-        });
-
-        bytes memory signature = getConditionalOrderSignature({
-            co: co,
-            privateKey: signerPrivateKey,
-            domainSeparator: engine.DOMAIN_SEPARATOR()
-        });
-
-        (,, uint256 conditionalOrderFee) = engine.execute(co, signature);
-
-        assertEq(
-            (
-                engineExposed.expose_UPPER_FEE_CAP()
-                    * engineExposed.expose_FEE_SCALING_FACTOR()
-            ) / 10_000,
-            conditionalOrderFee
-        );
-        assertEq(
-            (
-                engineExposed.expose_UPPER_FEE_CAP()
-                    * engineExposed.expose_FEE_SCALING_FACTOR()
-            ) / 10_000,
-            sUSD.balanceOf(address(this))
-        );
-    }
-
-    function test_fee_imposed_below_lower_fee_cap() public {
-        uint256 mocked_order_fees = 0;
-
-        mock_computeOrderFees({
-            perpsMarketProxy: address(perpsMarketProxy),
-            marketId: SETH_PERPS_MARKET_ID,
-            sizeDelta: 1 ether,
-            orderFees: mocked_order_fees,
-            fillPrice: 1 ether
-        });
-
-        IEngine.OrderDetails memory orderDetails = IEngine.OrderDetails({
-            marketId: SETH_PERPS_MARKET_ID,
-            accountId: accountId,
-            sizeDelta: 1 ether,
-            settlementStrategyId: 0,
-            acceptablePrice: type(uint256).max,
-            isReduceOnly: false,
-            trackingCode: TRACKING_CODE,
-            referrer: REFERRER
-        });
-
-        IEngine.ConditionalOrder memory co = IEngine.ConditionalOrder({
-            orderDetails: orderDetails,
-            signer: signer,
-            nonce: 0,
-            requireVerified: false,
-            trustedExecutor: address(this),
-            conditions: new bytes[](0)
-        });
-
-        bytes memory signature = getConditionalOrderSignature({
-            co: co,
-            privateKey: signerPrivateKey,
-            domainSeparator: engine.DOMAIN_SEPARATOR()
-        });
-
-        (,, uint256 conditionalOrderFee) = engine.execute(co, signature);
-
-        assertEq(engineExposed.expose_LOWER_FEE_CAP(), conditionalOrderFee);
-        assertEq(
-            engineExposed.expose_LOWER_FEE_CAP(), sUSD.balanceOf(address(this))
-        );
-    }
-
-    function test_fee_imposed_fee_cannot_be_paid() public {
-        vm.prank(signer);
-
-        engine.modifyCollateral({
-            _accountId: accountId,
-            _synthMarketId: SUSD_SPOT_MARKET_ID,
-            _amount: -int256(AMOUNT)
-        });
-
-        IEngine.OrderDetails memory orderDetails = IEngine.OrderDetails({
-            marketId: SETH_PERPS_MARKET_ID,
-            accountId: accountId,
-            sizeDelta: 10 ether,
-            settlementStrategyId: 0,
-            acceptablePrice: type(uint256).max,
-            isReduceOnly: false,
-            trackingCode: TRACKING_CODE,
-            referrer: REFERRER
-        });
-
-        IEngine.ConditionalOrder memory co = IEngine.ConditionalOrder({
-            orderDetails: orderDetails,
-            signer: signer,
-            nonce: 0,
-            requireVerified: false,
-            trustedExecutor: address(this),
-            conditions: new bytes[](0)
-        });
-
-        bytes memory signature = getConditionalOrderSignature({
-            co: co,
-            privateKey: signerPrivateKey,
-            domainSeparator: engine.DOMAIN_SEPARATOR()
-        });
-
-        (uint256 orderFees,) = perpsMarketProxy.computeOrderFees({
-            marketId: SETH_PERPS_MARKET_ID,
-            sizeDelta: 10 ether
-        });
-
-        orderFees =
-            orderFees * engineExposed.expose_FEE_SCALING_FACTOR() / 10_000;
-
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                InsufficientSynthCollateral.selector,
-                SUSD_SPOT_MARKET_ID,
-                0,
-                orderFees
-            )
-        );
-
-        engine.execute(co, signature);
-    }
-
-    function test_fee_imposed_insufficient_collateral_for_order() public {
-        IEngine.OrderDetails memory orderDetails = IEngine.OrderDetails({
-            marketId: SETH_PERPS_MARKET_ID,
-            accountId: accountId,
-            sizeDelta: 50 ether,
-            settlementStrategyId: 0,
-            acceptablePrice: type(uint256).max,
-            isReduceOnly: false,
-            trackingCode: TRACKING_CODE,
-            referrer: REFERRER
-        });
-
-        IEngine.ConditionalOrder memory co = IEngine.ConditionalOrder({
-            orderDetails: orderDetails,
-            signer: signer,
-            nonce: 0,
-            requireVerified: false,
-            trustedExecutor: address(this),
-            conditions: new bytes[](0)
-        });
-
-        bytes memory signature = getConditionalOrderSignature({
-            co: co,
-            privateKey: signerPrivateKey,
-            domainSeparator: engine.DOMAIN_SEPARATOR()
-        });
-
-        (uint256 orderFees,) = perpsMarketProxy.computeOrderFees({
-            marketId: SETH_PERPS_MARKET_ID,
-            sizeDelta: 50 ether
-        });
-
-        uint256 requiredMargin = perpsMarketProxy.requiredMarginForOrder(
-            accountId, SETH_PERPS_MARKET_ID, 50 ether
-        );
-
-        uint256 marginPostConditionalOrderFee = AMOUNT
-            - (
-                orderFees =
-                    orderFees * engineExposed.expose_FEE_SCALING_FACTOR() / 10_000
-            );
-
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                InsufficientMargin.selector,
-                marginPostConditionalOrderFee,
-                requiredMargin
-            )
-        );
-
-        engine.execute(co, signature);
+        engine.execute(co, signature, CO_FEE);
     }
 }
 
@@ -892,9 +752,9 @@ contract ReduceOnly is ConditionalOrderTest {
         IEngine.OrderDetails memory orderDetails = IEngine.OrderDetails({
             marketId: SETH_PERPS_MARKET_ID,
             accountId: accountId,
-            sizeDelta: 1 ether,
-            settlementStrategyId: 0,
-            acceptablePrice: type(uint256).max,
+            sizeDelta: SIZE_DELTA,
+            settlementStrategyId: SETTLEMENT_STRATEGY_ID,
+            acceptablePrice: ACCEPTABLE_PRICE,
             isReduceOnly: true,
             trackingCode: TRACKING_CODE,
             referrer: REFERRER
@@ -906,6 +766,7 @@ contract ReduceOnly is ConditionalOrderTest {
             nonce: 0,
             requireVerified: false,
             trustedExecutor: address(this),
+            maxExecutorFee: type(uint256).max,
             conditions: new bytes[](0)
         });
 
@@ -915,7 +776,7 @@ contract ReduceOnly is ConditionalOrderTest {
             domainSeparator: engine.DOMAIN_SEPARATOR()
         });
 
-        (, uint256 fees,) = engine.execute(co, signature);
+        (, uint256 fees) = engine.execute(co, signature, ZERO_CO_FEE);
 
         // confirms that the reduce-only order was executed
         assertTrue(fees > 0);
@@ -925,9 +786,9 @@ contract ReduceOnly is ConditionalOrderTest {
         IEngine.OrderDetails memory orderDetails = IEngine.OrderDetails({
             marketId: SETH_PERPS_MARKET_ID,
             accountId: accountId,
-            sizeDelta: 1 ether,
-            settlementStrategyId: 0,
-            acceptablePrice: type(uint256).max,
+            sizeDelta: SIZE_DELTA,
+            settlementStrategyId: SETTLEMENT_STRATEGY_ID,
+            acceptablePrice: ACCEPTABLE_PRICE,
             isReduceOnly: true,
             trackingCode: TRACKING_CODE,
             referrer: REFERRER
@@ -939,6 +800,7 @@ contract ReduceOnly is ConditionalOrderTest {
             nonce: 0,
             requireVerified: false,
             trustedExecutor: address(this),
+            maxExecutorFee: type(uint256).max,
             conditions: new bytes[](0)
         });
 
@@ -948,11 +810,9 @@ contract ReduceOnly is ConditionalOrderTest {
             domainSeparator: engine.DOMAIN_SEPARATOR()
         });
 
-        (, uint256 fees, uint256 conditionalOrderFee) =
-            engine.execute(co, signature);
+        (, uint256 fees) = engine.execute(co, signature, ZERO_CO_FEE);
 
         assertEq(0, fees);
-        assertEq(0, conditionalOrderFee);
     }
 
     function test_reduce_only_same_sign() public {
@@ -963,9 +823,9 @@ contract ReduceOnly is ConditionalOrderTest {
         IEngine.OrderDetails memory orderDetails = IEngine.OrderDetails({
             marketId: SETH_PERPS_MARKET_ID,
             accountId: accountId,
-            sizeDelta: 1 ether,
-            settlementStrategyId: 0,
-            acceptablePrice: type(uint256).max,
+            sizeDelta: SIZE_DELTA,
+            settlementStrategyId: SETTLEMENT_STRATEGY_ID,
+            acceptablePrice: ACCEPTABLE_PRICE,
             isReduceOnly: true,
             trackingCode: TRACKING_CODE,
             referrer: REFERRER
@@ -977,6 +837,7 @@ contract ReduceOnly is ConditionalOrderTest {
             nonce: 0,
             requireVerified: false,
             trustedExecutor: address(this),
+            maxExecutorFee: type(uint256).max,
             conditions: new bytes[](0)
         });
 
@@ -986,11 +847,9 @@ contract ReduceOnly is ConditionalOrderTest {
             domainSeparator: engine.DOMAIN_SEPARATOR()
         });
 
-        (, uint256 fees, uint256 conditionalOrderFee) =
-            engine.execute(co, signature);
+        (, uint256 fees) = engine.execute(co, signature, ZERO_CO_FEE);
 
         assertEq(0, fees);
-        assertEq(0, conditionalOrderFee);
     }
 
     function test_reduce_only_truncate_size_down() public {
@@ -1002,8 +861,8 @@ contract ReduceOnly is ConditionalOrderTest {
             marketId: SETH_PERPS_MARKET_ID,
             accountId: accountId,
             sizeDelta: type(int128).max,
-            settlementStrategyId: 0,
-            acceptablePrice: type(uint256).max,
+            settlementStrategyId: SETTLEMENT_STRATEGY_ID,
+            acceptablePrice: ACCEPTABLE_PRICE,
             isReduceOnly: true,
             trackingCode: TRACKING_CODE,
             referrer: REFERRER
@@ -1015,6 +874,7 @@ contract ReduceOnly is ConditionalOrderTest {
             nonce: 0,
             requireVerified: false,
             trustedExecutor: address(this),
+            maxExecutorFee: type(uint256).max,
             conditions: new bytes[](0)
         });
 
@@ -1024,7 +884,7 @@ contract ReduceOnly is ConditionalOrderTest {
             domainSeparator: engine.DOMAIN_SEPARATOR()
         });
 
-        (, uint256 fees,) = engine.execute(co, signature);
+        (, uint256 fees) = engine.execute(co, signature, ZERO_CO_FEE);
 
         // confirms that the reduce-only order was executed
         /// @dev max sizeDelta used proves prices was truncated
@@ -1040,7 +900,7 @@ contract ReduceOnly is ConditionalOrderTest {
             marketId: SETH_PERPS_MARKET_ID,
             accountId: accountId,
             sizeDelta: -type(int128).max,
-            settlementStrategyId: 0,
+            settlementStrategyId: SETTLEMENT_STRATEGY_ID,
             acceptablePrice: 0,
             isReduceOnly: true,
             trackingCode: TRACKING_CODE,
@@ -1053,6 +913,7 @@ contract ReduceOnly is ConditionalOrderTest {
             nonce: 0,
             requireVerified: false,
             trustedExecutor: address(this),
+            maxExecutorFee: type(uint256).max,
             conditions: new bytes[](0)
         });
 
@@ -1062,7 +923,7 @@ contract ReduceOnly is ConditionalOrderTest {
             domainSeparator: engine.DOMAIN_SEPARATOR()
         });
 
-        (, uint256 fees,) = engine.execute(co, signature);
+        (, uint256 fees) = engine.execute(co, signature, ZERO_CO_FEE);
 
         // confirms that the reduce-only order was executed
         /// @dev max sizeDelta used proves prices was truncated

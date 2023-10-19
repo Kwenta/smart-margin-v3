@@ -1,7 +1,12 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 pragma solidity 0.8.18;
 
+// contracts
 import {Engine} from "src/Engine.sol";
+import {TrustedMulticallForwarder} from
+    "lib/trusted-multicall-forwarder/src/TrustedMulticallForwarder.sol";
+
+// parameters
 import {BaseGoerliParameters} from
     "script/utils/parameters/BaseGoerliParameters.sol";
 import {BaseParameters} from "script/utils/parameters/BaseParameters.sol";
@@ -9,6 +14,8 @@ import {OptimismGoerliParameters} from
     "script/utils/parameters/OptimismGoerliParameters.sol";
 import {OptimismParameters} from
     "script/utils/parameters/OptimismParameters.sol";
+
+// forge utils
 import {Script} from "lib/forge-std/src/Script.sol";
 
 /// @title Kwenta Smart Margin v3 deployment script
@@ -18,15 +25,22 @@ contract Setup is Script {
         address perpsMarketProxy,
         address spotMarketProxy,
         address sUSDProxy,
-        address oracle,
-        address trustedForwarder
-    ) public returns (Engine engine) {
+        address oracle
+    )
+        public
+        returns (
+            Engine engine,
+            TrustedMulticallForwarder trustedForwarderContract
+        )
+    {
+        trustedForwarderContract = new TrustedMulticallForwarder();
+
         engine = new Engine({
             _perpsMarketProxy: perpsMarketProxy,
             _spotMarketProxy: spotMarketProxy,
             _sUSDProxy: sUSDProxy,
             _oracle: oracle,
-            _trustedForwarder: trustedForwarder
+            _trustedForwarder: address(trustedForwarderContract)
         });
     }
 }
@@ -43,8 +57,7 @@ contract DeployBase is Setup, BaseParameters {
             perpsMarketProxy: PERPS_MARKET_PROXY,
             spotMarketProxy: SPOT_MARKET_PROXY,
             sUSDProxy: USD_PROXY,
-            oracle: PYTH,
-            trustedForwarder: TRUSTED_FORWARDER
+            oracle: PYTH
         });
 
         vm.stopBroadcast();
@@ -63,8 +76,7 @@ contract DeployBaseGoerli is Setup, BaseGoerliParameters {
             perpsMarketProxy: PERPS_MARKET_PROXY,
             spotMarketProxy: SPOT_MARKET_PROXY,
             sUSDProxy: USD_PROXY,
-            oracle: PYTH,
-            trustedForwarder: TRUSTED_FORWARDER
+            oracle: PYTH
         });
 
         vm.stopBroadcast();
@@ -83,8 +95,7 @@ contract DeployOptimism is Setup, OptimismParameters {
             perpsMarketProxy: PERPS_MARKET_PROXY,
             spotMarketProxy: SPOT_MARKET_PROXY,
             sUSDProxy: USD_PROXY,
-            oracle: PYTH,
-            trustedForwarder: TRUSTED_FORWARDER
+            oracle: PYTH
         });
 
         vm.stopBroadcast();
@@ -103,8 +114,7 @@ contract DeployOptimismGoerli is Setup, OptimismGoerliParameters {
             perpsMarketProxy: PERPS_MARKET_PROXY,
             spotMarketProxy: SPOT_MARKET_PROXY,
             sUSDProxy: USD_PROXY,
-            oracle: PYTH,
-            trustedForwarder: TRUSTED_FORWARDER
+            oracle: PYTH
         });
 
         vm.stopBroadcast();
