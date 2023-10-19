@@ -4,6 +4,8 @@ pragma solidity 0.8.18;
 import {Engine, Setup} from "script/Deploy.s.sol";
 import {IEngine} from "src/interfaces/IEngine.sol";
 import {Test} from "lib/forge-std/src/Test.sol";
+import {TrustedMulticallForwarder} from
+    "lib/trusted-multicall-forwarder/src/TrustedMulticallForwarder.sol";
 
 contract DeploymentTest is Test, Setup {
     Setup setup;
@@ -13,7 +15,8 @@ contract DeploymentTest is Test, Setup {
     }
 
     function test_deploy() public {
-        (Engine engine,) = setup.deploySystem({
+        (Engine engine, TrustedMulticallForwarder forwarder) = setup
+            .deploySystem({
             perpsMarketProxy: address(0x1),
             spotMarketProxy: address(0x2),
             sUSDProxy: address(0x3),
@@ -21,6 +24,7 @@ contract DeploymentTest is Test, Setup {
         });
 
         assertTrue(address(engine) != address(0x0));
+        assertTrue(address(forwarder) != address(0x0));
     }
 
     function test_deploy_perps_market_proxy_zero_address() public {
