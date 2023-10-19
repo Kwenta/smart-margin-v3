@@ -437,6 +437,10 @@ contract VerifyConditions is ConditionalOrderTest {
 }
 
 contract Execute is ConditionalOrderTest {
+    event ConditionalOrderExecuted(
+        IPerpsMarketProxy.Data order, uint256 synthetixFees, uint256 executorFee
+    );
+
     function test_execute_order_committed() public {
         IEngine.OrderDetails memory orderDetails = IEngine.OrderDetails({
             marketId: SETH_PERPS_MARKET_ID,
@@ -480,6 +484,43 @@ contract Execute is ConditionalOrderTest {
 
         // fees
         assertTrue(fees != 0);
+    }
+
+    function test_execute_event() public {
+        IEngine.OrderDetails memory orderDetails = IEngine.OrderDetails({
+            marketId: SETH_PERPS_MARKET_ID,
+            accountId: accountId,
+            sizeDelta: SIZE_DELTA,
+            settlementStrategyId: SETTLEMENT_STRATEGY_ID,
+            acceptablePrice: ACCEPTABLE_PRICE,
+            isReduceOnly: false,
+            trackingCode: TRACKING_CODE,
+            referrer: REFERRER
+        });
+
+        IEngine.ConditionalOrder memory co = IEngine.ConditionalOrder({
+            orderDetails: orderDetails,
+            signer: signer,
+            nonce: 0,
+            requireVerified: false,
+            trustedExecutor: address(this),
+            maxExecutorFee: type(uint256).max,
+            conditions: new bytes[](0)
+        });
+
+        bytes memory signature = getConditionalOrderSignature({
+            co: co,
+            privateKey: signerPrivateKey,
+            domainSeparator: engine.DOMAIN_SEPARATOR()
+        });
+
+        IPerpsMarketProxy.Data memory emptyOrder;
+
+        // only checking that the event was emitted and not the values
+        vm.expectEmit(true, true, true, false);
+        emit ConditionalOrderExecuted(emptyOrder, 0, 0);
+
+        engine.execute(co, signature, ZERO_CO_FEE);
     }
 
     function test_execute_CannotExecuteOrder_too_leveraged() public {
