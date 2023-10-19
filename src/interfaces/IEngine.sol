@@ -99,6 +99,14 @@ interface IEngine {
     /// @param amount the amount of eth withdrawn
     event EthWithdraw(uint128 indexed accountId, uint256 amount);
 
+    /// @notice emitted when a conditional order is executed
+    /// @param order the order commited to the perps market
+    /// that was defined in the conditional order
+    /// @param executorFee the fee paid to the executor for executing the conditional order
+    event ConditionalOrderExecuted(
+        IPerpsMarketProxy.Data order, uint256 synthetixFees, uint256 executorFee
+    );
+
     /*//////////////////////////////////////////////////////////////
                              AUTHENTICATION
     //////////////////////////////////////////////////////////////*/
@@ -292,12 +300,15 @@ interface IEngine {
     /// @param _signature the signature of the conditional order
     /// @param _fee the fee paid to executor for the conditional order
     /// @return retOrder the order committed
-    /// @return fees the fees paid for the order to Synthetix
+    /// @return synthetixFees the fees paid for the order to Synthetix
+    ///         and *NOT* the fees paid to the executor
     function execute(
         ConditionalOrder calldata _co,
         bytes calldata _signature,
         uint256 _fee
-    ) external returns (IPerpsMarketProxy.Data memory retOrder, uint256 fees);
+    )
+        external
+        returns (IPerpsMarketProxy.Data memory retOrder, uint256 synthetixFees);
 
     /// @notice checks if the conditional order can be executed
     /// @param _co the conditional order which details the order to be executed and the conditions to be met

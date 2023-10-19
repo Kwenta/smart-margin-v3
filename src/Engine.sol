@@ -442,7 +442,7 @@ contract Engine is IEngine, EIP712, EIP7412, ERC2771Context {
     )
         external
         override
-        returns (IPerpsMarketProxy.Data memory retOrder, uint256 fees)
+        returns (IPerpsMarketProxy.Data memory retOrder, uint256 synthetixFees)
     {
         /// @dev check: (1) fee does not exceed the max fee set by the conditional order
         /// @dev check: (2) fee does not exceed balance credited to the account
@@ -499,7 +499,7 @@ contract Engine is IEngine, EIP712, EIP7412, ERC2771Context {
         }
 
         /// @dev execute the order
-        (retOrder, fees) = _commitOrder({
+        (retOrder, synthetixFees) = _commitOrder({
             _perpsMarketId: _co.orderDetails.marketId,
             _accountId: _co.orderDetails.accountId,
             _sizeDelta: sizeDelta,
@@ -507,6 +507,12 @@ contract Engine is IEngine, EIP712, EIP7412, ERC2771Context {
             _acceptablePrice: _co.orderDetails.acceptablePrice,
             _trackingCode: _co.orderDetails.trackingCode,
             _referrer: _co.orderDetails.referrer
+        });
+
+        emit ConditionalOrderExecuted({
+            order: retOrder,
+            synthetixFees: synthetixFees,
+            executorFee: _fee
         });
     }
 
