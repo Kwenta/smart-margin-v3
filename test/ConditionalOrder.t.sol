@@ -233,7 +233,7 @@ contract VerifySigner is ConditionalOrderTest {
 }
 
 contract VerifySignature is ConditionalOrderTest {
-    function test_verifySignature() public {
+    function test_verifySignature(uint256 fuzzyNonce) public {
         IEngine.OrderDetails memory orderDetails = IEngine.OrderDetails({
             marketId: 0,
             accountId: 0,
@@ -248,7 +248,7 @@ contract VerifySignature is ConditionalOrderTest {
         IEngine.ConditionalOrder memory co = IEngine.ConditionalOrder({
             orderDetails: orderDetails,
             signer: signer,
-            nonce: 0,
+            nonce: fuzzyNonce,
             requireVerified: false,
             trustedExecutor: address(this),
             maxExecutorFee: type(uint256).max,
