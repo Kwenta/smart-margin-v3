@@ -45,6 +45,7 @@ contract ConditionalOrderSignature {
                 co.nonce,
                 co.requireVerified,
                 co.trustedExecutor,
+                co.maxExecutorFee,
                 co.conditions
             )
         );
