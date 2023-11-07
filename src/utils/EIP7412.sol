@@ -15,6 +15,9 @@ contract EIP7412 {
         address EIP7412Implementer,
         bytes calldata signedOffchainData
     ) external payable {
+        /// @custom:auditor this allows arbitrary calls 
+        /// to be made to any contract. This may be a security risk.
+        /// Please review the contract carefully.
         IERC7412(EIP7412Implementer).fulfillOracleQuery(signedOffchainData);
     }
 }
