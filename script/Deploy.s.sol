@@ -85,7 +85,7 @@ contract DeployBaseGoerli is Setup, BaseGoerliParameters {
     }
 }
 
-/// @dev steps to deploy and verify on Base Goerli:
+/// @dev steps to deploy and verify on Base Goerli for the Kwenta Synthetix V3 Fork:
 /// (1) load the variables in the .env file via `source .env`
 /// (2) run `forge script script/Deploy.s.sol:DeployBaseKwentaForkGoerli --rpc-url $BASE_GOERLI_RPC_URL --etherscan-api-key $BASESCAN_API_KEY --broadcast --verify -vvvv`
 contract DeployBaseKwentaForkGoerli is Setup, BaseGoerliKwentaForkParameters {
