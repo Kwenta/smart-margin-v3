@@ -12,6 +12,8 @@ import {BaseGoerliParameters} from
 import {BaseParameters} from "script/utils/parameters/BaseParameters.sol";
 import {OptimismGoerliParameters} from
     "script/utils/parameters/OptimismGoerliParameters.sol";
+import {BaseGoerliKwentaForkParameters} from
+    "script/utils/parameters/BaseGoerliKwentaForkParameters.sol";
 import {OptimismParameters} from
     "script/utils/parameters/OptimismParameters.sol";
 
@@ -68,6 +70,25 @@ contract DeployBase is Setup, BaseParameters {
 /// (1) load the variables in the .env file via `source .env`
 /// (2) run `forge script script/Deploy.s.sol:DeployBaseGoerli --rpc-url $BASE_GOERLI_RPC_URL --etherscan-api-key $BASESCAN_API_KEY --broadcast --verify -vvvv`
 contract DeployBaseGoerli is Setup, BaseGoerliParameters {
+    function run() public {
+        uint256 privateKey = vm.envUint("PRIVATE_KEY");
+        vm.startBroadcast(privateKey);
+
+        Setup.deploySystem({
+            perpsMarketProxy: PERPS_MARKET_PROXY,
+            spotMarketProxy: SPOT_MARKET_PROXY,
+            sUSDProxy: USD_PROXY,
+            oracle: PYTH
+        });
+
+        vm.stopBroadcast();
+    }
+}
+
+/// @dev steps to deploy and verify on Base Goerli:
+/// (1) load the variables in the .env file via `source .env`
+/// (2) run `forge script script/Deploy.s.sol:DeployBaseKwentaForkGoerli --rpc-url $BASE_GOERLI_RPC_URL --etherscan-api-key $BASESCAN_API_KEY --broadcast --verify -vvvv`
+contract DeployBaseKwentaForkGoerli is Setup, BaseGoerliKwentaForkParameters {
     function run() public {
         uint256 privateKey = vm.envUint("PRIVATE_KEY");
         vm.startBroadcast(privateKey);
