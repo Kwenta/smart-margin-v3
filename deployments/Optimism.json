@@ -1,4 +1,14 @@
 {
-    "Engine": "",
-    "TrustedMulticallForwarder": ""
+    "Synthetix": {
+        "Engine": "",
+        "TrustedMulticallForwarder": ""
+    },
+    "Andromeda": {
+        "Engine": "",
+        "TrustedMulticallForwarder": ""
+    },
+    "Kwenta": {
+        "Engine": "",
+        "TrustedMulticallForwarder": ""
+    }
 }
