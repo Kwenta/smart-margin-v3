@@ -1,4 +1,14 @@
 {
-    "Engine": "0x13eBcd3aD7B4Aa0595Fe57085C62c4f9CaDdB000",
-    "TrustedMulticallForwarder": "0x5c8bAfBEA063D2E99325bD3FEdb678a1bEf42FDb"
+    "Synthetix": {
+        "Engine": "0x13eBcd3aD7B4Aa0595Fe57085C62c4f9CaDdB000",
+        "TrustedMulticallForwarder": "0x5c8bAfBEA063D2E99325bD3FEdb678a1bEf42FDb"
+    },
+    "Andromeda": {
+        "Engine": "0x95fc22cd9Fe16C0c04DA36aB227b0CC00d56b61f",
+        "TrustedMulticallForwarder": "0xB502070B4EC27d6809A32fd15D0F635b2F20d595"
+    },
+    "Kwenta": {
+        "Engine": "",
+        "TrustedMulticallForwarder": ""
+    }
 }
