@@ -1,4 +1,10 @@
 {
-    "Engine": "0x13eBcd3aD7B4Aa0595Fe57085C62c4f9CaDdB000",
-    "TrustedMulticallForwarder": "0x5c8bAfBEA063D2E99325bD3FEdb678a1bEf42FDb"
+    "Synthetix": {
+        "Engine": "0x13eBcd3aD7B4Aa0595Fe57085C62c4f9CaDdB000",
+        "TrustedMulticallForwarder": "0x5c8bAfBEA063D2E99325bD3FEdb678a1bEf42FDb"
+    },
+    "KwentaFork": {
+        "Engine": "0xa55a8d00a05145185dbd11a94321b67eb478e164",
+        "TrustedMulticallForwarder": "0xab3d53e788c64c074b4efd7fce993b598e51660a"
+    }
 }
