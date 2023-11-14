@@ -69,7 +69,7 @@ contract DeployBase_Synthetix is Setup, BaseParameters {
 /// @dev steps to deploy and verify on Base Goerli:
 /// (1) load the variables in the .env file via `source .env`
 /// (2) run `forge script script/Deploy.s.sol:DeployBaseGoerli_Synthetix --rpc-url $BASE_GOERLI_RPC_URL --etherscan-api-key $BASESCAN_API_KEY --broadcast --verify -vvvv`
-contract DeployBaseGoerli_Synthetix  is Setup, BaseGoerliParameters {
+contract DeployBaseGoerli_Synthetix is Setup, BaseGoerliParameters {
     function run() public {
         uint256 privateKey = vm.envUint("PRIVATE_KEY");
         vm.startBroadcast(privateKey);
@@ -88,7 +88,10 @@ contract DeployBaseGoerli_Synthetix  is Setup, BaseGoerliParameters {
 /// @dev steps to deploy and verify on Base Goerli for the Kwenta Synthetix V3 Fork:
 /// (1) load the variables in the .env file via `source .env`
 /// (2) run `forge script script/Deploy.s.sol:DeployBaseGoerli_KwentaFork --rpc-url $BASE_GOERLI_RPC_URL --etherscan-api-key $BASESCAN_API_KEY --broadcast --verify -vvvv`
-contract DeployBaseGoerli_KwentaFork is Setup, BaseGoerliKwentaForkParameters {
+contract DeployBaseGoerli_KwentaFork is
+    Setup,
+    BaseGoerliKwentaForkParameters
+{
     function run() public {
         uint256 privateKey = vm.envUint("PRIVATE_KEY");
         vm.startBroadcast(privateKey);
