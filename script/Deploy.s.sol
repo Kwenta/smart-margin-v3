@@ -49,8 +49,8 @@ contract Setup is Script {
 
 /// @dev steps to deploy and verify on Base:
 /// (1) load the variables in the .env file via `source .env`
-/// (2) run `forge script script/Deploy.s.sol:DeployBase --rpc-url $BASE_RPC_URL --etherscan-api-key $BASESCAN_API_KEY --broadcast --verify -vvvv`
-contract DeployBase is Setup, BaseParameters {
+/// (2) run `forge script script/Deploy.s.sol:DeployBase_Synthetix --rpc-url $BASE_RPC_URL --etherscan-api-key $BASESCAN_API_KEY --broadcast --verify -vvvv`
+contract DeployBase_Synthetix is Setup, BaseParameters {
     function run() public {
         uint256 privateKey = vm.envUint("PRIVATE_KEY");
         vm.startBroadcast(privateKey);
@@ -68,8 +68,8 @@ contract DeployBase is Setup, BaseParameters {
 
 /// @dev steps to deploy and verify on Base Goerli:
 /// (1) load the variables in the .env file via `source .env`
-/// (2) run `forge script script/Deploy.s.sol:DeployBaseGoerli --rpc-url $BASE_GOERLI_RPC_URL --etherscan-api-key $BASESCAN_API_KEY --broadcast --verify -vvvv`
-contract DeployBaseGoerli is Setup, BaseGoerliParameters {
+/// (2) run `forge script script/Deploy.s.sol:DeployBaseGoerli_Synthetix --rpc-url $BASE_GOERLI_RPC_URL --etherscan-api-key $BASESCAN_API_KEY --broadcast --verify -vvvv`
+contract DeployBaseGoerli_Synthetix  is Setup, BaseGoerliParameters {
     function run() public {
         uint256 privateKey = vm.envUint("PRIVATE_KEY");
         vm.startBroadcast(privateKey);
@@ -88,7 +88,7 @@ contract DeployBaseGoerli is Setup, BaseGoerliParameters {
 /// @dev steps to deploy and verify on Base Goerli for the Kwenta Synthetix V3 Fork:
 /// (1) load the variables in the .env file via `source .env`
 /// (2) run `forge script script/Deploy.s.sol:DeployBaseKwentaForkGoerli --rpc-url $BASE_GOERLI_RPC_URL --etherscan-api-key $BASESCAN_API_KEY --broadcast --verify -vvvv`
-contract DeployBaseKwentaForkGoerli is Setup, BaseGoerliKwentaForkParameters {
+contract DeployBaseGoerli_KwentaFork is Setup, BaseGoerliKwentaForkParameters {
     function run() public {
         uint256 privateKey = vm.envUint("PRIVATE_KEY");
         vm.startBroadcast(privateKey);
@@ -106,8 +106,8 @@ contract DeployBaseKwentaForkGoerli is Setup, BaseGoerliKwentaForkParameters {
 
 /// @dev steps to deploy and verify on Optimism:
 /// (1) load the variables in the .env file via `source .env`
-/// (2) run `forge script script/Deploy.s.sol:DeployOptimism --rpc-url $OPTIMISM_RPC_URL --etherscan-api-key $OPTIMISM_ETHERSCAN_API_KEY --broadcast --verify -vvvv`
-contract DeployOptimism is Setup, OptimismParameters {
+/// (2) run `forge script script/Deploy.s.sol:DeployOptimism_Synthetix --rpc-url $OPTIMISM_RPC_URL --etherscan-api-key $OPTIMISM_ETHERSCAN_API_KEY --broadcast --verify -vvvv`
+contract DeployOptimism_Synthetix is Setup, OptimismParameters {
     function run() public {
         uint256 privateKey = vm.envUint("PRIVATE_KEY");
         vm.startBroadcast(privateKey);
@@ -125,8 +125,8 @@ contract DeployOptimism is Setup, OptimismParameters {
 
 /// @dev steps to deploy and verify on Optimism Goerli:
 /// (1) load the variables in the .env file via `source .env`
-/// (2) run `forge script script/Deploy.s.sol:DeployOptimismGoerli --rpc-url $OPTIMISM_GOERLI_RPC_URL --etherscan-api-key $OPTIMISM_ETHERSCAN_API_KEY --broadcast --verify -vvvv`
-contract DeployOptimismGoerli is Setup, OptimismGoerliParameters {
+/// (2) run `forge script script/Deploy.s.sol:DeployOptimismGoerli_Synthetix --rpc-url $OPTIMISM_GOERLI_RPC_URL --etherscan-api-key $OPTIMISM_ETHERSCAN_API_KEY --broadcast --verify -vvvv`
+contract DeployOptimismGoerli_Synthetix is Setup, OptimismGoerliParameters {
     function run() public {
         uint256 privateKey = vm.envUint("PRIVATE_KEY");
         vm.startBroadcast(privateKey);
