@@ -35,8 +35,11 @@ contract Engine is IEngine, EIP712, EIP7412, ERC2771Context {
     bytes32 internal constant PERPS_COMMIT_ASYNC_ORDER_PERMISSION =
         "PERPS_COMMIT_ASYNC_ORDER";
 
-    /// @notice "0" synthMarketId represents sUSD in Synthetix v3
+    /// @notice "0" synthMarketId represents $sUSD in Synthetix v3
     uint128 internal constant USD_SYNTH_ID = 0;
+
+    /// @notice spot market name of $sUSDC in Synthetix v3
+    string internal constant SUSDC_SPOT_MARKET_NAME = "sUSDC Spot Market";
 
     /// @notice max number of conditions that can be defined for a conditional order
     uint256 internal constant MAX_CONDITIONS = 8;
@@ -72,8 +75,11 @@ contract Engine is IEngine, EIP712, EIP7412, ERC2771Context {
     /// @notice Synthetix v3 spot market proxy contract
     ISpotMarketProxy internal immutable SPOT_MARKET_PROXY;
 
-    /// @notice Synthetix v3 sUSD contract
+    /// @notice Synthetix v3 $sUSD contract
     IERC20 internal immutable SUSD;
+
+    /// @notice $USDC token contract
+    IERC20 internal immutable USDC;
 
     /*//////////////////////////////////////////////////////////////
                                  STATE
@@ -96,26 +102,30 @@ contract Engine is IEngine, EIP712, EIP7412, ERC2771Context {
     /// @notice Constructs the Engine contract
     /// @param _perpsMarketProxy Synthetix v3 perps market proxy contract
     /// @param _spotMarketProxy Synthetix v3 spot market proxy contract
-    /// @param _sUSDProxy Synthetix v3 sUSD contract
+    /// @param _sUSDProxy Synthetix v3 $sUSD contract
     /// @param _oracle pyth oracle contract used to get asset prices
     /// @param _trustedForwarder trusted forwarder contract used for meta transactions
+    /// @param _usdc address of the $USDC contract
     constructor(
         address _perpsMarketProxy,
         address _spotMarketProxy,
         address _sUSDProxy,
         address _oracle,
-        address _trustedForwarder
+        address _trustedForwarder,
+        address _usdc
     ) ERC2771Context(_trustedForwarder) {
         if (_perpsMarketProxy == address(0)) revert ZeroAddress();
         if (_spotMarketProxy == address(0)) revert ZeroAddress();
         if (_sUSDProxy == address(0)) revert ZeroAddress();
         if (_oracle == address(0)) revert ZeroAddress();
         if (_trustedForwarder == address(0)) revert ZeroAddress();
+        if (_usdc == address(0)) revert ZeroAddress();
 
         PERPS_MARKET_PROXY = IPerpsMarketProxy(_perpsMarketProxy);
         SPOT_MARKET_PROXY = ISpotMarketProxy(_spotMarketProxy);
         SUSD = IERC20(_sUSDProxy);
         ORACLE = IPyth(_oracle);
+        USDC = IERC20(_usdc);
     }
 
     /*//////////////////////////////////////////////////////////////
@@ -314,6 +324,95 @@ contract Engine is IEngine, EIP712, EIP7412, ERC2771Context {
     //////////////////////////////////////////////////////////////*/
 
     /// @inheritdoc IEngine
+    function zap(
+        uint128 _accountId,
+        uint128 _synthMarketId,
+        int256 _amount,
+        address _referrer
+    ) external override {
+        address caller = _msgSender();
+
+        /// @dev ensure specified synth market id is for $sUSDC
+        if (SPOT_MARKET_PROXY.name(_synthMarketId) != SUSDC_SPOT_MARKET_NAME) {
+            revert ZapFailed();
+        }
+
+        // define $sUSDC synth contract
+        IERC20 sUSDC = IERC20(_getSynthAddress(_synthMarketId));
+
+        // define $sUSD synth contract
+        IERC20 sUSD = IERC20(_getSynthAddress(USD_SYNTH_ID));
+
+        if (_amount > 0) {
+            /// @dev given the amount is positive, simply casting (int -> uint) is safe
+            USDC.transferFrom(caller, address(this), uint256(_amount));
+
+            // approve the spot market proxy to spend the $USDC
+            USDC.approve(address(SPOT_MARKET_PROXY), uint256(_amount));
+
+            // wrap the $USDC into $sUSDC
+            /// @dev wrapAmount == minAmountReceived to ensure a 1:1 exchange rate
+            SPOT_MARKET_PROXY.wrap({
+                marketId: _synthMarketId,
+                wrapAmount: uint256(_amount),
+                minAmountReceived: uint256(_amount)
+            });
+
+            // approve the spot market proxy to spend the $sUSDC
+            sUSDC.approve(address(SPOT_MARKET_PROXY), uint256(_amount));
+
+            // sell the $sUSDC for $sUSD
+            SPOT_MARKET_PROXY.sell({
+                marketId: _synthMarketId,
+                synthAmount: uint256(_amount),
+                minUsdAmount: uint256(_amount),
+                referrer: _referrer
+            });
+
+            // approve the perps market proxy to spend the $sUSD
+            sUSD.approve(address(PERPS_MARKET_PROXY), uint256(_amount));
+
+            // deposit the $sUSD into the perps market proxy
+            PERPS_MARKET_PROXY.modifyCollateral(
+                _accountId, USD_SYNTH_ID, _amount
+            );
+        } else {
+            if (!isAccountOwner(_accountId, caller)) revert Unauthorized();
+
+            // withdraw the $sUSD from the perps market proxy
+            PERPS_MARKET_PROXY.modifyCollateral(
+                _accountId, USD_SYNTH_ID, _amount
+            );
+
+            // approve the spot market proxy to spend the $sUSD
+            /// @dev given the amount is negative, simply casting (int -> uint) is unsafe, thus we use .abs()
+            sUSD.approve(address(SPOT_MARKET_PROXY), _amount.abs256());
+
+            // sell the $sUSD for $sUSDC
+            SPOT_MARKET_PROXY.buy({
+                marketId: _synthMarketId,
+                synthAmount: _amount.abs256(),
+                minUsdAmount: _amount.abs256(),
+                referrer: _referrer
+            });
+
+            // approve the spot market proxy to spend the $sUSDC
+            sUSDC.approve(address(SPOT_MARKET_PROXY), _amount.abs256());
+
+            // unwrap the $sUSDC into $USDC
+            /// @dev unwrapAmount == minAmountReceived to ensure a 1:1 exchange rate
+            SPOT_MARKET_PROXY.unwrap({
+                marketId: _synthMarketId,
+                unwrapAmount: _amount.abs256(),
+                minAmountReceived: _amount.abs256()
+            });
+
+            // transfer the $USDC to the caller
+            USDC.transfer(caller, _amount.abs256());
+        }
+    }
+
+    /// @inheritdoc IEngine
     function modifyCollateral(
         uint128 _accountId,
         uint128 _synthMarketId,
@@ -342,7 +441,7 @@ contract Engine is IEngine, EIP712, EIP7412, ERC2771Context {
         uint128 _synthMarketId,
         int256 _amount
     ) internal {
-        // @dev given the amount is positive, simply casting (int -> uint) is safe
+        /// @dev given the amount is positive, simply casting (int -> uint) is safe
         _synth.transferFrom(_from, address(this), uint256(_amount));
 
         _synth.approve(address(PERPS_MARKET_PROXY), uint256(_amount));
