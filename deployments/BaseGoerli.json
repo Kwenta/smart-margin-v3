@@ -4,8 +4,8 @@
         "TrustedMulticallForwarder": "0xB49d495c5aFC5e5CE113c1dCb016771925034707"
     },
     "Andromeda": {
-        "Engine": "0x8738276bcA829e89a840FF1bb7f75D630B74dFAC",
-        "TrustedMulticallForwarder": "0xBaA24D0839B9Bb2240CA8AABa7576664f1340bcA"
+        "Engine": "0xDD13e7e5C7bc8ca2b2d5fF9C2C37700E292C11D2",
+        "TrustedMulticallForwarder": "0x5A46492912EA26C48991e9FD74f67e840dDe2f02"
     },
     "Kwenta": {
         "Engine": "0x0b5456EB6eE169C533a931aD2a420237ADf3Da49",
