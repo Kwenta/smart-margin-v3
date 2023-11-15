@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-pragma solidity 0.8.18;
+pragma solidity 0.8.20;
 
 /// @notice EIP-712 typed structured data hashing and signing helpers for Kwenta Smart Margin v3: Engine contract
 /// @author JaredBorders (jaredborders@pm.me)

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-pragma solidity 0.8.18;
+pragma solidity 0.8.20;
 
 /// @title Consume prices from the Pyth Network (https://pyth.network/).
 /// @dev Please refer to the guidance at https://docs.pyth.network/consumers/best-practices for how to consume prices safely.

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-pragma solidity 0.8.18;
+pragma solidity 0.8.20;
 
 /// @title ERC-7412 Off-Chain Data Retrieval Contract
 /// @author Synthetix
