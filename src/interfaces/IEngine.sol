@@ -180,11 +180,13 @@ interface IEngine {
     /// @notice "zap" $USDC for $sUSD and deposit the $sUSD into the perps market proxy
     /// or withdraw the $sUSD from the perps market proxy and "zap" $sUSD for $USDC
     /// @param _accountId the account id to modify collateral for
+    /// @param _usdc the address of the $USDC contract
     /// @param _synthMarketId the id of the synth market (i.e. $sUSDC)
     /// @param _amount the amount of $USDC to deposit/withdraw
     /// @param _referrer the address of the referrer
     function zap(
         uint128 _accountId,
+        address _usdc,
         uint128 _synthMarketId,
         int256 _amount,
         address _referrer

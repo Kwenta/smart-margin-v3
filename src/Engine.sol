@@ -39,7 +39,8 @@ contract Engine is IEngine, EIP712, EIP7412, ERC2771Context {
     uint128 internal constant USD_SYNTH_ID = 0;
 
     /// @notice spot market name of $sUSDC in Synthetix v3
-    string internal constant SUSDC_SPOT_MARKET_NAME = "sUSDC Spot Market";
+    bytes32 internal constant SUSDC_SPOT_MARKET_NAME =
+        keccak256(abi.encodePacked("sUSDC Spot Market"));
 
     /// @notice max number of conditions that can be defined for a conditional order
     uint256 internal constant MAX_CONDITIONS = 8;
@@ -78,9 +79,6 @@ contract Engine is IEngine, EIP712, EIP7412, ERC2771Context {
     /// @notice Synthetix v3 $sUSD contract
     IERC20 internal immutable SUSD;
 
-    /// @notice $USDC token contract
-    IERC20 internal immutable USDC;
-
     /*//////////////////////////////////////////////////////////////
                                  STATE
     //////////////////////////////////////////////////////////////*/
@@ -105,27 +103,23 @@ contract Engine is IEngine, EIP712, EIP7412, ERC2771Context {
     /// @param _sUSDProxy Synthetix v3 $sUSD contract
     /// @param _oracle pyth oracle contract used to get asset prices
     /// @param _trustedForwarder trusted forwarder contract used for meta transactions
-    /// @param _usdc address of the $USDC contract
     constructor(
         address _perpsMarketProxy,
         address _spotMarketProxy,
         address _sUSDProxy,
         address _oracle,
-        address _trustedForwarder,
-        address _usdc
+        address _trustedForwarder
     ) ERC2771Context(_trustedForwarder) {
         if (_perpsMarketProxy == address(0)) revert ZeroAddress();
         if (_spotMarketProxy == address(0)) revert ZeroAddress();
         if (_sUSDProxy == address(0)) revert ZeroAddress();
         if (_oracle == address(0)) revert ZeroAddress();
         if (_trustedForwarder == address(0)) revert ZeroAddress();
-        if (_usdc == address(0)) revert ZeroAddress();
 
         PERPS_MARKET_PROXY = IPerpsMarketProxy(_perpsMarketProxy);
         SPOT_MARKET_PROXY = ISpotMarketProxy(_spotMarketProxy);
         SUSD = IERC20(_sUSDProxy);
         ORACLE = IPyth(_oracle);
-        USDC = IERC20(_usdc);
     }
 
     /*//////////////////////////////////////////////////////////////
@@ -326,6 +320,7 @@ contract Engine is IEngine, EIP712, EIP7412, ERC2771Context {
     /// @inheritdoc IEngine
     function zap(
         uint128 _accountId,
+        address _usdc,
         uint128 _synthMarketId,
         int256 _amount,
         address _referrer
@@ -333,9 +328,15 @@ contract Engine is IEngine, EIP712, EIP7412, ERC2771Context {
         address caller = _msgSender();
 
         /// @dev ensure specified synth market id is for $sUSDC
-        if (SPOT_MARKET_PROXY.name(_synthMarketId) != SUSDC_SPOT_MARKET_NAME) {
+        if (
+            keccak256(abi.encodePacked(SPOT_MARKET_PROXY.name(_synthMarketId)))
+                != SUSDC_SPOT_MARKET_NAME
+        ) {
             revert ZapFailed();
         }
+
+        // define $USDC contract
+        IERC20 USDC = IERC20(_usdc);
 
         // define $sUSDC synth contract
         IERC20 sUSDC = IERC20(_getSynthAddress(_synthMarketId));
@@ -345,7 +346,9 @@ contract Engine is IEngine, EIP712, EIP7412, ERC2771Context {
 
         if (_amount > 0) {
             /// @dev given the amount is positive, simply casting (int -> uint) is safe
-            USDC.transferFrom(caller, address(this), uint256(_amount));
+            if (!USDC.transferFrom(caller, address(this), uint256(_amount))) {
+                revert ZapFailed();
+            }
 
             // approve the spot market proxy to spend the $USDC
             USDC.approve(address(SPOT_MARKET_PROXY), uint256(_amount));
@@ -391,8 +394,8 @@ contract Engine is IEngine, EIP712, EIP7412, ERC2771Context {
             // sell the $sUSD for $sUSDC
             SPOT_MARKET_PROXY.buy({
                 marketId: _synthMarketId,
-                synthAmount: _amount.abs256(),
-                minUsdAmount: _amount.abs256(),
+                usdAmount: _amount.abs256(),
+                minAmountReceived: _amount.abs256(),
                 referrer: _referrer
             });
 
@@ -408,7 +411,9 @@ contract Engine is IEngine, EIP712, EIP7412, ERC2771Context {
             });
 
             // transfer the $USDC to the caller
-            USDC.transfer(caller, _amount.abs256());
+            if (!USDC.transfer(caller, _amount.abs256())) {
+                revert ZapFailed();
+            }
         }
     }
 
