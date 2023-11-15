@@ -1,14 +1,14 @@
 {
     "Synthetix": {
-        "Engine": "0x13eBcd3aD7B4Aa0595Fe57085C62c4f9CaDdB000",
-        "TrustedMulticallForwarder": "0x5c8bAfBEA063D2E99325bD3FEdb678a1bEf42FDb"
+        "Engine": "0x0181f397fB32CAD27b119cbE31Ab8EcaF44B756b",
+        "TrustedMulticallForwarder": "0xB49d495c5aFC5e5CE113c1dCb016771925034707"
     },
     "Andromeda": {
-        "Engine": "0x95fc22cd9Fe16C0c04DA36aB227b0CC00d56b61f",
-        "TrustedMulticallForwarder": "0xB502070B4EC27d6809A32fd15D0F635b2F20d595"
+        "Engine": "0x8738276bcA829e89a840FF1bb7f75D630B74dFAC",
+        "TrustedMulticallForwarder": "0xBaA24D0839B9Bb2240CA8AABa7576664f1340bcA"
     },
     "Kwenta": {
-        "Engine": "0xa55a8d00a05145185dbd11a94321b67eb478e164",
-        "TrustedMulticallForwarder": "0xab3d53e788c64c074b4efd7fce993b598e51660a"
+        "Engine": "0x0b5456EB6eE169C533a931aD2a420237ADf3Da49",
+        "TrustedMulticallForwarder": "0xe68Faa95D54bf335E67128c4528A551eaB3AF9fE"
     }
 }

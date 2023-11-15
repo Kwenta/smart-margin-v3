@@ -1,7 +1,7 @@
 {
     "Synthetix": {
-        "Engine": "0x3F380f09c14614982637C1d502C6f26F244eC6c3",
-        "TrustedMulticallForwarder": "0x0C15CB4880684d8E35e97FbFf1630889e4501859"
+        "Engine": "0x06198fCE58194C0cB7AB420D6da791789cE01F9d",
+        "TrustedMulticallForwarder": "0x9Fb8Fa76d34ad7b03A945f8335D3Ab24637091d6"
     },
     "Andromeda": {
         "Engine": "",
