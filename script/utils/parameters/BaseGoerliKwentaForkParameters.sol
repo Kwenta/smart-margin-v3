@@ -12,4 +12,6 @@ contract BaseGoerliKwentaForkParameters {
         0xD3bcDae94B0c2EF16d1c43d29c23b1735d864fC6;
 
     address public constant PYTH = 0x5955C1478F0dAD753C7E2B4dD1b4bC530C64749f;
+
+    address public constant USDC = 0x2e9F75DF8839ff192Da27e977CD154FD1EAE03cf;
 }

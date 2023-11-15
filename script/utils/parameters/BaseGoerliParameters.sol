@@ -13,6 +13,8 @@ contract BaseGoerliParameters {
 
     address public constant PYTH = 0x5955C1478F0dAD753C7E2B4dD1b4bC530C64749f;
 
+    address public constant USDC = 0x2e9F75DF8839ff192Da27e977CD154FD1EAE03cf;
+
     address public constant PERPS_MARKET_PROXY_ANDROMEDA =
         0xEED61f0CB02f3B38923b1b6EAa939D5f04f431b6;
 

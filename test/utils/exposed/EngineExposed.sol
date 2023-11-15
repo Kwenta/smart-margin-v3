@@ -11,14 +11,16 @@ contract EngineExposed is Engine {
         address _spotMarketProxy,
         address _sUSDProxy,
         address _oracle,
-        address _trustedForwarder
+        address _trustedForwarder,
+        address _usdc
     )
         Engine(
             _perpsMarketProxy,
             _spotMarketProxy,
             _sUSDProxy,
             _oracle,
-            _trustedForwarder
+            _trustedForwarder,
+            _usdc
         )
     {}
 

@@ -27,7 +27,8 @@ contract Setup is Script {
         address perpsMarketProxy,
         address spotMarketProxy,
         address sUSDProxy,
-        address oracle
+        address oracle,
+        address usdc
     )
         public
         returns (
@@ -42,7 +43,8 @@ contract Setup is Script {
             _spotMarketProxy: spotMarketProxy,
             _sUSDProxy: sUSDProxy,
             _oracle: oracle,
-            _trustedForwarder: address(trustedForwarderContract)
+            _trustedForwarder: address(trustedForwarderContract),
+            _usdc: usdc
         });
     }
 }
@@ -59,7 +61,8 @@ contract DeployBase_Synthetix is Setup, BaseParameters {
             perpsMarketProxy: PERPS_MARKET_PROXY,
             spotMarketProxy: SPOT_MARKET_PROXY,
             sUSDProxy: USD_PROXY,
-            oracle: PYTH
+            oracle: PYTH,
+            usdc: USDC
         });
 
         vm.stopBroadcast();
@@ -78,7 +81,8 @@ contract DeployBaseGoerli_Synthetix is Setup, BaseGoerliParameters {
             perpsMarketProxy: PERPS_MARKET_PROXY,
             spotMarketProxy: SPOT_MARKET_PROXY,
             sUSDProxy: USD_PROXY,
-            oracle: PYTH
+            oracle: PYTH,
+            usdc: USDC
         });
 
         vm.stopBroadcast();
@@ -100,7 +104,8 @@ contract DeployBaseGoerli_KwentaFork is
             perpsMarketProxy: PERPS_MARKET_PROXY,
             spotMarketProxy: SPOT_MARKET_PROXY,
             sUSDProxy: USD_PROXY,
-            oracle: PYTH
+            oracle: PYTH,
+            usdc: USDC
         });
 
         vm.stopBroadcast();
@@ -119,7 +124,8 @@ contract DeployBaseGoerli_Andromeda is Setup, BaseGoerliParameters {
             perpsMarketProxy: PERPS_MARKET_PROXY_ANDROMEDA,
             spotMarketProxy: SPOT_MARKET_PROXY_ANDROMEDA,
             sUSDProxy: USD_PROXY_ANDROMEDA,
-            oracle: PYTH
+            oracle: PYTH,
+            usdc: USDC
         });
 
         vm.stopBroadcast();
@@ -138,7 +144,8 @@ contract DeployOptimism_Synthetix is Setup, OptimismParameters {
             perpsMarketProxy: PERPS_MARKET_PROXY,
             spotMarketProxy: SPOT_MARKET_PROXY,
             sUSDProxy: USD_PROXY,
-            oracle: PYTH
+            oracle: PYTH,
+            usdc: USDC
         });
 
         vm.stopBroadcast();
@@ -157,7 +164,8 @@ contract DeployOptimismGoerli_Synthetix is Setup, OptimismGoerliParameters {
             perpsMarketProxy: PERPS_MARKET_PROXY,
             spotMarketProxy: SPOT_MARKET_PROXY,
             sUSDProxy: USD_PROXY,
-            oracle: PYTH
+            oracle: PYTH,
+            usdc: USDC
         });
 
         vm.stopBroadcast();

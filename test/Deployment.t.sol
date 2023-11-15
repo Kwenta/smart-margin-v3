@@ -20,7 +20,8 @@ contract DeploymentTest is Test, Setup {
             perpsMarketProxy: address(0x1),
             spotMarketProxy: address(0x2),
             sUSDProxy: address(0x3),
-            oracle: address(0x4)
+            oracle: address(0x4),
+            usdc: address(0x5)
         });
 
         assertTrue(address(engine) != address(0x0));
@@ -32,7 +33,8 @@ contract DeploymentTest is Test, Setup {
             perpsMarketProxy: address(0),
             spotMarketProxy: address(0x2),
             sUSDProxy: address(0x3),
-            oracle: address(0x4)
+            oracle: address(0x4),
+            usdc: address(0x5)
         }) {} catch (bytes memory reason) {
             assertEq(bytes4(reason), IEngine.ZeroAddress.selector);
         }
@@ -43,7 +45,8 @@ contract DeploymentTest is Test, Setup {
             perpsMarketProxy: address(0x1),
             spotMarketProxy: address(0),
             sUSDProxy: address(0x3),
-            oracle: address(0x4)
+            oracle: address(0x4),
+            usdc: address(0x5)
         }) {} catch (bytes memory reason) {
             assertEq(bytes4(reason), IEngine.ZeroAddress.selector);
         }
@@ -54,7 +57,8 @@ contract DeploymentTest is Test, Setup {
             perpsMarketProxy: address(0x1),
             spotMarketProxy: address(0x2),
             sUSDProxy: address(0),
-            oracle: address(0x4)
+            oracle: address(0x4),
+            usdc: address(0x5)
         }) {} catch (bytes memory reason) {
             assertEq(bytes4(reason), IEngine.ZeroAddress.selector);
         }
@@ -65,7 +69,8 @@ contract DeploymentTest is Test, Setup {
             perpsMarketProxy: address(0x1),
             spotMarketProxy: address(0x2),
             sUSDProxy: address(0x3),
-            oracle: address(0)
+            oracle: address(0),
+            usdc: address(0x5)
         }) {} catch (bytes memory reason) {
             assertEq(bytes4(reason), IEngine.ZeroAddress.selector);
         }
@@ -79,7 +84,20 @@ contract DeploymentTest is Test, Setup {
             _spotMarketProxy: address(0x2),
             _sUSDProxy: address(0x3),
             _oracle: address(0x4),
-            _trustedForwarder: address(0)
+            _trustedForwarder: address(0),
+            _usdc: address(0x5)
+        }) {} catch (bytes memory reason) {
+            assertEq(bytes4(reason), IEngine.ZeroAddress.selector);
+        }
+    }
+
+    function test_deploy_usdc_zero_address() public {
+        try setup.deploySystem({
+            perpsMarketProxy: address(0x1),
+            spotMarketProxy: address(0x2),
+            sUSDProxy: address(0x3),
+            oracle: address(0x4),
+            usdc: address(0)
         }) {} catch (bytes memory reason) {
             assertEq(bytes4(reason), IEngine.ZeroAddress.selector);
         }

@@ -79,6 +79,9 @@ contract Engine is IEngine, EIP712, EIP7412, ERC2771Context {
     /// @notice Synthetix v3 $sUSD contract
     IERC20 internal immutable SUSD;
 
+    /// @notice $USDC contract
+    IERC20 internal immutable USDC;
+
     /*//////////////////////////////////////////////////////////////
                                  STATE
     //////////////////////////////////////////////////////////////*/
@@ -103,23 +106,27 @@ contract Engine is IEngine, EIP712, EIP7412, ERC2771Context {
     /// @param _sUSDProxy Synthetix v3 $sUSD contract
     /// @param _oracle pyth oracle contract used to get asset prices
     /// @param _trustedForwarder trusted forwarder contract used for meta transactions
+    /// @param _usdc $USDC contract address
     constructor(
         address _perpsMarketProxy,
         address _spotMarketProxy,
         address _sUSDProxy,
         address _oracle,
-        address _trustedForwarder
+        address _trustedForwarder,
+        address _usdc
     ) ERC2771Context(_trustedForwarder) {
         if (_perpsMarketProxy == address(0)) revert ZeroAddress();
         if (_spotMarketProxy == address(0)) revert ZeroAddress();
         if (_sUSDProxy == address(0)) revert ZeroAddress();
         if (_oracle == address(0)) revert ZeroAddress();
         if (_trustedForwarder == address(0)) revert ZeroAddress();
+        if (_usdc == address(0)) revert ZeroAddress();
 
         PERPS_MARKET_PROXY = IPerpsMarketProxy(_perpsMarketProxy);
         SPOT_MARKET_PROXY = ISpotMarketProxy(_spotMarketProxy);
         SUSD = IERC20(_sUSDProxy);
         ORACLE = IPyth(_oracle);
+        USDC = IERC20(_usdc);
     }
 
     /*//////////////////////////////////////////////////////////////
@@ -320,7 +327,6 @@ contract Engine is IEngine, EIP712, EIP7412, ERC2771Context {
     /// @inheritdoc IEngine
     function zap(
         uint128 _accountId,
-        address _usdc,
         uint128 _synthMarketId,
         int256 _amount,
         address _referrer
@@ -334,9 +340,6 @@ contract Engine is IEngine, EIP712, EIP7412, ERC2771Context {
         ) {
             revert ZapFailed();
         }
-
-        // define $USDC contract
-        IERC20 USDC = IERC20(_usdc);
 
         // define $sUSDC synth contract
         IERC20 sUSDC = IERC20(_getSynthAddress(_synthMarketId));

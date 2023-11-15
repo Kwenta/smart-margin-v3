@@ -11,4 +11,6 @@ contract OptimismParameters {
         0xb2F30A7C980f052f02563fb518dcc39e6bf38175;
 
     address public constant PYTH = 0xff1a0f4744e8582DF1aE09D5611b887B6a12925C;
+
+    address public constant USDC = 0x0b2C639c533813f4Aa9D7837CAf62653d097Ff85;
 }
