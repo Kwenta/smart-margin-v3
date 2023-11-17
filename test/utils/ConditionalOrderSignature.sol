@@ -41,7 +41,7 @@ contract ConditionalOrderSignature {
         // to create an array of fixed length bytes32 hashes
         bytes32[] memory hashedConditions;
         for (uint256 i = 0; i < co.conditions.length; i++) {
-            hashedConditions[i] = keccak256(abi.encode(co.conditions[i]));
+            hashedConditions[i] = keccak256(co.conditions[i]);
         }
 
         bytes32 conditionalOrderHash = keccak256(
