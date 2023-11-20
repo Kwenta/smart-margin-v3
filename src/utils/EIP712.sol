@@ -21,7 +21,7 @@ contract EIP712 {
     bytes32 internal constant _DOMAIN_TYPEHASH =
         0x8b73c3c69bb8fe3d512ecc4cf759cc79239f7b179b0ffacaa9a75d522b39400f;
 
-    address private immutable _cachedThis;
+    uint256 private immutable _cachedThis;
     uint256 private immutable _cachedChainId;
     bytes32 private immutable _cachedNameHash;
     bytes32 private immutable _cachedVersionHash;
@@ -36,7 +36,7 @@ contract EIP712 {
     /// or if the chain id changes due to a hard fork,
     /// the domain separator will be seamlessly calculated on-the-fly.
     constructor() {
-        _cachedThis = address(this);
+        _cachedThis = uint256(uint160(address(this)));
         _cachedChainId = block.chainid;
 
         (string memory name, string memory version) = _domainNameAndVersion();
@@ -172,7 +172,7 @@ contract EIP712 {
         returns (bool result)
     {
         uint256 cachedChainId = _cachedChainId;
-        address cachedThis = _cachedThis;
+        uint256 cachedThis = _cachedThis;
         /// @solidity memory-safe-assembly
         assembly {
             result :=
