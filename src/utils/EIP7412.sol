@@ -12,7 +12,7 @@ contract EIP7412 {
     /// @param signedOffchainData The data that was returned
     /// from the off-chain interface, signed by the oracle
     function fulfillOracleQuery(
-        address EIP7412Implementer,
+        address payable EIP7412Implementer,
         bytes calldata signedOffchainData
     ) external payable {
         /// @custom:auditor this allows arbitrary calls
