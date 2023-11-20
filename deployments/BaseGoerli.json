@@ -8,7 +8,7 @@
         "TrustedMulticallForwarder": "0xBaA24D0839B9Bb2240CA8AABa7576664f1340bcA"
     },
     "Kwenta": {
-        "Engine": "0x0b5456EB6eE169C533a931aD2a420237ADf3Da49",
-        "TrustedMulticallForwarder": "0xe68Faa95D54bf335E67128c4528A551eaB3AF9fE"
+        "Engine": "0xEfc2aAE2eBABcD242b210AACc6A121078714bF26",
+        "TrustedMulticallForwarder": "0xfc026f2230C55DC8BDE3bD9bE8941fbDCA6B39C2"
     }
 }
