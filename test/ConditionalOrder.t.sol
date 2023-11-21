@@ -60,7 +60,7 @@ contract CanExecute is ConditionalOrderTest {
 
     function _defineConditionalOrder() internal {
         orderDetails = IEngine.OrderDetails({
-            marketId: SETH_PERPS_MARKET_ID,
+            marketId: sETHPerpsMarketId,
             accountId: accountId,
             sizeDelta: SIZE_DELTA,
             settlementStrategyId: SETTLEMENT_STRATEGY_ID,
@@ -337,7 +337,7 @@ contract VerifyConditions is ConditionalOrderTest {
         mock_getOpenPosition({
             perpsMarketProxy: address(perpsMarketProxy),
             accountId: accountId,
-            marketId: SETH_PERPS_MARKET_ID,
+            marketId: sETHPerpsMarketId,
             positionSize: 1 ether
         });
 
@@ -348,13 +348,11 @@ contract VerifyConditions is ConditionalOrderTest {
         conditions[3] = isPriceBelow(
             PYTH_ETH_USD_ASSET_ID, type(int64).max, type(uint64).max
         );
-        conditions[4] = isMarketOpen(SETH_PERPS_MARKET_ID);
-        conditions[5] = isPositionSizeAbove(accountId, SETH_PERPS_MARKET_ID, 0);
-        conditions[6] = isPositionSizeBelow(
-            accountId, SETH_PERPS_MARKET_ID, type(int64).max
-        );
-        conditions[7] =
-            isOrderFeeBelow(SETH_PERPS_MARKET_ID, 1, type(uint256).max);
+        conditions[4] = isMarketOpen(sETHPerpsMarketId);
+        conditions[5] = isPositionSizeAbove(accountId, sETHPerpsMarketId, 0);
+        conditions[6] =
+            isPositionSizeBelow(accountId, sETHPerpsMarketId, type(int64).max);
+        conditions[7] = isOrderFeeBelow(sETHPerpsMarketId, 1, type(uint256).max);
 
         IEngine.OrderDetails memory orderDetails;
 
@@ -389,7 +387,7 @@ contract VerifyConditions is ConditionalOrderTest {
         conditions[1] = isTimestampBefore(type(uint256).max);
         conditions[2] = isPriceAbove(PYTH_ETH_USD_ASSET_ID, 0, type(uint64).max);
         conditions[3] = isPriceBelow(PYTH_ETH_USD_ASSET_ID, 0, type(uint64).max); // false
-        conditions[4] = isMarketOpen(SETH_PERPS_MARKET_ID);
+        conditions[4] = isMarketOpen(sETHPerpsMarketId);
 
         IEngine.OrderDetails memory orderDetails;
 
@@ -411,7 +409,7 @@ contract VerifyConditions is ConditionalOrderTest {
     function test_verifyConditions_InvalidConditionSelector() public {
         bytes[] memory conditions = new bytes[](1);
         conditions[0] = abi.encodeWithSignature(
-            "_getSynthAddress(uint128 _synthMarketId)", SETH_SPOT_MARKET_ID
+            "_getSynthAddress(uint128 _synthMarketId)", sETHSpotMarketId
         );
 
         IEngine.OrderDetails memory orderDetails;
@@ -443,7 +441,7 @@ contract Execute is ConditionalOrderTest {
 
     function test_execute_order_committed() public {
         IEngine.OrderDetails memory orderDetails = IEngine.OrderDetails({
-            marketId: SETH_PERPS_MARKET_ID,
+            marketId: sETHPerpsMarketId,
             accountId: accountId,
             sizeDelta: SIZE_DELTA,
             settlementStrategyId: SETTLEMENT_STRATEGY_ID,
@@ -474,7 +472,7 @@ contract Execute is ConditionalOrderTest {
 
         // retOrder
         assertTrue(retOrder.settlementTime != 0);
-        assertTrue(retOrder.request.marketId == SETH_PERPS_MARKET_ID);
+        assertTrue(retOrder.request.marketId == sETHPerpsMarketId);
         assertTrue(retOrder.request.accountId == accountId);
         assertTrue(retOrder.request.sizeDelta == 1 ether);
         assertTrue(retOrder.request.settlementStrategyId == 0);
@@ -488,7 +486,7 @@ contract Execute is ConditionalOrderTest {
 
     function test_execute_event() public {
         IEngine.OrderDetails memory orderDetails = IEngine.OrderDetails({
-            marketId: SETH_PERPS_MARKET_ID,
+            marketId: sETHPerpsMarketId,
             accountId: accountId,
             sizeDelta: SIZE_DELTA,
             settlementStrategyId: SETTLEMENT_STRATEGY_ID,
@@ -525,7 +523,7 @@ contract Execute is ConditionalOrderTest {
 
     function test_execute_CannotExecuteOrder_too_leveraged() public {
         IEngine.OrderDetails memory orderDetails = IEngine.OrderDetails({
-            marketId: SETH_PERPS_MARKET_ID,
+            marketId: sETHPerpsMarketId,
             accountId: accountId,
             sizeDelta: INVALID_SIZE_DELTA,
             settlementStrategyId: SETTLEMENT_STRATEGY_ID,
@@ -559,7 +557,7 @@ contract Execute is ConditionalOrderTest {
 
     function test_execute_CannotExecuteOrder_invalid_acceptablePrice() public {
         IEngine.OrderDetails memory orderDetails = IEngine.OrderDetails({
-            marketId: SETH_PERPS_MARKET_ID,
+            marketId: sETHPerpsMarketId,
             accountId: accountId,
             sizeDelta: SIZE_DELTA,
             settlementStrategyId: SETTLEMENT_STRATEGY_ID,
@@ -595,7 +593,7 @@ contract Execute is ConditionalOrderTest {
         public
     {
         IEngine.OrderDetails memory orderDetails = IEngine.OrderDetails({
-            marketId: SETH_PERPS_MARKET_ID,
+            marketId: sETHPerpsMarketId,
             accountId: accountId,
             sizeDelta: SIZE_DELTA,
             settlementStrategyId: INVALID_SETTLEMENT_STRATEGY_ID,
@@ -637,7 +635,7 @@ contract Fee is ConditionalOrderTest {
         engine.depositEth{value: 1 ether}(accountId);
 
         IEngine.OrderDetails memory orderDetails = IEngine.OrderDetails({
-            marketId: SETH_PERPS_MARKET_ID,
+            marketId: sETHPerpsMarketId,
             accountId: accountId,
             sizeDelta: SIZE_DELTA,
             settlementStrategyId: SETTLEMENT_STRATEGY_ID,
@@ -676,7 +674,7 @@ contract Fee is ConditionalOrderTest {
         engine.depositEth{value: CO_FEE - 1}(accountId);
 
         IEngine.OrderDetails memory orderDetails = IEngine.OrderDetails({
-            marketId: SETH_PERPS_MARKET_ID,
+            marketId: sETHPerpsMarketId,
             accountId: accountId,
             sizeDelta: SIZE_DELTA,
             settlementStrategyId: SETTLEMENT_STRATEGY_ID,
@@ -711,7 +709,7 @@ contract Fee is ConditionalOrderTest {
         engine.depositEth{value: 1 ether}(accountId);
 
         IEngine.OrderDetails memory orderDetails = IEngine.OrderDetails({
-            marketId: SETH_PERPS_MARKET_ID,
+            marketId: sETHPerpsMarketId,
             accountId: accountId,
             sizeDelta: SIZE_DELTA,
             settlementStrategyId: SETTLEMENT_STRATEGY_ID,
@@ -746,11 +744,11 @@ contract Fee is ConditionalOrderTest {
 contract ReduceOnly is ConditionalOrderTest {
     function test_reduce_only() public {
         mock_getOpenPosition(
-            address(perpsMarketProxy), accountId, SETH_PERPS_MARKET_ID, -1 ether
+            address(perpsMarketProxy), accountId, sETHPerpsMarketId, -1 ether
         );
 
         IEngine.OrderDetails memory orderDetails = IEngine.OrderDetails({
-            marketId: SETH_PERPS_MARKET_ID,
+            marketId: sETHPerpsMarketId,
             accountId: accountId,
             sizeDelta: SIZE_DELTA,
             settlementStrategyId: SETTLEMENT_STRATEGY_ID,
@@ -784,7 +782,7 @@ contract ReduceOnly is ConditionalOrderTest {
 
     function test_reduce_only_zero_size() public {
         IEngine.OrderDetails memory orderDetails = IEngine.OrderDetails({
-            marketId: SETH_PERPS_MARKET_ID,
+            marketId: sETHPerpsMarketId,
             accountId: accountId,
             sizeDelta: SIZE_DELTA,
             settlementStrategyId: SETTLEMENT_STRATEGY_ID,
@@ -817,11 +815,11 @@ contract ReduceOnly is ConditionalOrderTest {
 
     function test_reduce_only_same_sign() public {
         mock_getOpenPosition(
-            address(perpsMarketProxy), accountId, SETH_PERPS_MARKET_ID, 1 ether
+            address(perpsMarketProxy), accountId, sETHPerpsMarketId, 1 ether
         );
 
         IEngine.OrderDetails memory orderDetails = IEngine.OrderDetails({
-            marketId: SETH_PERPS_MARKET_ID,
+            marketId: sETHPerpsMarketId,
             accountId: accountId,
             sizeDelta: SIZE_DELTA,
             settlementStrategyId: SETTLEMENT_STRATEGY_ID,
@@ -854,11 +852,11 @@ contract ReduceOnly is ConditionalOrderTest {
 
     function test_reduce_only_truncate_size_down() public {
         mock_getOpenPosition(
-            address(perpsMarketProxy), accountId, SETH_PERPS_MARKET_ID, -1 ether
+            address(perpsMarketProxy), accountId, sETHPerpsMarketId, -1 ether
         );
 
         IEngine.OrderDetails memory orderDetails = IEngine.OrderDetails({
-            marketId: SETH_PERPS_MARKET_ID,
+            marketId: sETHPerpsMarketId,
             accountId: accountId,
             sizeDelta: type(int128).max,
             settlementStrategyId: SETTLEMENT_STRATEGY_ID,
@@ -893,11 +891,11 @@ contract ReduceOnly is ConditionalOrderTest {
 
     function test_reduce_only_truncate_size_up() public {
         mock_getOpenPosition(
-            address(perpsMarketProxy), accountId, SETH_PERPS_MARKET_ID, 1 ether
+            address(perpsMarketProxy), accountId, sETHPerpsMarketId, 1 ether
         );
 
         IEngine.OrderDetails memory orderDetails = IEngine.OrderDetails({
-            marketId: SETH_PERPS_MARKET_ID,
+            marketId: sETHPerpsMarketId,
             accountId: accountId,
             sizeDelta: -type(int128).max,
             settlementStrategyId: SETTLEMENT_STRATEGY_ID,
@@ -1021,14 +1019,12 @@ contract Conditions is ConditionalOrderTest {
     }
 
     function test_isMarketOpen() public {
-        bool isOpen = engine.isMarketOpen(SETH_PERPS_MARKET_ID);
+        bool isOpen = engine.isMarketOpen(sETHPerpsMarketId);
         assertTrue(isOpen);
 
-        mock_getMaxMarketSize(
-            MARKET_CONFIGURATION_MODULE, SETH_PERPS_MARKET_ID, 0
-        );
+        mock_getMaxMarketSize(MARKET_CONFIGURATION_MODULE, sETHPerpsMarketId, 0);
 
-        isOpen = engine.isMarketOpen(SETH_PERPS_MARKET_ID);
+        isOpen = engine.isMarketOpen(sETHPerpsMarketId);
         assertFalse(isOpen);
     }
 
@@ -1037,22 +1033,22 @@ contract Conditions is ConditionalOrderTest {
         mock_getOpenPosition({
             perpsMarketProxy: address(perpsMarketProxy),
             accountId: accountId,
-            marketId: SETH_PERPS_MARKET_ID,
+            marketId: sETHPerpsMarketId,
             positionSize: mock_positionSize
         });
 
         bool isAbove = engine.isPositionSizeAbove(
-            accountId, SETH_PERPS_MARKET_ID, mock_positionSize - 1
+            accountId, sETHPerpsMarketId, mock_positionSize - 1
         );
         assertTrue(isAbove);
 
         isAbove = engine.isPositionSizeAbove(
-            accountId, SETH_PERPS_MARKET_ID, mock_positionSize
+            accountId, sETHPerpsMarketId, mock_positionSize
         );
         assertFalse(isAbove);
 
         isAbove = engine.isPositionSizeAbove(
-            accountId, SETH_PERPS_MARKET_ID, mock_positionSize + 1
+            accountId, sETHPerpsMarketId, mock_positionSize + 1
         );
         assertFalse(isAbove);
     }
@@ -1062,22 +1058,22 @@ contract Conditions is ConditionalOrderTest {
         mock_getOpenPosition({
             perpsMarketProxy: address(perpsMarketProxy),
             accountId: accountId,
-            marketId: SETH_PERPS_MARKET_ID,
+            marketId: sETHPerpsMarketId,
             positionSize: mock_positionSize
         });
 
         bool isBelow = engine.isPositionSizeBelow(
-            accountId, SETH_PERPS_MARKET_ID, mock_positionSize - 1
+            accountId, sETHPerpsMarketId, mock_positionSize - 1
         );
         assertFalse(isBelow);
 
         isBelow = engine.isPositionSizeBelow(
-            accountId, SETH_PERPS_MARKET_ID, mock_positionSize
+            accountId, sETHPerpsMarketId, mock_positionSize
         );
         assertFalse(isBelow);
 
         isBelow = engine.isPositionSizeBelow(
-            accountId, SETH_PERPS_MARKET_ID, mock_positionSize + 1
+            accountId, sETHPerpsMarketId, mock_positionSize + 1
         );
         assertTrue(isBelow);
     }
@@ -1085,22 +1081,20 @@ contract Conditions is ConditionalOrderTest {
     function test_isOrderFeeBelow() public {
         int128 sizeDelta = 1 ether;
         (uint256 orderFees,) = perpsMarketProxy.computeOrderFees({
-            marketId: SETH_PERPS_MARKET_ID,
+            marketId: sETHPerpsMarketId,
             sizeDelta: sizeDelta
         });
 
-        bool isBelow = engine.isOrderFeeBelow(
-            SETH_PERPS_MARKET_ID, sizeDelta, orderFees - 1
-        );
+        bool isBelow =
+            engine.isOrderFeeBelow(sETHPerpsMarketId, sizeDelta, orderFees - 1);
         assertFalse(isBelow);
 
         isBelow =
-            engine.isOrderFeeBelow(SETH_PERPS_MARKET_ID, sizeDelta, orderFees);
+            engine.isOrderFeeBelow(sETHPerpsMarketId, sizeDelta, orderFees);
         assertFalse(isBelow);
 
-        isBelow = engine.isOrderFeeBelow(
-            SETH_PERPS_MARKET_ID, sizeDelta, orderFees + 1
-        );
+        isBelow =
+            engine.isOrderFeeBelow(sETHPerpsMarketId, sizeDelta, orderFees + 1);
         assertTrue(isBelow);
     }
 }

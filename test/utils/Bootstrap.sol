@@ -17,6 +17,7 @@ import {IERC20} from "src/interfaces/tokens/IERC20.sol";
 import {IPerpsMarketProxy} from "src/interfaces/synthetix/IPerpsMarketProxy.sol";
 import {ISpotMarketProxy} from "src/interfaces/synthetix/ISpotMarketProxy.sol";
 import {IPyth} from "src/interfaces/oracles/IPyth.sol";
+import {SynthetixMarketLookup} from "test/utils/SynthetixMarketLookup.sol";
 import {SynthMinter} from "test/utils/SynthMinter.sol";
 import {TrustedMulticallForwarder} from
     "lib/trusted-multicall-forwarder/src/TrustedMulticallForwarder.sol";
@@ -30,9 +31,14 @@ contract Bootstrap is Test, Constants, Conditions, SynthetixV3Errors {
     IPerpsMarketProxy public perpsMarketProxy;
     ISpotMarketProxy public spotMarketProxy;
     IERC20 public sUSD;
-    IERC20 public sBTC;
     IERC20 public USDC;
     IPyth public pyth;
+
+    // spot market id's
+    uint128 public sETHSpotMarketId;
+
+    // perps market id's
+    uint128 public sETHPerpsMarketId;
 
     SynthMinter public synthMinter;
     uint128 public accountId;
@@ -61,7 +67,6 @@ contract Bootstrap is Test, Constants, Conditions, SynthetixV3Errors {
         sUSD = IERC20(_sUSDAddress);
         pyth = IPyth(_pythAddress);
         synthMinter = new SynthMinter(_sUSDAddress, _spotMarketProxyAddress);
-        sBTC = synthMinter.sBTC();
         USDC = IERC20(_usdcAddress);
 
         vm.startPrank(ACTOR);
@@ -74,6 +79,14 @@ contract Bootstrap is Test, Constants, Conditions, SynthetixV3Errors {
         vm.stopPrank();
 
         synthMinter.mint_sUSD(ACTOR, AMOUNT);
+
+        SynthetixMarketLookup marketLookup = new SynthetixMarketLookup();
+        sETHSpotMarketId = marketLookup.findSpotMarketId(
+            "sETH Spot Market", address(spotMarketProxy)
+        );
+        sETHPerpsMarketId = marketLookup.findPerpsMarketId(
+            "SETH Perps Market", address(perpsMarketProxy)
+        );
 
         /// @custom:todo mint USDC?
     }
@@ -100,7 +113,6 @@ contract Bootstrap is Test, Constants, Conditions, SynthetixV3Errors {
         sUSD = IERC20(_sUSDAddress);
         pyth = IPyth(_pythAddress);
         synthMinter = new SynthMinter(_sUSDAddress, _spotMarketProxyAddress);
-        sBTC = synthMinter.sBTC();
         USDC = IERC20(_usdcAddress);
 
         vm.startPrank(ACTOR);

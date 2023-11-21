@@ -29,7 +29,7 @@ contract CommitOrder is AsyncOrderTest {
 
         (IPerpsMarketProxy.Data memory retOrder, uint256 fees) = engine
             .commitOrder({
-            _perpsMarketId: SETH_PERPS_MARKET_ID,
+            _perpsMarketId: sETHPerpsMarketId,
             _accountId: accountId,
             _sizeDelta: 1 ether,
             _settlementStrategyId: SETTLEMENT_STRATEGY_ID,
@@ -40,7 +40,7 @@ contract CommitOrder is AsyncOrderTest {
 
         // retOrder
         assertTrue(retOrder.settlementTime != 0);
-        assertTrue(retOrder.request.marketId == SETH_PERPS_MARKET_ID);
+        assertTrue(retOrder.request.marketId == sETHPerpsMarketId);
         assertTrue(retOrder.request.accountId == accountId);
         assertTrue(retOrder.request.sizeDelta == 1 ether);
         assertTrue(retOrder.request.settlementStrategyId == 0);
@@ -76,7 +76,7 @@ contract CommitOrder is AsyncOrderTest {
         int128 sizeDelta = 1000 ether;
 
         uint256 requiredMargin = perpsMarketProxy.requiredMarginForOrder(
-            accountId, SETH_PERPS_MARKET_ID, sizeDelta
+            accountId, sETHPerpsMarketId, sizeDelta
         );
 
         int256 availableMargin = perpsMarketProxy.getAvailableMargin(accountId);
@@ -92,7 +92,7 @@ contract CommitOrder is AsyncOrderTest {
         );
 
         engine.commitOrder({
-            _perpsMarketId: SETH_PERPS_MARKET_ID,
+            _perpsMarketId: sETHPerpsMarketId,
             _accountId: accountId,
             _sizeDelta: sizeDelta,
             _settlementStrategyId: SETTLEMENT_STRATEGY_ID,

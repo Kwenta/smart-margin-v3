@@ -49,7 +49,7 @@ contract NonceBitmapTest is Bootstrap, ConditionalOrderSignature {
         uint256 mask = type(uint256).max;
 
         IEngine.OrderDetails memory orderDetails = IEngine.OrderDetails({
-            marketId: SETH_PERPS_MARKET_ID,
+            marketId: sETHPerpsMarketId,
             accountId: accountId,
             sizeDelta: SIZE_DELTA,
             settlementStrategyId: SETTLEMENT_STRATEGY_ID,
