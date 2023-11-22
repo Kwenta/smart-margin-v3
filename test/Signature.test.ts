@@ -1,16 +1,10 @@
-import {
-  time,
-  loadFixture,
-} from "@nomicfoundation/hardhat-toolbox/network-helpers";
-import { anyValue } from "@nomicfoundation/hardhat-chai-matchers/withArgs";
+import { loadFixture } from "@nomicfoundation/hardhat-toolbox/network-helpers";
 import { expect } from "chai";
 import { ethers } from "hardhat";
 
 const ONE_ADDRESS = "0x0000000000000000000000000000000000000001";
 
 // example data
-const domainSeparator =
-  "0x8c5858714ec5af03fd2ee4772a4502b25abc93609cb57f7745fca2c17a7dbf1f";
 const signerPrivateKey =
   "0xe690d00bd51f5343c6999d8e88328e3dfa0111b65f2a8790d48f89fe43ad07c0";
 const marketId = "200";
@@ -51,14 +45,14 @@ describe("Signature", function () {
     return { engine, owner, otherAccount };
   }
 
-  describe("Deployment", function () {
-    it("Should set the right unlockTime", async function () {
+  describe("Signature checks", function () {
+    it("The engine deployed successfully", async function () {
       const { engine } = await loadFixture(bootstrapSystem);
 
       expect(await engine.getAddress()).to.exist;
     });
 
-    it.only("Should work", async () => {
+    it("Signature is verified", async () => {
       const { engine } = await loadFixture(bootstrapSystem);
       const wallet = new ethers.Wallet(signerPrivateKey);
       const signer = wallet.address;
@@ -121,7 +115,6 @@ describe("Signature", function () {
         conditionalOrder
       );
 
-
       const recoveredAddress = ethers.verifyTypedData(
         domain,
         types,
@@ -131,99 +124,8 @@ describe("Signature", function () {
 
       expect(recoveredAddress).to.equal(signer);
 
-      // const res = await engine.verifySignature(conditionalOrder, signature);
-      // expect(res).to.be.true;
+      const res = await engine.verifySignature(conditionalOrder, signature);
+      expect(res).to.be.true;
     });
-
-    // it("Should set the right owner", async function () {
-    //   const { lock, owner } = await loadFixture(bootstrapSystem);
-
-    //   expect(await lock.owner()).to.equal(owner.address);
-    // });
-
-    // it("Should receive and store the funds to lock", async function () {
-    //   const { lock, lockedAmount } = await loadFixture(
-    //     bootstrapSystem
-    //   );
-
-    //   expect(await ethers.provider.getBalance(lock.target)).to.equal(
-    //     lockedAmount
-    //   );
-    // });
-
-    // it("Should fail if the unlockTime is not in the future", async function () {
-    //   // We don't use the fixture here because we want a different deployment
-    //   const latestTime = await time.latest();
-    //   const Lock = await ethers.getContractFactory("Lock");
-    //   await expect(Lock.deploy(latestTime, { value: 1 })).to.be.revertedWith(
-    //     "Unlock time should be in the future"
-    //   );
-    // });
   });
-
-  // describe("Withdrawals", function () {
-  //   describe("Validations", function () {
-  //     it("Should revert with the right error if called too soon", async function () {
-  //       const { lock } = await loadFixture(bootstrapSystem);
-
-  //       await expect(lock.withdraw()).to.be.revertedWith(
-  //         "You can't withdraw yet"
-  //       );
-  //     });
-
-  //     it("Should revert with the right error if called from another account", async function () {
-  //       const { lock, unlockTime, otherAccount } = await loadFixture(
-  //         bootstrapSystem
-  //       );
-
-  //       // We can increase the time in Hardhat Network
-  //       await time.increaseTo(unlockTime);
-
-  //       // We use lock.connect() to send a transaction from another account
-  //       await expect(lock.connect(otherAccount).withdraw()).to.be.revertedWith(
-  //         "You aren't the owner"
-  //       );
-  //     });
-
-  //     it("Shouldn't fail if the unlockTime has arrived and the owner calls it", async function () {
-  //       const { lock, unlockTime } = await loadFixture(
-  //         bootstrapSystem
-  //       );
-
-  //       // Transactions are sent using the first signer by default
-  //       await time.increaseTo(unlockTime);
-
-  //       await expect(lock.withdraw()).not.to.be.reverted;
-  //     });
-  //   });
-
-  //   describe("Events", function () {
-  //     it("Should emit an event on withdrawals", async function () {
-  //       const { lock, unlockTime, lockedAmount } = await loadFixture(
-  //         bootstrapSystem
-  //       );
-
-  //       await time.increaseTo(unlockTime);
-
-  //       await expect(lock.withdraw())
-  //         .to.emit(lock, "Withdrawal")
-  //         .withArgs(lockedAmount, anyValue); // We accept any value as `when` arg
-  //     });
-  //   });
-
-  //   describe("Transfers", function () {
-  //     it("Should transfer the funds to the owner", async function () {
-  //       const { lock, unlockTime, lockedAmount, owner } = await loadFixture(
-  //         bootstrapSystem
-  //       );
-
-  //       await time.increaseTo(unlockTime);
-
-  //       await expect(lock.withdraw()).to.changeEtherBalances(
-  //         [owner, lock],
-  //         [lockedAmount, -lockedAmount]
-  //       );
-  //     });
-  //   });
-  // });
 });
