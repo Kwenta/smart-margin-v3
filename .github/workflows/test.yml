@@ -51,7 +51,7 @@ jobs:
             key: ${{ runner.os }}-modules-${{ hashFiles('**/package-lock.json') }}
         - name: Install dependencies
           run: npm i --no-audit
-        - name: Compile contracts
-          run: npx hardhat compile
+        # - name: Compile contracts
+        #   run: npx hardhat compile
         - name: Execute contract tests
           run: npx hardhat test
