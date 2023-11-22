@@ -29,7 +29,6 @@ const trustedExecutor = "0x7FA9385bE102ac3EAc297483Dd6233D62b3e1496";
 const maxExecutorFee =
   "115792089237316195423570985008687907853269984665640564039457584007913129639935";
 const conditions: any[] = [];
-const engineAddress = "0x500A139459fA3628C416A6b19BFADd83B20e5D0b";
 
 describe("Signature", function () {
   // We define a fixture to reuse the same setup in every test.
@@ -59,18 +58,11 @@ describe("Signature", function () {
       expect(await engine.getAddress()).to.exist;
     });
 
-    it("Should work", async () => {
-      const { engine, owner } = await loadFixture(bootstrapSystem);
+    it.only("Should work", async () => {
+      const { engine } = await loadFixture(bootstrapSystem);
       const wallet = new ethers.Wallet(signerPrivateKey);
       const signer = wallet.address;
       const engineAddress = await engine.getAddress();
-
-      // const domain = {
-      //   name: "CollectorDAO",
-      //   version: "1",
-      //   chainId: 31337,
-      //   verifyingContract: await engine.getAddress(),
-      // };
 
       const domain = {
         name: "SMv3: OrderBook",
@@ -123,13 +115,13 @@ describe("Signature", function () {
         conditions: conditions,
       };
 
-      const signature = await owner.signTypedData(
+      const signature = await wallet.signTypedData(
         domain,
         types,
         conditionalOrder
       );
 
-      const expectedSignerAddress = owner.address;
+
       const recoveredAddress = ethers.verifyTypedData(
         domain,
         types,
@@ -137,7 +129,10 @@ describe("Signature", function () {
         signature
       );
 
-      expect(recoveredAddress).to.equal(expectedSignerAddress);
+      expect(recoveredAddress).to.equal(signer);
+
+      // const res = await engine.verifySignature(conditionalOrder, signature);
+      // expect(res).to.be.true;
     });
 
     // it("Should set the right owner", async function () {
