@@ -66,7 +66,7 @@ library ConditionalOrderHashLib {
                 co.requireVerified,
                 co.trustedExecutor,
                 co.maxExecutorFee,
-                keccak256(abi.encode(hashedConditions))
+                keccak256(abi.encodePacked(hashedConditions))
             )
         );
     }
