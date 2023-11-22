@@ -45,10 +45,10 @@ jobs:
             node-version: '18.12.0'
         - name: Update NPM
           run: npm install -g npm@8.19.2
-        - uses: actions/cache@v2
-          with:
-            path: '**/node_modules'
-            key: ${{ runner.os }}-modules-${{ hashFiles('**/package-lock.json') }}
+        # - uses: actions/cache@v2
+        #   with:
+        #     path: '**/node_modules'
+        #     key: ${{ runner.os }}-modules-${{ hashFiles('**/package-lock.json') }}
         - name: Install dependencies
           run: npm i --no-audit
         # - name: Compile contracts
