@@ -8,6 +8,29 @@ import { ethers } from "hardhat";
 
 const ONE_ADDRESS = "0x0000000000000000000000000000000000000001";
 
+// example data
+const domainSeparator =
+  "0x8c5858714ec5af03fd2ee4772a4502b25abc93609cb57f7745fca2c17a7dbf1f";
+const signerPrivateKey =
+  "0xe690d00bd51f5343c6999d8e88328e3dfa0111b65f2a8790d48f89fe43ad07c0";
+const marketId = "200";
+const accountId = "170141183460469231731687303715884105756";
+const sizeDelta = "1000000000000000000";
+const settlementStrategyId = "0";
+const acceptablePrice =
+  "115792089237316195423570985008687907853269984665640564039457584007913129639935";
+const isReduceOnly = false;
+const trackingCode =
+  "0x4b57454e54410000000000000000000000000000000000000000000000000000";
+const referrer = "0xF510a2Ff7e9DD7e18629137adA4eb56B9c13E885";
+const nonce = "0";
+const requireVerified = false;
+const trustedExecutor = "0x7FA9385bE102ac3EAc297483Dd6233D62b3e1496";
+const maxExecutorFee =
+  "115792089237316195423570985008687907853269984665640564039457584007913129639935";
+const conditions: any[] = [];
+const engineAddress = "0x500A139459fA3628C416A6b19BFADd83B20e5D0b";
+
 describe("Signature", function () {
   // We define a fixture to reuse the same setup in every test.
   // We use loadFixture to run this setup once, snapshot that state,
@@ -38,41 +61,84 @@ describe("Signature", function () {
 
     it("Should work", async () => {
       const { engine, owner } = await loadFixture(bootstrapSystem);
+      const wallet = new ethers.Wallet(signerPrivateKey);
+      const signer = wallet.address;
+      const engineAddress = await engine.getAddress();
+
+      // const domain = {
+      //   name: "CollectorDAO",
+      //   version: "1",
+      //   chainId: 31337,
+      //   verifyingContract: await engine.getAddress(),
+      // };
 
       const domain = {
-        name: "CollectorDAO",
+        name: "SMv3: OrderBook",
         version: "1",
         chainId: 31337,
-        verifyingContract: await engine.getAddress(),
+        verifyingContract: engineAddress,
       };
 
       const types = {
-        Ballot: [
-          { name: "proposalId", type: "bytes32" },
-          { name: "voteFor", type: "bool" },
+        OrderDetails: [
+          { name: "marketId", type: "uint128" },
+          { name: "accountId", type: "uint128" },
+          { name: "sizeDelta", type: "int128" },
+          { name: "settlementStrategyId", type: "uint128" },
+          { name: "acceptablePrice", type: "uint256" },
+          { name: "isReduceOnly", type: "bool" },
+          { name: "trackingCode", type: "bytes32" },
+          { name: "referrer", type: "address" },
+        ],
+        ConditionalOrder: [
+          { name: "orderDetails", type: "OrderDetails" },
+          { name: "signer", type: "address" },
+          { name: "nonce", type: "uint256" },
+          { name: "requireVerified", type: "bool" },
+          { name: "trustedExecutor", type: "address" },
+          { name: "maxExecutorFee", type: "uint256" },
+          { name: "conditions", type: "bytes[]" },
         ],
       };
 
-      const proposalId = "0x7361646600000000000000000000000000000000000000000000000000000000";
-      const voteFor = true;
-
-      const ballot = {
-        proposalId,
-        voteFor,
+      let orderDetails = {
+        marketId: BigInt(marketId),
+        accountId: BigInt(accountId),
+        sizeDelta: BigInt(sizeDelta),
+        settlementStrategyId: BigInt(settlementStrategyId),
+        acceptablePrice: BigInt(acceptablePrice),
+        isReduceOnly: isReduceOnly,
+        trackingCode: trackingCode,
+        referrer: referrer,
       };
 
-      const signature = await owner.signTypedData(domain, types, ballot);
+      // define the conditional order struct
+      let conditionalOrder = {
+        orderDetails: orderDetails,
+        signer: signer,
+        nonce: BigInt(nonce),
+        requireVerified: requireVerified,
+        trustedExecutor: trustedExecutor,
+        maxExecutorFee: BigInt(maxExecutorFee),
+        conditions: conditions,
+      };
+
+      const signature = await owner.signTypedData(
+        domain,
+        types,
+        conditionalOrder
+      );
 
       const expectedSignerAddress = owner.address;
       const recoveredAddress = ethers.verifyTypedData(
         domain,
         types,
-        ballot,
+        conditionalOrder,
         signature
       );
 
       expect(recoveredAddress).to.equal(expectedSignerAddress);
-    })
+    });
 
     // it("Should set the right owner", async function () {
     //   const { lock, owner } = await loadFixture(bootstrapSystem);
