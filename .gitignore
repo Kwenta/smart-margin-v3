@@ -15,6 +15,18 @@ out/
 .idea
 
 # Hardhat
-node_modules/*
-artifacts/*
-cache_hardhat/*
+node_modules
+.env
+
+# Hardhat files
+/cache_hardhat
+/cache
+/artifacts
+
+# TypeChain files
+/typechain
+/typechain-types
+
+# solidity-coverage files
+/coverage
+/coverage.json
