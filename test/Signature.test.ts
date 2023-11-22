@@ -36,6 +36,44 @@ describe("Signature", function () {
       expect(await engine.getAddress()).to.exist;
     });
 
+    it("Should work", async () => {
+      const { engine, owner } = await loadFixture(bootstrapSystem);
+
+      const domain = {
+        name: "CollectorDAO",
+        version: "1",
+        chainId: 31337,
+        verifyingContract: await engine.getAddress(),
+      };
+
+      const types = {
+        Ballot: [
+          { name: "proposalId", type: "bytes32" },
+          { name: "voteFor", type: "bool" },
+        ],
+      };
+
+      const proposalId = "0x7361646600000000000000000000000000000000000000000000000000000000";
+      const voteFor = true;
+
+      const ballot = {
+        proposalId,
+        voteFor,
+      };
+
+      const signature = await owner.signTypedData(domain, types, ballot);
+
+      const expectedSignerAddress = owner.address;
+      const recoveredAddress = ethers.verifyTypedData(
+        domain,
+        types,
+        ballot,
+        signature
+      );
+
+      expect(recoveredAddress).to.equal(expectedSignerAddress);
+    })
+
     // it("Should set the right owner", async function () {
     //   const { lock, owner } = await loadFixture(bootstrapSystem);
 
