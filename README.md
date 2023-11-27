@@ -42,6 +42,11 @@ src/
 ```
 
 ## Tests
+0. Install dependencies
+
+```
+npm i
+```
 
 1. Follow the [Foundry guide to working on an existing project](https://book.getfoundry.sh/projects/working-on-an-existing-project.html)
 
@@ -51,13 +56,13 @@ src/
 npm run compile
 ```
 
-3. Execute tests (requires rpc url(s) to be set in `.env`)
+3. Execute forge tests (requires rpc url(s) to be set in `.env`)
 
 ```
 npm run test
 ```
 
-4. Run specific test
+4. Run specific forge test
     > `OPTIMISM_GOERLI_RPC_URL` can be replaced with `OPTIMISM_RPC_URL` if a mainnet fork is desired
 
 ```
@@ -69,6 +74,13 @@ forge test --fork-url $(grep OPTIMISM_GOERLI_RPC_URL .env | cut -d '=' -f2) --ma
 
 ```
 npm run decode-custom-error -- <error hash 0x...>
+```
+
+6. Run hardhat tests
+> project must be compiled first (see step 2)
+
+```
+npx hardhat test
 ```
 
 ## Deployment Addresses
