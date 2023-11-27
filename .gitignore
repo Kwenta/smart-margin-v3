@@ -13,3 +13,21 @@ out/
 # Other
 .vscode
 .idea
+
+# Hardhat
+node_modules
+.env
+package-lock.json
+
+# Hardhat files
+/cache_hardhat
+/cache
+/artifacts
+
+# TypeChain files
+/typechain
+/typechain-types
+
+# solidity-coverage files
+/coverage
+/coverage.json

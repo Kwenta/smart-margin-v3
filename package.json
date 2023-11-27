@@ -20,6 +20,9 @@
   "bugs": {
     "url": "https://github.com/Kwenta/smart-margin-v3/issues"
   },
-  "devDependencies": {},
-  "dependencies": {}
+  "devDependencies": {
+    "@nomicfoundation/hardhat-toolbox": "^4.0.0",
+    "hardhat": "^2.19.1",
+    "hardhat-preprocessor": "^0.1.5"
+  }
 }

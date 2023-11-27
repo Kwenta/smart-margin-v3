@@ -52,7 +52,7 @@ library ConditionalOrderHashLib {
 
         // array of dynamic length bytes must be hashed separately
         // to create an array of fixed length bytes32 hashes
-        bytes32[] memory hashedConditions;
+        bytes32[] memory hashedConditions = new bytes32[](co.conditions.length);
         for (uint256 i = 0; i < co.conditions.length; i++) {
             hashedConditions[i] = keccak256(co.conditions[i]);
         }
@@ -66,7 +66,7 @@ library ConditionalOrderHashLib {
                 co.requireVerified,
                 co.trustedExecutor,
                 co.maxExecutorFee,
-                keccak256(abi.encode(hashedConditions))
+                keccak256(abi.encodePacked(hashedConditions))
             )
         );
     }
