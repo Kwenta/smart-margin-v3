@@ -176,7 +176,7 @@ contract Engine is IEngine, EIP712, EIP7412, ERC2771Context {
         external
         override
     {
-        address payable caller = payable(_msgSender());
+        address caller = _msgSender();
 
         if (!isAccountOwner(_accountId, caller)) revert Unauthorized();
 
@@ -189,11 +189,9 @@ contract Engine is IEngine, EIP712, EIP7412, ERC2771Context {
     /// @dev UNSAFE to call directly; use `withdrawEth` instead
     /// @param _caller the caller of the function
     /// @param _accountId the account id to debit ETH from
-    function _withdrawEth(
-        address payable _caller,
-        uint128 _accountId,
-        uint256 _amount
-    ) internal {
+    function _withdrawEth(address _caller, uint128 _accountId, uint256 _amount)
+        internal
+    {
         if (_amount > ethBalances[_accountId]) revert InsufficientEthBalance();
 
         // decrement the ETH balance of the account prior to transferring ETH to the caller
@@ -467,7 +465,7 @@ contract Engine is IEngine, EIP712, EIP7412, ERC2771Context {
         /// @dev the fee is denoted in ETH and is paid to the caller (conditional order executor)
         /// @dev the fee does not exceed the max fee set by the conditional order and
         /// this is enforced by the `canExecute` function
-        _withdrawEth(payable(_msgSender()), _co.orderDetails.accountId, _fee);
+        _withdrawEth(_msgSender(), _co.orderDetails.accountId, _fee);
 
         /// @notice get size delta from order details
         /// @dev up to the caller to not waste gas by passing in a size delta of zero
