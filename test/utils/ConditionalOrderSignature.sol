@@ -37,6 +37,13 @@ contract ConditionalOrderSignature {
             )
         );
 
+        // array of dynamic length bytes must be hashed separately
+        // to create an array of fixed length bytes32 hashes
+        bytes32[] memory hashedConditions = new bytes32[](co.conditions.length);
+        for (uint256 i = 0; i < co.conditions.length; i++) {
+            hashedConditions[i] = keccak256(co.conditions[i]);
+        }
+
         bytes32 conditionalOrderHash = keccak256(
             abi.encode(
                 _CONDITIONAL_ORDER_TYPEHASH,
@@ -46,7 +53,7 @@ contract ConditionalOrderSignature {
                 co.requireVerified,
                 co.trustedExecutor,
                 co.maxExecutorFee,
-                co.conditions
+                keccak256(abi.encodePacked(hashedConditions))
             )
         );
 
