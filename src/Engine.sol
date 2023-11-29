@@ -160,6 +160,12 @@ contract Engine is IEngine, EIP712, EIP7412, ERC2771Context {
 
     /// @inheritdoc IEngine
     function depositEth(uint128 _accountId) external payable override {
+        // ensure account exists (i.e. owner is not the zero address)
+        /// @notice this does not check if the caller is the account owner
+        if (PERPS_MARKET_PROXY.getAccountOwner(_accountId) == address(0)) {
+            revert AccountDoesNotExist();
+        }
+
         ethBalances[_accountId] += msg.value;
 
         emit EthDeposit(_accountId, msg.value);
