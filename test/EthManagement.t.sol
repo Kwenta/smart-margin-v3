@@ -29,6 +29,14 @@ contract Deposit is EthManagementTest {
         assertEq(address(engine).balance, AMOUNT);
     }
 
+    function test_depositEth_Account_Doesnt_Exist() public {
+        uint128 invalidAccountId = type(uint128).max;
+        assert(perpsMarketProxy.getAccountOwner(invalidAccountId) == address(0));
+
+        vm.expectRevert(IEngine.AccountDoesNotExist.selector);
+        engine.depositEth{value: AMOUNT}(invalidAccountId);
+    }
+
     function test_depositEth_via_trustedForwarder() public {
         TrustedMulticallForwarder.Call3Value memory call =
         TrustedMulticallForwarder.Call3Value(
@@ -112,10 +120,15 @@ contract Deposit is EthManagementTest {
     ) public {
         vm.assume(fuzzedEthAmount < address(this).balance - 1 ether);
 
-        engine.depositEth{value: fuzzedEthAmount}(fuzzedAccountId);
+        if (perpsMarketProxy.getAccountOwner(fuzzedAccountId) == address(0)) {
+            vm.expectRevert(IEngine.AccountDoesNotExist.selector);
+            engine.depositEth{value: fuzzedEthAmount}(fuzzedAccountId);
+        } else {
+            engine.depositEth{value: fuzzedEthAmount}(fuzzedAccountId);
 
-        assertEq(engine.ethBalances(fuzzedAccountId), fuzzedEthAmount);
-        assertEq(address(engine).balance, fuzzedEthAmount);
+            assertEq(engine.ethBalances(fuzzedAccountId), fuzzedEthAmount);
+            assertEq(address(engine).balance, fuzzedEthAmount);
+        }
     }
 
     function test_depositEth_event() public {
