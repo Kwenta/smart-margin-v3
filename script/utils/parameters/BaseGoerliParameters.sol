@@ -13,12 +13,15 @@ contract BaseGoerliParameters {
 
     address public constant PYTH = 0x5955C1478F0dAD753C7E2B4dD1b4bC530C64749f;
 
+    // https://usecannon.com/packages/synthetix-omnibus/latest/84531-andromeda
     address public constant PERPS_MARKET_PROXY_ANDROMEDA =
-        0xEED61f0CB02f3B38923b1b6EAa939D5f04f431b6;
+        0x75c43165ea38cB857C45216a37C5405A7656673c;
 
+    // https://usecannon.com/packages/synthetix-omnibus/latest/84531-andromeda
     address public constant SPOT_MARKET_PROXY_ANDROMEDA =
-        0x41A883a85b1AdE59F41d459Fa550b40fa56429DB;
+        0x26f3EcFa0Aa924649cfd4b74C57637e910A983a4;
 
+    // https://usecannon.com/packages/synthetix-omnibus/latest/84531-andromeda
     address public constant USD_PROXY_ANDROMEDA =
-        0xC9ee9628f23b14483EA413C28712690E8D2dC6a3;
+        0xa89163A087fe38022690C313b5D4BBF12574637f;
 }
