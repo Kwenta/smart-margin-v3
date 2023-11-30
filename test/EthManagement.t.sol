@@ -5,7 +5,7 @@ import {Bootstrap, TrustedMulticallForwarder} from "test/utils/Bootstrap.sol";
 import {IEngine} from "src/interfaces/IEngine.sol";
 import {SynthetixMock} from "test/utils/mocks/SynthetixMock.sol";
 import {ERC2771Forwarder} from
-    "lib/trusted-multicall-forwarder/lib/openzeppelin-contracts/contracts/metatx/ERC2771Forwarder.sol";
+    "lib/openzeppelin-contracts/contracts/metatx/ERC2771Forwarder.sol";
 
 contract CantReceiveEth {}
 
@@ -33,7 +33,7 @@ contract Deposit is EthManagementTest {
         TrustedMulticallForwarder.Call3Value memory call =
         TrustedMulticallForwarder.Call3Value(
             address(engine),
-            true,
+            true, // requireSuccess
             AMOUNT,
             abi.encodeWithSelector(engine.depositEth.selector, accountId)
         );
@@ -49,13 +49,12 @@ contract Deposit is EthManagementTest {
         assertEq(engine.ethBalances(accountId), AMOUNT * 2);
     }
 
-    function test_depositEth_via_trustedForwarder_value_mismatch_allow_failure()
-        public
-    {
+    function test_depositEth_via_trustedForwarder_value_mismatch_require_success(
+    ) public {
         TrustedMulticallForwarder.Call3Value memory call =
         TrustedMulticallForwarder.Call3Value(
             address(engine),
-            true, // allow failure
+            true, // requireSuccess
             AMOUNT,
             abi.encodeWithSelector(engine.depositEth.selector, accountId)
         );
@@ -80,7 +79,7 @@ contract Deposit is EthManagementTest {
         TrustedMulticallForwarder.Call3Value memory call =
         TrustedMulticallForwarder.Call3Value(
             address(engine),
-            false, // do not allow failure
+            false, // requireSuccess = false
             AMOUNT,
             abi.encodeWithSelector(engine.depositEth.selector, accountId)
         );
