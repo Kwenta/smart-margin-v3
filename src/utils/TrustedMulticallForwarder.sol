@@ -23,7 +23,9 @@ import {
 /// @author Daniel Beal <db@cc.snxdao.io>
 /// @author Noah Litvin <noah.litvin@gmail.com>
 /// @author Jared Borders <jaredborders@pm.me>
-contract TrustedMulticallForwarder is ERC2771Forwarder {
+contract TrustedMulticallForwarder is
+    ERC2771Forwarder("trusted-multicall-forwarder")
+{
     struct Call {
         address target;
         bytes callData;
@@ -46,8 +48,6 @@ contract TrustedMulticallForwarder is ERC2771Forwarder {
         bool success;
         bytes returnData;
     }
-
-    constructor() ERC2771Forwarder("trusted-multicall-forwarder") {}
 
     /// @notice Backwards-compatible call aggregation with Multicall
     /// @param calls An array of Call structs
