@@ -4,3 +4,6 @@
 [submodule "lib/trusted-multicall-forwarder"]
 	path = lib/trusted-multicall-forwarder
 	url = https://github.com/Synthetixio/trusted-multicall-forwarder
+[submodule "lib/openzeppelin-contracts"]
+	path = lib/openzeppelin-contracts
+	url = https://github.com/openzeppelin/openzeppelin-contracts
