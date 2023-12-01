@@ -77,6 +77,9 @@ interface IEngine {
     /// @notice thrown when attempting to transfer eth fails
     error EthTransferFailed();
 
+    /// @notice thrown when attempting to deposit eth into an account that does not exist
+    error AccountDoesNotExist();
+
     /*//////////////////////////////////////////////////////////////
                                  EVENTS
     //////////////////////////////////////////////////////////////*/
