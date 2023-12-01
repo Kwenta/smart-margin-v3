@@ -4,7 +4,7 @@ pragma solidity 0.8.20;
 // contracts
 import {Engine} from "src/Engine.sol";
 import {TrustedMulticallForwarder} from
-    "lib/trusted-multicall-forwarder/src/TrustedMulticallForwarder.sol";
+    "src/utils/TrustedMulticallForwarder.sol";
 
 // parameters
 import {BaseGoerliParameters} from

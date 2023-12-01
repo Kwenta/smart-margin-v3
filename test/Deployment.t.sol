@@ -5,7 +5,7 @@ import {Engine, Setup} from "script/Deploy.s.sol";
 import {IEngine} from "src/interfaces/IEngine.sol";
 import {Test} from "lib/forge-std/src/Test.sol";
 import {TrustedMulticallForwarder} from
-    "lib/trusted-multicall-forwarder/src/TrustedMulticallForwarder.sol";
+    "src/utils/TrustedMulticallForwarder.sol";
 
 contract DeploymentTest is Test, Setup {
     Setup setup;

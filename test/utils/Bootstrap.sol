@@ -19,7 +19,7 @@ import {ISpotMarketProxy} from "src/interfaces/synthetix/ISpotMarketProxy.sol";
 import {IPyth} from "src/interfaces/oracles/IPyth.sol";
 import {SynthMinter} from "test/utils/SynthMinter.sol";
 import {TrustedMulticallForwarder} from
-    "lib/trusted-multicall-forwarder/src/TrustedMulticallForwarder.sol";
+    "src/utils/TrustedMulticallForwarder.sol";
 
 contract Bootstrap is Test, Constants, Conditions, SynthetixV3Errors {
     using console2 for *;
