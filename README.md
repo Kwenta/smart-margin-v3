@@ -38,45 +38,46 @@ src/
 │   └── SignatureCheckerLib.sol
 └── utils
     ├── EIP712.sol
-    └── EIP7412.sol
+    ├── EIP7412.sol
+    └── TrustedMulticallForwarder.sol
 ```
 
 ## Tests
-0. Install dependencies
+1. Install dependencies
 
 ```
 npm i
 ```
 
-1. Follow the [Foundry guide to working on an existing project](https://book.getfoundry.sh/projects/working-on-an-existing-project.html)
+2. Follow the [Foundry guide to working on an existing project](https://book.getfoundry.sh/projects/working-on-an-existing-project.html)
 
-2. Build project
+3. Build project
 
 ```
 npm run compile
 ```
 
-3. Execute forge tests (requires rpc url(s) to be set in `.env`)
+4. Execute forge tests (requires rpc url(s) to be set in `.env`)
 
 ```
 npm run test
 ```
 
-4. Run specific forge test
+5. Run specific forge test
     > `OPTIMISM_GOERLI_RPC_URL` can be replaced with `OPTIMISM_RPC_URL` if a mainnet fork is desired
 
 ```
 forge test --fork-url $(grep OPTIMISM_GOERLI_RPC_URL .env | cut -d '=' -f2) --match-test TEST_NAME -vvv
 ```
 
-5. Decode a custom error defined by Synthetix v3
+6. Decode a custom error defined by Synthetix v3
     > ex: `npm run decode-custom-error -- 0x01de5522...`
 
 ```
 npm run decode-custom-error -- <error hash 0x...>
 ```
 
-6. Run hardhat tests
+7. Run hardhat tests
 > project must be compiled first (see step 2)
 
 ```
