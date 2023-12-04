@@ -29,7 +29,7 @@ contract EIP7412Test is Test, SynthetixMock {
         EIP7412 eip7412 = new EIP7412();
 
         uint256 preBalance = address(this).balance;
-        uint preBalanceeip7412Mock = address(eip7412Mock).balance;
+        uint256 preBalanceeip7412Mock = address(eip7412Mock).balance;
 
         eip7412.fulfillOracleQuery{value: amount}(
             payable(address(eip7412Mock)), signedOffchainData
