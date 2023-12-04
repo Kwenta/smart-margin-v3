@@ -5,8 +5,6 @@ import {ConditionalOrderHashLib} from
     "src/libraries/ConditionalOrderHashLib.sol";
 import {EIP712} from "src/utils/EIP712.sol";
 import {EIP7412} from "src/utils/EIP7412.sol";
-import {ERC2771Context} from
-    "lib/openzeppelin-contracts/contracts/metatx/ERC2771Context.sol";
 import {IEngine, IPerpsMarketProxy} from "src/interfaces/IEngine.sol";
 import {IERC20} from "src/interfaces/tokens/IERC20.sol";
 import {IPyth, PythStructs} from "src/interfaces/oracles/IPyth.sol";
@@ -19,7 +17,7 @@ import {SignatureCheckerLib} from "src/libraries/SignatureCheckerLib.sol";
 /// @author JaredBorders (jaredborders@pm.me)
 /// @custom:auditor this contract does not prevent reentrancy.
 /// Please review the contract carefully.
-contract Engine is IEngine, EIP712, EIP7412, ERC2771Context {
+contract Engine is IEngine, EIP712, EIP7412 {
     using MathLib for int128;
     using MathLib for int256;
     using MathLib for uint256;
@@ -98,19 +96,16 @@ contract Engine is IEngine, EIP712, EIP7412, ERC2771Context {
     /// @param _spotMarketProxy Synthetix v3 spot market proxy contract
     /// @param _sUSDProxy Synthetix v3 sUSD contract
     /// @param _oracle pyth oracle contract used to get asset prices
-    /// @param _trustedForwarder trusted forwarder contract used for meta transactions
     constructor(
         address _perpsMarketProxy,
         address _spotMarketProxy,
         address _sUSDProxy,
-        address _oracle,
-        address _trustedForwarder
-    ) ERC2771Context(_trustedForwarder) {
+        address _oracle
+    ) {
         if (_perpsMarketProxy == address(0)) revert ZeroAddress();
         if (_spotMarketProxy == address(0)) revert ZeroAddress();
         if (_sUSDProxy == address(0)) revert ZeroAddress();
         if (_oracle == address(0)) revert ZeroAddress();
-        if (_trustedForwarder == address(0)) revert ZeroAddress();
 
         PERPS_MARKET_PROXY = IPerpsMarketProxy(_perpsMarketProxy);
         SPOT_MARKET_PROXY = ISpotMarketProxy(_spotMarketProxy);
@@ -176,11 +171,9 @@ contract Engine is IEngine, EIP712, EIP7412, ERC2771Context {
         external
         override
     {
-        address caller = _msgSender();
+        if (!isAccountOwner(_accountId, msg.sender)) revert Unauthorized();
 
-        if (!isAccountOwner(_accountId, caller)) revert Unauthorized();
-
-        _withdrawEth(caller, _accountId, _amount);
+        _withdrawEth(msg.sender, _accountId, _amount);
 
         emit EthWithdraw(_accountId, _amount);
     }
@@ -212,7 +205,7 @@ contract Engine is IEngine, EIP712, EIP7412, ERC2771Context {
         uint256 _wordPos,
         uint256 _mask
     ) external override {
-        if (_isAccountOwnerOrDelegate(_accountId, _msgSender())) {
+        if (_isAccountOwnerOrDelegate(_accountId, msg.sender)) {
             /// @dev using bitwise OR to set the bit at the bit position
             /// bitmap          = .......10001
             /// mask            = .......00110
@@ -325,16 +318,14 @@ contract Engine is IEngine, EIP712, EIP7412, ERC2771Context {
     ) external override {
         IERC20 synth = IERC20(_getSynthAddress(_synthMarketId));
 
-        address caller = _msgSender();
-
         if (_amount > 0) {
             _depositCollateral(
-                caller, synth, _accountId, _synthMarketId, _amount
+                msg.sender, synth, _accountId, _synthMarketId, _amount
             );
         } else {
-            if (!isAccountOwner(_accountId, caller)) revert Unauthorized();
+            if (!isAccountOwner(_accountId, msg.sender)) revert Unauthorized();
             _withdrawCollateral(
-                caller, synth, _accountId, _synthMarketId, _amount
+                msg.sender, synth, _accountId, _synthMarketId, _amount
             );
         }
     }
@@ -399,7 +390,7 @@ contract Engine is IEngine, EIP712, EIP7412, ERC2771Context {
         returns (IPerpsMarketProxy.Data memory retOrder, uint256 fees)
     {
         /// @dev only the account owner can withdraw collateral
-        if (_isAccountOwnerOrDelegate(_accountId, _msgSender())) {
+        if (_isAccountOwnerOrDelegate(_accountId, msg.sender)) {
             (retOrder, fees) = _commitOrder({
                 _perpsMarketId: _perpsMarketId,
                 _accountId: _accountId,
@@ -465,7 +456,7 @@ contract Engine is IEngine, EIP712, EIP7412, ERC2771Context {
         /// @dev the fee is denoted in ETH and is paid to the caller (conditional order executor)
         /// @dev the fee does not exceed the max fee set by the conditional order and
         /// this is enforced by the `canExecute` function
-        _withdrawEth(_msgSender(), _co.orderDetails.accountId, _fee);
+        _withdrawEth(msg.sender, _co.orderDetails.accountId, _fee);
 
         /// @notice get size delta from order details
         /// @dev up to the caller to not waste gas by passing in a size delta of zero
@@ -553,7 +544,7 @@ contract Engine is IEngine, EIP712, EIP7412, ERC2771Context {
         } else {
             // if the order does not require verification, then the caller
             // must be the trusted executor defined by "trustedExecutor"
-            if (_msgSender() != _co.trustedExecutor) return false;
+            if (msg.sender != _co.trustedExecutor) return false;
         }
 
         return true;
