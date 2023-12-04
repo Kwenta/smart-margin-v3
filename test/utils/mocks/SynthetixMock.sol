@@ -51,19 +51,6 @@ contract SynthetixMock is Test {
         );
     }
 
-    function mock_fulfillOracleQuery(
-        address EIP7412Implementer,
-        bytes calldata signedOffchainData
-    ) public {
-        vm.mockCall(
-            EIP7412Implementer,
-            abi.encodeWithSelector(
-                EIP7412.fulfillOracleQuery.selector, signedOffchainData
-            ),
-            abi.encode()
-        );
-    }
-
     function mock_getAccountOwner(
         address perpsMarketProxy,
         uint128 accountId,
