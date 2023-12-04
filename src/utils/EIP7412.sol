@@ -8,6 +8,7 @@ import {IERC7412} from "src/interfaces/synthetix/IERC7412.sol";
 /// @author JaredBorders (jaredborders@pm.me)
 contract EIP7412 {
     /// @notice Fulfill an EIP-7412 oracle query
+    /// @dev refunds from EIP7412Implementer are *NOT* supported
     /// @param EIP7412Implementer The address of the EIP-7412 implementer
     /// @param signedOffchainData The data that was returned
     /// from the off-chain interface, signed by the oracle
