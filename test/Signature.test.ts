@@ -44,7 +44,6 @@ describe("Signature", function () {
       ONE_ADDRESS,
       ONE_ADDRESS,
       ONE_ADDRESS,
-      ONE_ADDRESS,
       ONE_ADDRESS
     );
     await engine.waitForDeployment();
