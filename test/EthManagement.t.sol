@@ -1,11 +1,9 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 pragma solidity 0.8.20;
 
-import {Bootstrap, TrustedMulticallForwarder} from "test/utils/Bootstrap.sol";
+import {Bootstrap} from "test/utils/Bootstrap.sol";
 import {IEngine} from "src/interfaces/IEngine.sol";
 import {SynthetixMock} from "test/utils/mocks/SynthetixMock.sol";
-import {ERC2771Forwarder} from
-    "lib/openzeppelin-contracts/contracts/metatx/ERC2771Forwarder.sol";
 
 contract CantReceiveEth {}
 
@@ -35,82 +33,6 @@ contract Deposit is EthManagementTest {
 
         vm.expectRevert(IEngine.AccountDoesNotExist.selector);
         engine.depositEth{value: AMOUNT}(invalidAccountId);
-    }
-
-    function test_depositEth_via_trustedForwarder() public {
-        TrustedMulticallForwarder.Call3Value memory call =
-        TrustedMulticallForwarder.Call3Value(
-            address(engine),
-            true, // requireSuccess
-            AMOUNT,
-            abi.encodeWithSelector(engine.depositEth.selector, accountId)
-        );
-
-        TrustedMulticallForwarder.Call3Value[] memory calls =
-            new TrustedMulticallForwarder.Call3Value[](2);
-
-        calls[0] = call;
-        calls[1] = call;
-
-        trustedForwarderContract.aggregate3Value{value: AMOUNT * 2}(calls);
-
-        assertEq(engine.ethBalances(accountId), AMOUNT * 2);
-    }
-
-    function test_depositEth_via_trustedForwarder_value_mismatch_require_success(
-    ) public {
-        TrustedMulticallForwarder.Call3Value memory call =
-        TrustedMulticallForwarder.Call3Value(
-            address(engine),
-            true, // requireSuccess
-            AMOUNT,
-            abi.encodeWithSelector(engine.depositEth.selector, accountId)
-        );
-
-        TrustedMulticallForwarder.Call3Value[] memory calls =
-            new TrustedMulticallForwarder.Call3Value[](2);
-
-        calls[0] = call;
-        calls[1] = call;
-
-        // EvmError: OutOfFund
-        vm.expectRevert();
-
-        // msg.value is AMOUNT, but since two calls spend AMOUNT each, the accumulated
-        // msg.value is AMOUNT * 2. This should fail and revert.
-        trustedForwarderContract.aggregate3Value{value: AMOUNT}(calls);
-
-        assertEq(engine.ethBalances(accountId), 0);
-    }
-
-    function test_depositEth_via_trustedForwarder_value_mismatch() public {
-        TrustedMulticallForwarder.Call3Value memory call =
-        TrustedMulticallForwarder.Call3Value(
-            address(engine),
-            false, // requireSuccess = false
-            AMOUNT,
-            abi.encodeWithSelector(engine.depositEth.selector, accountId)
-        );
-
-        TrustedMulticallForwarder.Call3Value[] memory calls =
-            new TrustedMulticallForwarder.Call3Value[](2);
-
-        calls[0] = call;
-        calls[1] = call;
-
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                ERC2771Forwarder.ERC2771ForwarderMismatchedValue.selector,
-                AMOUNT * 2,
-                AMOUNT
-            )
-        );
-
-        // msg.value is AMOUNT, but since two calls spend AMOUNT each, the accumulated
-        // msg.value is AMOUNT * 2. This should fail but not revert.
-        trustedForwarderContract.aggregate3Value{value: AMOUNT}(calls);
-
-        assertEq(engine.ethBalances(accountId), 0);
     }
 
     function test_depositEth_fuzz(
