@@ -1,14 +1,11 @@
 {
     "Synthetix": {
-        "Engine": "0x06198fCE58194C0cB7AB420D6da791789cE01F9d",
-        "TrustedMulticallForwarder": "0x9Fb8Fa76d34ad7b03A945f8335D3Ab24637091d6"
+        "Engine": ""
     },
     "Andromeda": {
-        "Engine": "",
-        "TrustedMulticallForwarder": ""
+        "Engine": ""
     },
     "Kwenta": {
-        "Engine": "",
-        "TrustedMulticallForwarder": ""
+        "Engine": ""
     }
 }

@@ -1,14 +1,11 @@
 {
     "Synthetix": {
-        "Engine": "",
-        "TrustedMulticallForwarder": ""
+        "Engine": ""
     },
     "Andromeda": {
-        "Engine": "",
-        "TrustedMulticallForwarder": ""
+        "Engine": ""
     },
     "Kwenta": {
-        "Engine": "",
-        "TrustedMulticallForwarder": ""
+        "Engine": ""
     }
 }

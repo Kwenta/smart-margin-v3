@@ -3,8 +3,6 @@ pragma solidity 0.8.20;
 
 // contracts
 import {Engine} from "src/Engine.sol";
-import {TrustedMulticallForwarder} from
-    "src/utils/TrustedMulticallForwarder.sol";
 
 // parameters
 import {BaseGoerliParameters} from
@@ -28,21 +26,12 @@ contract Setup is Script {
         address spotMarketProxy,
         address sUSDProxy,
         address oracle
-    )
-        public
-        returns (
-            Engine engine,
-            TrustedMulticallForwarder trustedForwarderContract
-        )
-    {
-        trustedForwarderContract = new TrustedMulticallForwarder();
-
+    ) public returns (Engine engine) {
         engine = new Engine({
             _perpsMarketProxy: perpsMarketProxy,
             _spotMarketProxy: spotMarketProxy,
             _sUSDProxy: sUSDProxy,
-            _oracle: oracle,
-            _trustedForwarder: address(trustedForwarderContract)
+            _oracle: oracle
         });
     }
 }
