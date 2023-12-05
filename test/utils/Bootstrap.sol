@@ -14,7 +14,7 @@ import {
     Setup
 } from "script/Deploy.s.sol";
 import {IERC20} from "src/interfaces/tokens/IERC20.sol";
-import {IPerpsMarketProxy} from "src/interfaces/synthetix/IPerpsMarketProxy.sol";
+import {IPerpsMarketProxy} from "test/utils/interfaces/IPerpsMarketProxy.sol";
 import {ISpotMarketProxy} from "src/interfaces/synthetix/ISpotMarketProxy.sol";
 import {IPyth} from "src/interfaces/oracles/IPyth.sol";
 import {SynthMinter} from "test/utils/SynthMinter.sol";
