@@ -124,7 +124,8 @@ contract Engine is IEngine, EIP712, EIP7412 {
         override
         returns (bool)
     {
-        return PERPS_MARKET_PROXY.getAccountOwner(_accountId) == _caller;
+        return _caller != address(0)
+            && PERPS_MARKET_PROXY.getAccountOwner(_accountId) == _caller;
     }
 
     /// @inheritdoc IEngine
@@ -144,9 +145,10 @@ contract Engine is IEngine, EIP712, EIP7412 {
         view
         returns (bool)
     {
-        return PERPS_MARKET_PROXY.isAuthorized(
-            _accountId, PERPS_COMMIT_ASYNC_ORDER_PERMISSION, _caller
-        );
+        return _caller != address(0)
+            && PERPS_MARKET_PROXY.isAuthorized(
+                _accountId, PERPS_COMMIT_ASYNC_ORDER_PERMISSION, _caller
+            );
     }
 
     /*//////////////////////////////////////////////////////////////
