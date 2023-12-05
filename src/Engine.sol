@@ -459,7 +459,6 @@ contract Engine is IEngine, EIP712, EIP7412 {
         _withdrawEth(msg.sender, _co.orderDetails.accountId, _fee);
 
         /// @notice get size delta from order details
-        /// @dev up to the caller to not waste gas by passing in a size delta of zero
         int128 sizeDelta = _co.orderDetails.sizeDelta;
 
         /// @notice handle reduce only orders
@@ -473,8 +472,9 @@ contract Engine is IEngine, EIP712, EIP7412 {
                 return (retOrder, 0);
             }
 
-            // ensure incoming size delta is NOT the same sign; i.e. reduce only orders cannot increase position size
-            if (positionSize.isSameSign(sizeDelta)) {
+            // ensure incoming size delta is non-zero and NOT the same sign;
+            // i.e. reduce only orders cannot increase position size
+            if (sizeDelta == 0 || positionSize.isSameSign(sizeDelta)) {
                 return (retOrder, 0);
             }
 
