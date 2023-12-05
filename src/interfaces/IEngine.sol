@@ -280,7 +280,7 @@ interface IEngine {
     /// and the transaction will revert with CannotExecuteOrder().
     ///
     /// note: It is recommended to attempt simulating the co execution prior to submission
-    /// or employ some other sophisticated stratgey to mitigate the risk of submitting a co that 
+    /// or employ some other sophisticated stratgey to mitigate the risk of submitting a co that
     /// cannot be executed due to internal Synthetix v3 scenarios that are *unpredictable*.
     ///
     /// The Engine contract does not store co's. It only stores the nonceBitmaps for each account.
