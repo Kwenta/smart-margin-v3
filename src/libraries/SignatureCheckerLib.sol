@@ -105,41 +105,6 @@ library SignatureCheckerLib {
     }
 
     /**
-     * @dev Overload of {ECDSA-tryRecover} that receives the `r` and `vs` short-signature fields separately.
-     *
-     * See https://eips.ethereum.org/EIPS/eip-2098[ERC-2098 short signatures]
-     */
-    function tryRecover(bytes32 hash, bytes32 r, bytes32 vs)
-        internal
-        pure
-        returns (address, RecoverError, bytes32)
-    {
-        unchecked {
-            bytes32 s = vs
-                & bytes32(
-                    0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
-                );
-            // We do not check for an overflow here since the shift operation results in 0 or 1.
-            uint8 v = uint8((uint256(vs) >> 255) + 27);
-            return tryRecover(hash, v, r, s);
-        }
-    }
-
-    /**
-     * @dev Overload of {ECDSA-recover} that receives the `r and `vs` short-signature fields separately.
-     */
-    function recover(bytes32 hash, bytes32 r, bytes32 vs)
-        internal
-        pure
-        returns (address)
-    {
-        (address recovered, RecoverError error, bytes32 errorArg) =
-            tryRecover(hash, r, vs);
-        _throwError(error, errorArg);
-        return recovered;
-    }
-
-    /**
      * @dev Overload of {ECDSA-tryRecover} that receives the `v`,
      * `r` and `s` signature fields separately.
      */
@@ -171,21 +136,6 @@ library SignatureCheckerLib {
         }
 
         return (signer, RecoverError.NoError, bytes32(0));
-    }
-
-    /**
-     * @dev Overload of {ECDSA-recover} that receives the `v`,
-     * `r` and `s` signature fields separately.
-     */
-    function recover(bytes32 hash, uint8 v, bytes32 r, bytes32 s)
-        internal
-        pure
-        returns (address)
-    {
-        (address recovered, RecoverError error, bytes32 errorArg) =
-            tryRecover(hash, v, r, s);
-        _throwError(error, errorArg);
-        return recovered;
     }
 
     /**
