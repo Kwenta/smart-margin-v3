@@ -21,7 +21,7 @@ contract Engine is IEngine, EIP712, EIP7412 {
     using MathLib for int128;
     using MathLib for int256;
     using MathLib for uint256;
-    using SignatureCheckerLib for bytes;
+    using SignatureCheckerLib for bytes32;
     using ConditionalOrderHashLib for ConditionalOrder;
 
     /*//////////////////////////////////////////////////////////////
@@ -569,9 +569,7 @@ contract Engine is IEngine, EIP712, EIP7412 {
         ConditionalOrder calldata _co,
         bytes calldata _signature
     ) public view override returns (bool) {
-        return _signature.isValidSignatureNowCalldata(
-            _hashTypedData(_co.hash()), _co.signer
-        );
+        return _hashTypedData(_co.hash()).recover(_signature) == _co.signer;
     }
 
     /// @inheritdoc IEngine
