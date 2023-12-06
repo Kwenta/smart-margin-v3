@@ -15,8 +15,6 @@ import {SignatureCheckerLib} from "src/libraries/SignatureCheckerLib.sol";
 /// @title Kwenta Smart Margin v3: Engine contract
 /// @notice Responsible for interacting with Synthetix v3 perps markets
 /// @author JaredBorders (jaredborders@pm.me)
-/// @custom:auditor this contract does not prevent reentrancy.
-/// Please review the contract carefully.
 contract Engine is IEngine, EIP712, EIP7412 {
     using MathLib for int128;
     using MathLib for int256;
