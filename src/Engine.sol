@@ -391,7 +391,7 @@ contract Engine is IEngine, EIP712, EIP7412 {
         override
         returns (IPerpsMarketProxy.Data memory retOrder, uint256 fees)
     {
-        /// @dev only the account owner can withdraw collateral
+        /// @dev the account owner or the delegate may commit async orders
         if (_isAccountOwnerOrDelegate(_accountId, msg.sender)) {
             (retOrder, fees) = _commitOrder({
                 _perpsMarketId: _perpsMarketId,
@@ -497,7 +497,7 @@ contract Engine is IEngine, EIP712, EIP7412 {
             }
         }
 
-        /// @dev execute the order
+        /// @dev commit async order
         (retOrder, synthetixFees) = _commitOrder({
             _perpsMarketId: _co.orderDetails.marketId,
             _accountId: _co.orderDetails.accountId,
