@@ -28,8 +28,12 @@ contract Forwarder {
     {
         results = new bytes[](data.length);
 
-        for (uint256 i = 0; i < data.length; i++) {
+        for (uint256 i = 0; i < data.length;) {
             results[i] = _functionDelegateCall(target, data[i]);
+
+            unchecked {
+                ++i;
+            }
         }
 
         return results;
