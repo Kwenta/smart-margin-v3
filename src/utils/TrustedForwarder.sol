@@ -38,6 +38,7 @@ contract TrustedForwarder {
     /// @return returnData An array of Result structs
     function aggregate3Value(Call3Value[] calldata calls)
         public
+        payable
         returns (Result[] memory returnData)
     {
         uint256 valAccumulator;
@@ -46,22 +47,14 @@ contract TrustedForwarder {
         uint256 length = calls.length;
         returnData = new Result[](length);
 
-        mapping(address => bool) trustedForwardersCache;
-
         for (uint256 i = 0; i < length; i++) {
             // define the call object
             calli = calls[i];
 
             /// @dev early exit;
             /// ensure the target trusts this forwarder else revert the whole tx
-            if (
-                !trustedForwardersCache(calli.target)
-                    || !_isTrustedByTarget(calli.target)
-            ) {
+            if (!_isTrustedByTarget(calli.target)) {
                 revert TargetNotTrusted(calli.target);
-            } else {
-                // cache the target as trusted to avoid future calls within this scope
-                trustedForwardersCache[calli.target] = true;
             }
 
             // define default result to return for this call
@@ -73,9 +66,7 @@ contract TrustedForwarder {
             // add the allocated value to the value accumulator
             // so we can check the msg.value at the end
             // to ensure it matches the sum of the call values
-            unchecked {
-                valAccumulator += val;
-            }
+            valAccumulator += val;
 
             // make the call and record the result data and whether it was successful
             (result.success, result.returnData) = calli.target.call{value: val}(

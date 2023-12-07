@@ -5,14 +5,15 @@ import {ConditionalOrderHashLib} from
     "src/libraries/ConditionalOrderHashLib.sol";
 import {EIP712} from "src/utils/EIP712.sol";
 import {EIP7412} from "src/utils/EIP7412.sol";
-import {ERC2771Context} from
-    "lib/openzeppelin-contracts/contracts/metatx/ERC2771Context.sol";
 import {IEngine, IPerpsMarketProxy} from "src/interfaces/IEngine.sol";
 import {IERC20} from "src/interfaces/tokens/IERC20.sol";
 import {IPyth, PythStructs} from "src/interfaces/oracles/IPyth.sol";
 import {ISpotMarketProxy} from "src/interfaces/synthetix/ISpotMarketProxy.sol";
 import {MathLib} from "src/libraries/MathLib.sol";
 import {SignatureCheckerLib} from "src/libraries/SignatureCheckerLib.sol";
+import {
+    TrustedForwarder, ERC2771Context
+} from "src/utils/TrustedForwarder.sol";
 
 /// @title Kwenta Smart Margin v3: Engine contract
 /// @notice Responsible for interacting with Synthetix v3 perps markets
@@ -92,28 +93,35 @@ contract Engine is IEngine, EIP712, EIP7412, ERC2771Context {
     //////////////////////////////////////////////////////////////*/
 
     /// @notice Constructs the Engine contract
+    /// @dev a trusted forwarder is deployed with the Engine contract
     /// @param _perpsMarketProxy Synthetix v3 perps market proxy contract
     /// @param _spotMarketProxy Synthetix v3 spot market proxy contract
     /// @param _sUSDProxy Synthetix v3 sUSD contract
     /// @param _oracle pyth oracle contract used to get asset prices
-    /// @param _trustedForwarder trusted forwarder contract used for safely batching transactions
     constructor(
         address _perpsMarketProxy,
         address _spotMarketProxy,
         address _sUSDProxy,
-        address _oracle,
-        address _trustedForwarder
-    ) ERC2771Context(_trustedForwarder) {
+        address _oracle
+    ) ERC2771Context(address(new TrustedForwarder())) {
         if (_perpsMarketProxy == address(0)) revert ZeroAddress();
         if (_spotMarketProxy == address(0)) revert ZeroAddress();
         if (_sUSDProxy == address(0)) revert ZeroAddress();
         if (_oracle == address(0)) revert ZeroAddress();
-        if (_trustedForwarder == address(0)) revert ZeroAddress();
 
         PERPS_MARKET_PROXY = IPerpsMarketProxy(_perpsMarketProxy);
         SPOT_MARKET_PROXY = ISpotMarketProxy(_spotMarketProxy);
         SUSD = IERC20(_sUSDProxy);
         ORACLE = IPyth(_oracle);
+    }
+
+    /*//////////////////////////////////////////////////////////////
+                           TRUSTED FORWARDER
+    //////////////////////////////////////////////////////////////*/
+
+    /// @inheritdoc ERC2771Context
+    function trustedForwarder() public view override returns (address) {
+        return super.trustedForwarder();
     }
 
     /*//////////////////////////////////////////////////////////////
@@ -553,7 +561,7 @@ contract Engine is IEngine, EIP712, EIP7412, ERC2771Context {
         } else {
             // if the order does not require verification, then the caller
             // must be the trusted executor defined by "trustedExecutor"
-            if (_msgSender != _co.trustedExecutor) return false;
+            if (_msgSender() != _co.trustedExecutor) return false;
         }
 
         return true;
