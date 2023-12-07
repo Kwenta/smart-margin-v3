@@ -124,7 +124,8 @@ contract Engine is IEngine, EIP712, EIP7412 {
         override
         returns (bool)
     {
-        return PERPS_MARKET_PROXY.getAccountOwner(_accountId) == _caller;
+        return _caller != address(0)
+            && PERPS_MARKET_PROXY.getAccountOwner(_accountId) == _caller;
     }
 
     /// @inheritdoc IEngine
@@ -144,9 +145,10 @@ contract Engine is IEngine, EIP712, EIP7412 {
         view
         returns (bool)
     {
-        return PERPS_MARKET_PROXY.isAuthorized(
-            _accountId, PERPS_COMMIT_ASYNC_ORDER_PERMISSION, _caller
-        );
+        return _caller != address(0)
+            && PERPS_MARKET_PROXY.isAuthorized(
+                _accountId, PERPS_COMMIT_ASYNC_ORDER_PERMISSION, _caller
+            );
     }
 
     /*//////////////////////////////////////////////////////////////
@@ -261,7 +263,7 @@ contract Engine is IEngine, EIP712, EIP7412 {
     {
         // shift _nonce to the right by 8 bits and cast to uint248
         /// @dev wordPos == 0 if 0 <= _nonce <= 255, 1 if 256 <= _nonce <= 511, etc.
-        wordPos = uint248(_nonce >> 8);
+        wordPos = _nonce >> 8;
 
         // cast the last 8 bits of _nonce to uint8
         /// @dev 0 <= bitPos <= 255
@@ -389,7 +391,7 @@ contract Engine is IEngine, EIP712, EIP7412 {
         override
         returns (IPerpsMarketProxy.Data memory retOrder, uint256 fees)
     {
-        /// @dev only the account owner can withdraw collateral
+        /// @dev the account owner or the delegate may commit async orders
         if (_isAccountOwnerOrDelegate(_accountId, msg.sender)) {
             (retOrder, fees) = _commitOrder({
                 _perpsMarketId: _perpsMarketId,
@@ -495,7 +497,7 @@ contract Engine is IEngine, EIP712, EIP7412 {
             }
         }
 
-        /// @dev execute the order
+        /// @dev commit async order
         (retOrder, synthetixFees) = _commitOrder({
             _perpsMarketId: _co.orderDetails.marketId,
             _accountId: _co.orderDetails.accountId,

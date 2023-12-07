@@ -36,7 +36,7 @@ interface IEngine {
         OrderDetails orderDetails;
         // address of the signer of the order
         address signer;
-        // an incrementing value indexed per order
+        // a means to prevent replay attacks and identify the order
         uint256 nonce;
         // option to require all extra conditions to be verified on-chain
         bool requireVerified;

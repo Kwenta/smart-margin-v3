@@ -19,12 +19,6 @@ interface IERC7412 {
     /// to the most recently posted oracle data transaction
     error FeeRequired(uint256 feeAmount);
 
-    /// @dev Returns a human-readable identifier of the oracle
-    /// contract. This should map to a URL and API
-    /// key on the client side.
-    /// @return The oracle identifier.
-    function oracleId() external view returns (bytes32);
-
     /// @dev Upon resolving the oracle query, the client should
     /// call this function to post the data to the
     /// blockchain.
