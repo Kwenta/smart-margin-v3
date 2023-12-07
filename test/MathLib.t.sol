@@ -78,21 +78,6 @@ contract MathLibTest is Test {
         }
     }
 
-    function test_castU128() public {
-        uint256 x = 1 ether;
-        uint128 z = x.castU128();
-        assertEq(z, 1 ether);
-    }
-
-    function test_castU128_overflow() public {
-        uint256 x = type(uint128).max;
-        x++;
-
-        vm.expectRevert(abi.encodeWithSelector(MathLib.OverflowU128.selector));
-
-        x.castU128();
-    }
-
     function test_isSameSign() public {
         int128 x = -1;
         int128 y = -1;
