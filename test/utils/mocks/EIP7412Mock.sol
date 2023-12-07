@@ -2,11 +2,18 @@
 pragma solidity 0.8.20;
 
 contract EIP7412Mock {
-    function fulfillOracleQuery(bytes calldata) external payable {}
+    event Success();
+
+    function fulfillOracleQuery(bytes calldata) external payable {
+        require(msg.value > 0, "EIP7412Mock");
+
+        emit Success();
+    }
 }
 
 contract EIP7412MockRefund {
     function fulfillOracleQuery(bytes calldata) external payable {
+        assert(msg.value > 0);
         (bool success,) = msg.sender.call{value: msg.value}("");
         require(success, "EIP7412MockRefund");
     }

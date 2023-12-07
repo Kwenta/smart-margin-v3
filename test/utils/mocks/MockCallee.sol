@@ -4,7 +4,9 @@ pragma solidity 0.8.20;
 import {ERC2771Context} from
     "lib/openzeppelin-contracts/contracts/metatx/ERC2771Context.sol";
 
-contract MockCallee {}
+contract MockCallee {
+    function thisMethodSucceeds() public pure {}
+}
 
 contract MockCalleeWithContext is ERC2771Context {
     error Unsuccessful();
@@ -17,12 +19,18 @@ contract MockCalleeWithContext is ERC2771Context {
         revert Unsuccessful();
     }
 
-    function sendBackValue(address target) public payable {
+    function sendEthValueTo(address target) public payable {
         (bool ok,) = target.call{value: msg.value}("");
         if (!ok) revert Unsuccessful();
     }
 
-    function lockEth() public payable {
+    function sendEthBack() public payable {
+        (bool ok,) = msg.sender.call{value: msg.value}("");
+        if (!ok) revert Unsuccessful();
+    }
+
+    function lockEth() public payable returns (uint256) {
         // do nothing
+        return msg.value;
     }
 }
