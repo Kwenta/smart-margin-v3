@@ -45,17 +45,6 @@ library MathLib {
         }
     }
 
-    /// @notice cast uint256 to uint128
-    /// @dev asserts that input is not greater than uint128 max
-    /// @param x unsigned 256-bit number
-    /// @return downcasted uint128 from uint256
-    function castU128(uint256 x) internal pure returns (uint128) {
-        if (x > type(uint128).max) {
-            revert OverflowU128();
-        }
-        return uint128(x);
-    }
-
     /// @notice determines if input numbers have the same sign
     /// @dev asserts that both numbers are not zero
     /// @param x signed number
