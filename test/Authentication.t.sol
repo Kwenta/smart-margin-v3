@@ -42,6 +42,16 @@ contract AccountOwner is AuthenticationTest {
 
         assertFalse(isOwner);
     }
+
+    function test_isAccountOwner_zero_address_caller() public {
+        // may happen in the context of conditional orders
+        // where the caller is address(0)
+        vm.prank(address(0));
+
+        bool isOwner = engine.isAccountOwner(accountId, address(0));
+
+        assertFalse(isOwner);
+    }
 }
 
 contract AccountDelegate is AuthenticationTest {
@@ -103,5 +113,15 @@ contract AccountDelegate is AuthenticationTest {
             permission: PERPS_COMMIT_ASYNC_ORDER_PERMISSION,
             user: NEW_ACTOR
         });
+    }
+
+    function test_isAccountDelegate_zero_address_caller() public {
+        // may happen in the context of conditional orders
+        // where the caller is address(0)
+        vm.prank(address(0));
+
+        bool isDelegate = engine.isAccountDelegate(accountId, address(0));
+
+        assertFalse(isDelegate);
     }
 }
