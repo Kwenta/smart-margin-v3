@@ -38,7 +38,8 @@ src/
 │   └── SignatureCheckerLib.sol
 └── utils
     ├── EIP712.sol
-    └── EIP7412.sol
+    ├── EIP7412.sol
+    └── TrustedForwarder.sol
 ```
 
 ## Tests
