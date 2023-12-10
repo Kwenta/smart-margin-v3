@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 pragma solidity 0.8.20;
 
-import {Bootstrap, IPerpsMarketProxy} from "test/utils/Bootstrap.sol";
+import {Bootstrap} from "test/utils/Bootstrap.sol";
+import {IPerpsMarketProxy} from "src/interfaces/synthetix/IPerpsMarketProxy.sol";
 import {SynthetixMock} from "test/utils/mocks/SynthetixMock.sol";
 
 contract AsyncOrderTest is Bootstrap, SynthetixMock {

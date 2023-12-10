@@ -8,6 +8,7 @@ import {IERC7412} from "src/interfaces/synthetix/IERC7412.sol";
 /// @author JaredBorders (jaredborders@pm.me)
 contract EIP7412 {
     /// @notice Fulfill an EIP-7412 oracle query
+    /// @dev refunds from EIP7412Implementer are *NOT* supported
     /// @param EIP7412Implementer The address of the EIP-7412 implementer
     /// @param signedOffchainData The data that was returned
     /// from the off-chain interface, signed by the oracle
@@ -15,9 +16,8 @@ contract EIP7412 {
         address payable EIP7412Implementer,
         bytes calldata signedOffchainData
     ) external payable {
-        /// @custom:auditor this allows arbitrary calls
-        /// to be made to any contract. This may be a security risk.
-        /// Please review the contract carefully.
+        /// @dev given the EIP7412Implementer address is specified in the call,
+        /// there exists the possibility of arbitrary code execution
         IERC7412(EIP7412Implementer).fulfillOracleQuery{value: msg.value}(
             signedOffchainData
         );

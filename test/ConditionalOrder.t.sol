@@ -1,10 +1,11 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 pragma solidity 0.8.20;
 
-import {Bootstrap, IPerpsMarketProxy} from "test/utils/Bootstrap.sol";
+import {Bootstrap} from "test/utils/Bootstrap.sol";
 import {ConditionalOrderSignature} from
     "test/utils/ConditionalOrderSignature.sol";
 import {IEngine} from "src/interfaces/IEngine.sol";
+import {IPerpsMarketProxy} from "src/interfaces/synthetix/IPerpsMarketProxy.sol";
 import {PythMock} from "test/utils/mocks/PythMock.sol";
 import {SynthetixMock} from "test/utils/mocks/SynthetixMock.sol";
 
@@ -782,7 +783,11 @@ contract ReduceOnly is ConditionalOrderTest {
         assertTrue(fees > 0);
     }
 
-    function test_reduce_only_zero_size() public {
+    function test_reduce_only_when_position_doesnt_exist() public {
+        /*
+            ensure position exists; reduce only orders cannot increase position size
+        */
+
         IEngine.OrderDetails memory orderDetails = IEngine.OrderDetails({
             marketId: SETH_PERPS_MARKET_ID,
             accountId: accountId,
@@ -815,7 +820,60 @@ contract ReduceOnly is ConditionalOrderTest {
         assertEq(0, fees);
     }
 
+    function test_reduce_only_zero_size_delta() public {
+        /*
+            ensure incoming size delta is non-zero
+        */
+
+        IEngine.OrderDetails memory orderDetails = IEngine.OrderDetails({
+            marketId: SETH_PERPS_MARKET_ID,
+            accountId: accountId,
+            sizeDelta: 0, // zero sizeDelta
+            settlementStrategyId: SETTLEMENT_STRATEGY_ID,
+            acceptablePrice: ACCEPTABLE_PRICE,
+            isReduceOnly: true,
+            trackingCode: TRACKING_CODE,
+            referrer: REFERRER
+        });
+
+        IEngine.ConditionalOrder memory co = IEngine.ConditionalOrder({
+            orderDetails: orderDetails,
+            signer: signer,
+            nonce: 0,
+            requireVerified: false,
+            trustedExecutor: address(this),
+            maxExecutorFee: type(uint256).max,
+            conditions: new bytes[](0)
+        });
+
+        bytes memory signature = getConditionalOrderSignature({
+            co: co,
+            privateKey: signerPrivateKey,
+            domainSeparator: engine.DOMAIN_SEPARATOR()
+        });
+
+        (IPerpsMarketProxy.Data memory retOrder, uint256 fees) =
+            engine.execute(co, signature, ZERO_CO_FEE);
+
+        // retOrder
+        assertTrue(retOrder.settlementTime == 0);
+        assertTrue(retOrder.request.marketId == 0);
+        assertTrue(retOrder.request.accountId == 0);
+        assertTrue(retOrder.request.sizeDelta == 0);
+        assertTrue(retOrder.request.settlementStrategyId == 0);
+        assertTrue(retOrder.request.acceptablePrice == 0);
+        assertTrue(retOrder.request.trackingCode == bytes32(0));
+        assertTrue(retOrder.request.referrer == address(0));
+
+        // fees
+        assertTrue(fees == 0);
+    }
+
     function test_reduce_only_same_sign() public {
+        /*
+           ensure incoming size delta is NOT the same sign
+        */
+
         mock_getOpenPosition(
             address(perpsMarketProxy), accountId, SETH_PERPS_MARKET_ID, 1 ether
         );
@@ -847,9 +905,21 @@ contract ReduceOnly is ConditionalOrderTest {
             domainSeparator: engine.DOMAIN_SEPARATOR()
         });
 
-        (, uint256 fees) = engine.execute(co, signature, ZERO_CO_FEE);
+        (IPerpsMarketProxy.Data memory retOrder, uint256 fees) =
+            engine.execute(co, signature, ZERO_CO_FEE);
 
-        assertEq(0, fees);
+        // retOrder
+        assertTrue(retOrder.settlementTime == 0);
+        assertTrue(retOrder.request.marketId == 0);
+        assertTrue(retOrder.request.accountId == 0);
+        assertTrue(retOrder.request.sizeDelta == 0);
+        assertTrue(retOrder.request.settlementStrategyId == 0);
+        assertTrue(retOrder.request.acceptablePrice == 0);
+        assertTrue(retOrder.request.trackingCode == bytes32(0));
+        assertTrue(retOrder.request.referrer == address(0));
+
+        // fees
+        assertTrue(fees == 0);
     }
 
     function test_reduce_only_truncate_size_down() public {

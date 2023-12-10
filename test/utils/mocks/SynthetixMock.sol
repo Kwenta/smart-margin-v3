@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 pragma solidity 0.8.20;
 
-import {EIP7412} from "src/utils/EIP7412.sol";
-import {IPerpsMarketProxy} from "src/interfaces/synthetix/IPerpsMarketProxy.sol";
+import {IPerpsMarketProxy} from "test/utils/interfaces/IPerpsMarketProxy.sol";
 import {Test} from "lib/forge-std/src/Test.sol";
 
 contract SynthetixMock is Test {
@@ -48,19 +47,6 @@ contract SynthetixMock is Test {
                 IPerpsMarketProxy.getMaxMarketSize.selector, marketId
             ),
             abi.encode(maxMarketSize)
-        );
-    }
-
-    function mock_fulfillOracleQuery(
-        address EIP7412Implementer,
-        bytes calldata signedOffchainData
-    ) public {
-        vm.mockCall(
-            EIP7412Implementer,
-            abi.encodeWithSelector(
-                EIP7412.fulfillOracleQuery.selector, signedOffchainData
-            ),
-            abi.encode()
         );
     }
 

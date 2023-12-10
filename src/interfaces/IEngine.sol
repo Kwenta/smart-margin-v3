@@ -36,7 +36,7 @@ interface IEngine {
         OrderDetails orderDetails;
         // address of the signer of the order
         address signer;
-        // an incrementing value indexed per order
+        // a means to prevent replay attacks and identify the order
         uint256 nonce;
         // option to require all extra conditions to be verified on-chain
         bool requireVerified;
@@ -278,6 +278,10 @@ interface IEngine {
     /// It will be called within the Engine's execute function to determine if the co can be executed
     /// and if it returns true, the co will be executed. If it returns false, the co will not be executed
     /// and the transaction will revert with CannotExecuteOrder().
+    ///
+    /// note: It is recommended to attempt simulating the co execution prior to submission
+    /// or employ some other sophisticated stratgey to mitigate the risk of submitting a co that
+    /// cannot be executed due to internal Synthetix v3 scenarios that are *unpredictable*.
     ///
     /// The Engine contract does not store co's. It only stores the nonceBitmaps for each account.
     /// The Engine does hold and account for ETH credit and can modify the ETH credit of an account.
