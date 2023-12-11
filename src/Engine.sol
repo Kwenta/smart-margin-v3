@@ -663,30 +663,28 @@ contract Engine is IEngine, EIP712, EIP7412, ERC2771Context {
 
     /// @inheritdoc IEngine
     function isPriceAbove(
-        bytes32 _assetId,
-        int64 _price,
-        uint64 _confidenceInterval
+        uint128 _assetId,
+        uint128 _price
     ) public view override returns (bool) {
-        PythStructs.Price memory priceData = ORACLE.getPrice(_assetId);
+        (, uint256 fillPrice) = PERPS_MARKET_PROXY.computeOrderFees({
+            marketId: _getMarketId(_assetId),
+            sizeDelta: 0
+        });
 
-        /// @dev although counterintuitive, a smaller confidence interval is more accurate.
-        /// The Engine must ensure the current confidence interval is not
-        /// greater (i.e. less accurate) than the confidence interval defined by the condition.
-        return priceData.price > _price && priceData.conf <= _confidenceInterval;
+        return fillPrice > _price;
     }
 
     /// @inheritdoc IEngine
     function isPriceBelow(
-        bytes32 _assetId,
-        int64 _price,
-        uint64 _confidenceInterval
+        uint128 _assetId,
+        uint128 _price
     ) public view override returns (bool) {
-        PythStructs.Price memory priceData = ORACLE.getPrice(_assetId);
+        (, uint256 fillPrice) = PERPS_MARKET_PROXY.computeOrderFees({
+            marketId: _getMarketId(_assetId),
+            sizeDelta: 0
+        });
 
-        /// @dev although counterintuitive, a smaller confidence interval is more accurate.
-        /// The Engine must ensure the current confidence interval is not
-        /// greater (i.e. less accurate) than the confidence interval defined by the condition.
-        return priceData.price < _price && priceData.conf <= _confidenceInterval;
+        return priceData.price < _price;
     }
 
     /// @inheritdoc IEngine
