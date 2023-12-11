@@ -381,51 +381,23 @@ interface IEngine {
         returns (bool);
 
     /// @notice determine if the current price of an asset is above a given price
-    /// @dev assets price is determined by the pyth oracle
+    /// @dev relies on Synthetix Perps v3 market's simulated fill price
     /// @param _assetId id of an asset to check the price of
     /// @param _price the price to compare against
-    /// @param _confidenceInterval roughly corresponds to the standard error of a normal distribution
-    ///
-    /// example:
-    /// given:
-    /// PythStructs.Price.expo (expo) = -5
-    /// confidenceInterval (conf) = 1500
-    /// PythStructs.Price.price (price) = 12276250
-    ///
-    /// conf * 10^(expo) = 1500 * 10^(-5) = $0.015
-    /// price * 10^(-5) = 12276250 * 10^(-5) = $122.7625
-    ///
-    /// thus, the price of the asset is $122.7625 +/- $0.015
-    ///
     /// @return true if the current price of the asset is above the given `_price`, false otherwise
     function isPriceAbove(
-        bytes32 _assetId,
-        int64 _price,
-        uint64 _confidenceInterval
+        uint128 _assetId,
+        uint128 _price
     ) external view returns (bool);
 
     /// @notice determine if the current price of an asset is below a given price
-    /// @dev assets price is determined by the pyth oracle
+    /// @dev relies on Synthetix Perps v3 market's simulated fill price
     /// @param _assetId id of an asset to check the price of
     /// @param _price the price to compare against
-    /// @param _confidenceInterval roughly corresponds to the standard error of a normal distribution
-    ///
-    /// example:
-    /// given:
-    /// PythStructs.Price.expo (expo) = -5
-    /// confidenceInterval (conf) = 1500
-    /// PythStructs.Price.price (price) = 12276250
-    ///
-    /// conf * 10^(expo) = 1500 * 10^(-5) = $0.015
-    /// price * 10^(-5) = 12276250 * 10^(-5) = $122.7625
-    ///
-    /// thus, the price of the asset is $122.7625 +/- $0.015
-    ///
     /// @return true if the current price of the asset is below the given `_price`, false otherwise
     function isPriceBelow(
-        bytes32 _assetId,
-        int64 _price,
-        uint64 _confidenceInterval
+       uint128 _assetId,
+        uint128 _price
     ) external view returns (bool);
 
     /// @notice can market accept non close-only orders (i.e. is the market open)
