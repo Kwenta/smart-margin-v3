@@ -2,6 +2,7 @@
 pragma solidity 0.8.20;
 
 import {Bootstrap} from "test/utils/Bootstrap.sol";
+import {IEngine} from "src/interfaces/IEngine.sol";
 import {IPerpsMarketProxy} from "src/interfaces/synthetix/IPerpsMarketProxy.sol";
 import {SynthetixMock} from "test/utils/mocks/SynthetixMock.sol";
 
@@ -96,6 +97,23 @@ contract CommitOrder is AsyncOrderTest {
             _perpsMarketId: SETH_PERPS_MARKET_ID,
             _accountId: accountId,
             _sizeDelta: sizeDelta,
+            _settlementStrategyId: SETTLEMENT_STRATEGY_ID,
+            _acceptablePrice: type(uint256).max,
+            _trackingCode: TRACKING_CODE,
+            _referrer: REFERRER
+        });
+    }
+
+    function test_commitOrder_Unauthorized() public {
+        vm.prank(BAD_ACTOR);
+
+        vm.expectRevert(abi.encodeWithSelector(IEngine.Unauthorized.selector));
+
+        (IPerpsMarketProxy.Data memory retOrder, uint256 fees) = engine
+            .commitOrder({
+            _perpsMarketId: SETH_PERPS_MARKET_ID,
+            _accountId: accountId,
+            _sizeDelta: 1 ether,
             _settlementStrategyId: SETTLEMENT_STRATEGY_ID,
             _acceptablePrice: type(uint256).max,
             _trackingCode: TRACKING_CODE,
