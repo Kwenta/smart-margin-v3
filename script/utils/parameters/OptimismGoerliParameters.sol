@@ -10,6 +10,4 @@ contract OptimismGoerliParameters {
 
     address public constant USD_PROXY =
         0xe487Ad4291019b33e2230F8E2FB1fb6490325260;
-
-    address public constant PYTH = 0xff1a0f4744e8582DF1aE09D5611b887B6a12925C;
 }
