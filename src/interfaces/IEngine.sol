@@ -380,25 +380,27 @@ interface IEngine {
         view
         returns (bool);
 
-    /// @notice determine if the current price of an asset is above a given price
+    /// @notice determine if the simulated fill price is above a given price
     /// @dev relies on Synthetix Perps v3 market's simulated fill price
-    /// @param _assetId id of an asset to check the price of
+    /// @param _marketId id a market used to check the price of the
+    /// underlying asset of that market (i.e. ETH Perp Market -> ETH)
     /// @param _price the price to compare against
-    /// @return true if the current price of the asset is above the given `_price`, false otherwise
-    function isPriceAbove(
-        uint128 _assetId,
-        uint128 _price
-    ) external view returns (bool);
+    /// @return true if the simulated fill price is above the given `_price`, false otherwise
+    function isPriceAbove(uint128 _marketId, uint256 _price)
+        external
+        view
+        returns (bool);
 
-    /// @notice determine if the current price of an asset is below a given price
+    /// @notice determine if the simulated fill price is below a given price
     /// @dev relies on Synthetix Perps v3 market's simulated fill price
-    /// @param _assetId id of an asset to check the price of
+    /// @param _marketId id a market used to check the price of the
+    /// underlying asset of that market (i.e. ETH Perp Market -> ETH)
     /// @param _price the price to compare against
-    /// @return true if the current price of the asset is below the given `_price`, false otherwise
-    function isPriceBelow(
-       uint128 _assetId,
-        uint128 _price
-    ) external view returns (bool);
+    /// @return true if the simulated fill price is below the given `_price`, false otherwise
+    function isPriceBelow(uint128 _marketId, uint256 _price)
+        external
+        view
+        returns (bool);
 
     /// @notice can market accept non close-only orders (i.e. is the market open)
     /// @dev if maxMarketSize to 0, the market will be in a close-only state
