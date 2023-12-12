@@ -116,15 +116,6 @@ contract Engine is IEngine, EIP712, EIP7412, ERC2771Context {
     }
 
     /*//////////////////////////////////////////////////////////////
-                           TRUSTED FORWARDER
-    //////////////////////////////////////////////////////////////*/
-
-    /// @inheritdoc ERC2771Context
-    function trustedForwarder() public view override returns (address) {
-        return super.trustedForwarder();
-    }
-
-    /*//////////////////////////////////////////////////////////////
                              AUTHENTICATION
     //////////////////////////////////////////////////////////////*/
 
