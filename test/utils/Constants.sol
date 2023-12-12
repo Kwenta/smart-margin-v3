@@ -52,9 +52,6 @@ contract Constants {
 
     uint128 constant SETH_PERPS_MARKET_ID = 200;
 
-    bytes32 constant PYTH_ETH_USD_ASSET_ID =
-        0xca80ba6dc32e08d06f1aa886011eed1d77c77be9eb761cc10d72b7d0a2fd57a6;
-
     uint256 internal constant AMOUNT = 10_000 ether;
 
     address internal constant MARKET_CONFIGURATION_MODULE =
