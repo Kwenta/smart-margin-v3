@@ -173,6 +173,42 @@ contract CanExecute is ConditionalOrderTest {
 
         assertFalse(canExec);
     }
+
+    function test_canExecute_false_require_verify_condition_not_met() public {
+        bytes[] memory conditions = new bytes[](1);
+        conditions[0] = isTimestampAfter(block.timestamp + 100); // condition not met
+
+        IEngine.OrderDetails memory orderDetails = IEngine.OrderDetails({
+            marketId: SETH_PERPS_MARKET_ID,
+            accountId: accountId,
+            sizeDelta: SIZE_DELTA,
+            settlementStrategyId: SETTLEMENT_STRATEGY_ID,
+            acceptablePrice: ACCEPTABLE_PRICE,
+            isReduceOnly: false,
+            trackingCode: TRACKING_CODE,
+            referrer: REFERRER
+        });
+
+        IEngine.ConditionalOrder memory co = IEngine.ConditionalOrder({
+            orderDetails: orderDetails,
+            signer: signer,
+            nonce: 0,
+            requireVerified: true,
+            trustedExecutor: address(this),
+            maxExecutorFee: type(uint256).max,
+            conditions: conditions
+        });
+
+        bytes memory signature = getConditionalOrderSignature({
+            co: co,
+            privateKey: signerPrivateKey,
+            domainSeparator: engine.DOMAIN_SEPARATOR()
+        });
+
+        bool canExec = engine.canExecute(co, signature, ZERO_CO_FEE);
+
+        assertFalse(canExec);
+    }
 }
 
 contract VerifySigner is ConditionalOrderTest {
