@@ -39,24 +39,6 @@ contract Engine is IEngine, EIP712, EIP7412, ERC2771Context {
     /// @notice max number of conditions that can be defined for a conditional order
     uint256 internal constant MAX_CONDITIONS = 8;
 
-    /// @notice condition selector constant(s)
-    bytes4 internal constant isTimestampAfterSelector =
-        IEngine.isTimestampAfter.selector;
-    bytes4 internal constant isTimestampBeforeSelector =
-        IEngine.isTimestampBefore.selector;
-    bytes4 internal constant isPriceAboveSelector =
-        IEngine.isPriceAbove.selector;
-    bytes4 internal constant isPriceBelowSelector =
-        IEngine.isPriceBelow.selector;
-    bytes4 internal constant isMarketOpenSelector =
-        IEngine.isMarketOpen.selector;
-    bytes4 internal constant isPositionSizeAboveSelector =
-        IEngine.isPositionSizeAbove.selector;
-    bytes4 internal constant isPositionSizeBelowSelector =
-        IEngine.isPositionSizeBelow.selector;
-    bytes4 internal constant isOrderFeeBelowSelector =
-        IEngine.isOrderFeeBelow.selector;
-
     /*//////////////////////////////////////////////////////////////
                                IMMUTABLES
     //////////////////////////////////////////////////////////////*/
@@ -594,14 +576,14 @@ contract Engine is IEngine, EIP712, EIP7412, ERC2771Context {
             /// @dev checking if the selector is valid prevents the possibility of
             /// a malicious condition from griefing the executor
             if (
-                selector == isTimestampAfterSelector
-                    || selector == isTimestampBeforeSelector
-                    || selector == isPriceAboveSelector
-                    || selector == isPriceBelowSelector
-                    || selector == isMarketOpenSelector
-                    || selector == isPositionSizeAboveSelector
-                    || selector == isPositionSizeBelowSelector
-                    || selector == isOrderFeeBelowSelector
+                selector == this.isPriceAbove.selector
+                    || selector == this.isPriceBelow.selector
+                    || selector == this.isTimestampAfter.selector
+                    || selector == this.isTimestampBefore.selector
+                    || selector == this.isMarketOpen.selector
+                    || selector == this.isPositionSizeAbove.selector
+                    || selector == this.isPositionSizeBelow.selector
+                    || selector == this.isOrderFeeBelow.selector
             ) {
                 // @dev staticcall to prevent state changes in the case a condition is malicious
                 (success, response) =
