@@ -61,10 +61,10 @@ contract Engine is IEngine, EIP712, EIP7412, ERC2771Context {
     mapping(uint128 accountId => mapping(uint256 index => uint256 bitmap))
         public nonceBitmap;
 
-    /// @notice mapping of account id to ETH balance
-    /// @dev ETH can be deposited/withdrawn from the
+    /// @notice mapping of account id to sUSD balance
+    /// @dev sUSD can be deposited/withdrawn from the
     /// Engine contract to pay for fee(s) (conditional order execution, etc.)
-    mapping(uint128 accountId => uint256 ethBalance) public ethBalances;
+    mapping(uint128 accountId => uint256 ethBalance) public susdBalance;
 
     /*//////////////////////////////////////////////////////////////
                               CONSTRUCTOR
@@ -125,54 +125,6 @@ contract Engine is IEngine, EIP712, EIP7412, ERC2771Context {
             && PERPS_MARKET_PROXY.isAuthorized(
                 _accountId, PERPS_COMMIT_ASYNC_ORDER_PERMISSION, _caller
             );
-    }
-
-    /*//////////////////////////////////////////////////////////////
-                             ETH MANAGEMENT
-    //////////////////////////////////////////////////////////////*/
-
-    /// @inheritdoc IEngine
-    function depositEth(uint128 _accountId) external payable override {
-        // ensure account exists (i.e. owner is not the zero address)
-        /// @notice this does not check if the caller is the account owner
-        if (PERPS_MARKET_PROXY.getAccountOwner(_accountId) == address(0)) {
-            revert AccountDoesNotExist();
-        }
-
-        ethBalances[_accountId] += msg.value;
-
-        emit EthDeposit(_accountId, msg.value);
-    }
-
-    /// @inheritdoc IEngine
-    function withdrawEth(uint128 _accountId, uint256 _amount)
-        external
-        override
-    {
-        address caller = _msgSender();
-
-        if (!isAccountOwner(_accountId, caller)) revert Unauthorized();
-
-        _withdrawEth(caller, _accountId, _amount);
-
-        emit EthWithdraw(_accountId, _amount);
-    }
-
-    /// @notice debit ETH from the account and transfer it to the caller
-    /// @dev UNSAFE to call directly; use `withdrawEth` instead
-    /// @param _caller the caller of the function
-    /// @param _accountId the account id to debit ETH from
-    function _withdrawEth(address _caller, uint128 _accountId, uint256 _amount)
-        internal
-    {
-        if (_amount > ethBalances[_accountId]) revert InsufficientEthBalance();
-
-        // decrement the ETH balance of the account prior to transferring ETH to the caller
-        ethBalances[_accountId] -= _amount;
-
-        (bool sent,) = _caller.call{value: _amount}("");
-
-        if (!sent) revert EthTransferFailed();
     }
 
     /*//////////////////////////////////////////////////////////////
@@ -410,6 +362,55 @@ contract Engine is IEngine, EIP712, EIP7412, ERC2771Context {
     }
 
     /*//////////////////////////////////////////////////////////////
+                       CONDITIONAL ORDER PAYMENT
+    //////////////////////////////////////////////////////////////*/
+
+    /// @inheritdoc IEngine
+    function deposit(uint128 _accountId, uint256 _amount) external override {
+        // ensure account exists (i.e. owner is not the zero address)
+        /// @notice this does not check if the caller is the account owner
+        if (PERPS_MARKET_PROXY.getAccountOwner(_accountId) == address(0)) {
+            revert AccountDoesNotExist();
+        }
+
+        if (!SUSD.transferFrom(msg.sender, address(this), _amount)) {
+            revert DepositFailed();
+        }
+
+        susdBalance[_accountId] += _amount;
+
+        emit Deposit(_accountId, _amount);
+    }
+
+    /// @inheritdoc IEngine
+    function withdraw(uint128 _accountId, uint256 _amount) external override {
+        address caller = _msgSender();
+
+        if (!isAccountOwner(_accountId, caller)) revert Unauthorized();
+
+        _withdraw(caller, _accountId, _amount);
+
+        emit Withdraw(_accountId, _amount);
+    }
+
+    /// @notice debit sUSD from the account and transfer it to the caller
+    /// @dev UNSAFE to call directly; use `withdraw` instead
+    /// @param _caller the caller of the function
+    /// @param _accountId the account id to debit sUSD from
+    function _withdraw(address _caller, uint128 _accountId, uint256 _amount)
+        internal
+    {
+        if (_amount > susdBalance[_accountId]) revert InsufficientBalance();
+
+        // decrement the sUSD balance of the account prior to transferring sUSD to the caller
+        susdBalance[_accountId] -= _amount;
+
+        if (!SUSD.transfer(_caller, _amount)) {
+            revert WithdrawalFailed();
+        }
+    }
+
+    /*//////////////////////////////////////////////////////////////
                       CONDITIONAL ORDER MANAGEMENT
     //////////////////////////////////////////////////////////////*/
 
@@ -435,10 +436,10 @@ contract Engine is IEngine, EIP712, EIP7412, ERC2771Context {
         _useUnorderedNonce(_co.orderDetails.accountId, _co.nonce);
 
         /// @dev impose a fee for executing the conditional order
-        /// @dev the fee is denoted in ETH and is paid to the caller (conditional order executor)
+        /// @dev the fee is denoted in sUSD and is paid to the caller (conditional order executor)
         /// @dev the fee does not exceed the max fee set by the conditional order and
         /// this is enforced by the `canExecute` function
-        _withdrawEth(_msgSender(), _co.orderDetails.accountId, _fee);
+        _withdraw(_msgSender(), _co.orderDetails.accountId, _fee);
 
         /// @notice get size delta from order details
         int128 sizeDelta = _co.orderDetails.sizeDelta;
@@ -504,8 +505,8 @@ contract Engine is IEngine, EIP712, EIP7412, ERC2771Context {
         // verify fee does not exceed the max fee set by the conditional order
         if (_fee > _co.maxExecutorFee) return false;
 
-        // verify account has enough credit (ETH) to pay the fee
-        if (_fee > ethBalances[_co.orderDetails.accountId]) return false;
+        // verify account has enough credit to pay the fee
+        if (_fee > susdBalance[_co.orderDetails.accountId]) return false;
 
         // verify nonce has not been executed before
         if (hasUnorderedNonceBeenUsed(_co.orderDetails.accountId, _co.nonce)) {

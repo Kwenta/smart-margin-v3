@@ -43,7 +43,7 @@ interface IEngine {
         bool requireVerified;
         // address that can execute the order *if* requireVerified is false
         address trustedExecutor;
-        // max fee denominated in ETH that can be paid to the executor
+        // max fee denominated in sUSD that can be paid to the executor
         uint256 maxExecutorFee;
         // array of extra conditions to be met on-chain *if* requireVerified is true
         bytes[] conditions;
@@ -72,14 +72,17 @@ interface IEngine {
     /// @notice thrown when attempting to verify a condition identified by an invalid selector
     error InvalidConditionSelector(bytes4 selector);
 
-    /// @notice thrown when attempting to debit an account with insufficient balance
-    error InsufficientEthBalance();
-
-    /// @notice thrown when attempting to transfer eth fails
-    error EthTransferFailed();
-
-    /// @notice thrown when attempting to deposit eth into an account that does not exist
+    /// @notice thrown when attempting to deposit sUSD into an account that does not exist
     error AccountDoesNotExist();
+
+    /// @notice thrown when attempting to withdraw more sUSD from the Engine than the account has credit for
+    error InsufficientBalance();
+
+    /// @notice thrown when attempt to deposit sUSD into the Engine fails
+    error DepositFailed();
+
+    /// @notice thrown when attempt to withdraw sUSD from the Engine fails
+    error WithdrawFailed();
 
     /*//////////////////////////////////////////////////////////////
                                  EVENTS
@@ -93,15 +96,15 @@ interface IEngine {
         uint128 indexed accountId, uint256 word, uint256 mask
     );
 
-    /// @notice emitted when eth is deposited into the engine and credited to an account
+    /// @notice emitted when sUSD is deposited into the engine and credited to an account
     /// @param accountId the id of the account that was credited
-    /// @param amount the amount of eth deposited
-    event EthDeposit(uint128 indexed accountId, uint256 amount);
+    /// @param amount the amount of sUSD deposited
+    event Deposit(uint128 indexed accountId, uint256 amount);
 
-    /// @notice emitted when eth is withdrawn from the engine and debited from an account
+    /// @notice emitted when sUSD is withdrawn from the engine and debited from an account
     /// @param accountId the id of the account that was debited
-    /// @param amount the amount of eth withdrawn
-    event EthWithdraw(uint128 indexed accountId, uint256 amount);
+    /// @param amount the amount of sUSD withdrawn
+    event Withdraw(uint128 indexed accountId, uint256 amount);
 
     /// @notice emitted when a co is executed
     /// @param order the order commited to the perps market
@@ -138,17 +141,17 @@ interface IEngine {
         returns (bool);
 
     /*//////////////////////////////////////////////////////////////
-                             ETH MANAGEMENT
+                       CONDITIONAL ORDER PAYMENT
     //////////////////////////////////////////////////////////////*/
 
-    /// @notice deposit eth into the engine and credit the account identified by the accountId
+    /// @notice deposit sUSD into the engine and credit the account identified by the accountId
     /// @param _accountId the id of the account to credit
-    function depositEth(uint128 _accountId) external payable;
+    function deposit(uint128 _accountId, uint256 _amount) external;
 
-    /// @notice withdraw eth from the engine and debit the account identified by the accountId
+    /// @notice withdraw sUSD from the engine and debit the account identified by the accountId
     /// @param _accountId the id of the account to debit
-    /// @param _amount the amount of eth to withdraw
-    function withdrawEth(uint128 _accountId, uint256 _amount) external;
+    /// @param _amount the amount of sUSD to withdraw
+    function withdraw(uint128 _accountId, uint256 _amount) external;
 
     /*//////////////////////////////////////////////////////////////
                             NONCE MANAGEMENT
@@ -251,7 +254,7 @@ interface IEngine {
     ///    the conditions array becomes the source of verification imposed on-chain.
     /// 7. The maxExecutorFee which is included in the ConditionalOrder struct.
     ///    The maxExecutorFee is the maximum fee that can be imposed by the address that
-    ///    successfully executes the co (trustedExecutor or not). This max fee is denominated in ETH and is
+    ///    successfully executes the co (trustedExecutor or not). This max fee is denominated in sUSD and is
     ///    enforced on-chain. If the maxExecutorFee is greater than the fee specified
     ///    by the executor, the co will *not* be executed.
     /// 8. The conditions which are included in the ConditionalOrder struct.
@@ -270,8 +273,8 @@ interface IEngine {
     /// In *every* case of co execution, the logic of validating the co is:
     ///
     /// 1. Check if the fee specified by the executor is less than or equal to the maxExecutorFee
-    /// 2. Check if the account has sufficient ETH credit to pay the fee
-    ///    (see ETH MANAGEMENT for how that can be accomplished)
+    /// 2. Check if the account has sufficient sUSD credit to pay the fee
+    ///    (see CONDITIONAL ORDER PAYMENT for how that can be accomplished)
     /// 3. Check if the nonce has been used (see NONCE MANAGEMENT for how that can be accomplished)
     /// 4. Check if the signer is the owner or delegate of the account
     /// 5. Check if the signature is valid for the given co and signer
@@ -292,20 +295,16 @@ interface IEngine {
     /// cannot be executed due to internal Synthetix v3 scenarios/contexts that are *unpredictable*.
     ///
     /// The Engine contract does not store co's. It only stores the nonceBitmaps for each account.
-    /// The Engine does hold and account for ETH credit and can modify the ETH credit of an account.
+    /// The Engine does hold and account for sUSD credit and can modify the sUSD credit of an account.
     ///
-    /// ETH Management:
-    /// With the introduction of co's, the Engine contract now holds ETH credit for accounts.
+    /// Conditional Order Payment:
+    /// With the introduction of co's, the Engine contract now holds sUSD credit for accounts.
     /// Using collateral to pay for fees is not ideal due to accounting risks associated with
     /// orders that are close to max leverage. To mitigate this risk, the Engine contract
-    /// holds ETH credit for accounts. This ETH credit is used to pay for fees.
+    /// holds sUSD credit for accounts. This sUSD credit is used to pay for fees.
     /// Furthermore, given the multi-colateral nature of the protocol, the Engine contract
     /// does not need to handle scenarios where an account does not have sufficient
-    /// snxUSD collateral to pay the fee.
-    ///
-    /// Finally, the current approach to implementing Account Abstraction via ERC-4337
-    /// requires traders deposit ETH to the "protocol" prior to trading. This ETH can be
-    /// multipurposed to pay for fees. This is the approach taken by the Engine contract.
+    /// collateral to pay the fee.
 
     /// @custom:docs for more in-depth documentation of co mechanism,
     /// please refer to https://github.com/Kwenta/smart-margin-v3/wiki/Conditional-Orders
@@ -330,7 +329,7 @@ interface IEngine {
     /// @param _signature the signature of the co
     /// @param _fee the executor specified fee for the executing the co
     /// @dev if the fee is greater than the maxExecutorFee defined in the co,
-    /// or if the account lacks sufficient ETH credit to pay the fee, canExecute will return false
+    /// or if the account lacks sufficient sUSD credit to pay the fee, canExecute will return false
     /// @custom:warning this function may return false-positive results in the case the underlying Synthetix Perps v3
     /// market is in a state that is not predictable (ex: unpredictable updates to the market's simulated fill price)
     /// @return true if the order can be executed, false otherwise
@@ -377,8 +376,8 @@ interface IEngine {
     /// DISCLAIMER:
     /// Take note that if a trusted party is authorized to execute a co, then the trader
     /// does not actually need to specify any conditions. In a contrived example, the trader
-    /// could simply "tell" the trusted party to execute the co if the price of ETH is above/below some number.
-    /// The trusted party would then check the price of ETH (via whatever method deemed necessary)
+    /// could simply "tell" the trusted party to execute the co if the price of BTC is above/below some number.
+    /// The trusted party would then check the price of BTC (via whatever method deemed necessary)
     /// and execute the co.
     /// This is a very simple example, but it illustrates the flexibility of the co
     /// along with the degree of trust that will be placed in the trusted party.
@@ -405,7 +404,7 @@ interface IEngine {
     /// @notice determine if the simulated fill price is above a given price
     /// @dev relies on Synthetix Perps v3 market's simulated fill price
     /// @param _marketId id a market used to check the price of the
-    /// underlying asset of that market (i.e. ETH Perp Market -> ETH)
+    /// underlying asset of that market (i.e. BTC Perp Market -> BTC)
     /// @param _price the price to compare against
     /// @return true if the simulated fill price is above the given `_price`, false otherwise
     function isPriceAbove(uint128 _marketId, uint256 _price)
@@ -416,7 +415,7 @@ interface IEngine {
     /// @notice determine if the simulated fill price is below a given price
     /// @dev relies on Synthetix Perps v3 market's simulated fill price
     /// @param _marketId id a market used to check the price of the
-    /// underlying asset of that market (i.e. ETH Perp Market -> ETH)
+    /// underlying asset of that market (i.e. BTC Perp Market -> BTC)
     /// @param _price the price to compare against
     /// @return true if the simulated fill price is below the given `_price`, false otherwise
     function isPriceBelow(uint128 _marketId, uint256 _price)
