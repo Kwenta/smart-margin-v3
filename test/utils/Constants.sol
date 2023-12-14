@@ -59,5 +59,5 @@ contract Constants {
 
     uint256 internal constant ZERO_CO_FEE = 0;
 
-    uint256 internal constant CO_FEE = 100 wei;
+    uint256 internal constant CO_FEE = 620_198 wei;
 }

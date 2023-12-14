@@ -115,7 +115,7 @@ contract CanExecute is ConditionalOrderTest {
         _defineConditionalOrder();
 
         // ensure the account has no credit
-        assertEq(engine.ethBalances(accountId), 0);
+        assertEq(engine.credit(accountId), 0);
 
         // CO_FEE is non-zero, and the account has no credit
         bool canExec = engine.canExecute(co, signature, CO_FEE);
@@ -178,7 +178,7 @@ contract CanExecute is ConditionalOrderTest {
         bytes[] memory conditions = new bytes[](1);
         conditions[0] = isTimestampAfter(block.timestamp + 100); // condition not met
 
-        IEngine.OrderDetails memory orderDetails = IEngine.OrderDetails({
+        orderDetails = IEngine.OrderDetails({
             marketId: SETH_PERPS_MARKET_ID,
             accountId: accountId,
             sizeDelta: SIZE_DELTA,
@@ -189,7 +189,7 @@ contract CanExecute is ConditionalOrderTest {
             referrer: REFERRER
         });
 
-        IEngine.ConditionalOrder memory co = IEngine.ConditionalOrder({
+        co = IEngine.ConditionalOrder({
             orderDetails: orderDetails,
             signer: signer,
             nonce: 0,
@@ -199,7 +199,7 @@ contract CanExecute is ConditionalOrderTest {
             conditions: conditions
         });
 
-        bytes memory signature = getConditionalOrderSignature({
+        signature = getConditionalOrderSignature({
             co: co,
             privateKey: signerPrivateKey,
             domainSeparator: engine.DOMAIN_SEPARATOR()
@@ -647,7 +647,14 @@ contract Execute is ConditionalOrderTest {
 
 contract Fee is ConditionalOrderTest {
     function test_fee_imposed() public {
-        engine.depositEth{value: 1 ether}(accountId);
+        // prank ACTOR because this address has sUSD
+        vm.startPrank(ACTOR);
+
+        sUSD.approve(address(engine), type(uint256).max);
+
+        engine.deposit(accountId, CO_FEE);
+
+        vm.stopPrank();
 
         IEngine.OrderDetails memory orderDetails = IEngine.OrderDetails({
             marketId: SETH_PERPS_MARKET_ID,
@@ -676,17 +683,24 @@ contract Fee is ConditionalOrderTest {
             domainSeparator: engine.DOMAIN_SEPARATOR()
         });
 
-        uint256 preExecutorBalance = address(this).balance;
+        uint256 preExecutorBalance = sUSD.balanceOf(address(this));
 
         engine.execute(co, signature, CO_FEE);
 
-        uint256 postExecutorBalance = address(this).balance;
+        uint256 postExecutorBalance = sUSD.balanceOf(address(this));
 
         assertEq(preExecutorBalance + CO_FEE, postExecutorBalance);
     }
 
     function test_fee_exceeds_account_credit() public {
-        engine.depositEth{value: CO_FEE - 1}(accountId);
+        // prank ACTOR because this address has sUSD
+        vm.startPrank(ACTOR);
+
+        sUSD.approve(address(engine), type(uint256).max);
+
+        engine.deposit(accountId, CO_FEE - 1);
+
+        vm.stopPrank();
 
         IEngine.OrderDetails memory orderDetails = IEngine.OrderDetails({
             marketId: SETH_PERPS_MARKET_ID,
@@ -721,7 +735,14 @@ contract Fee is ConditionalOrderTest {
     }
 
     function test_fee_exceeds_maxExecutorFee() public {
-        engine.depositEth{value: 1 ether}(accountId);
+        // prank ACTOR because this address has sUSD
+        vm.startPrank(ACTOR);
+
+        sUSD.approve(address(engine), type(uint256).max);
+
+        engine.deposit(accountId, CO_FEE);
+
+        vm.stopPrank();
 
         IEngine.OrderDetails memory orderDetails = IEngine.OrderDetails({
             marketId: SETH_PERPS_MARKET_ID,

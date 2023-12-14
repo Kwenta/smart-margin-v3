@@ -10,14 +10,11 @@ import {IERC20} from "src/interfaces/tokens/IERC20.sol";
 import {ISpotMarketProxy} from "src/interfaces/synthetix/ISpotMarketProxy.sol";
 import {MathLib} from "src/libraries/MathLib.sol";
 import {SignatureCheckerLib} from "src/libraries/SignatureCheckerLib.sol";
-import {
-    TrustedForwarder, ERC2771Context
-} from "src/utils/TrustedForwarder.sol";
 
 /// @title Kwenta Smart Margin v3: Engine contract
 /// @notice Responsible for interacting with Synthetix v3 perps markets
 /// @author JaredBorders (jaredborders@pm.me)
-contract Engine is IEngine, EIP712, EIP7412, ERC2771Context {
+contract Engine is IEngine, EIP712, EIP7412 {
     using MathLib for int128;
     using MathLib for int256;
     using MathLib for uint256;
@@ -61,10 +58,10 @@ contract Engine is IEngine, EIP712, EIP7412, ERC2771Context {
     mapping(uint128 accountId => mapping(uint256 index => uint256 bitmap))
         public nonceBitmap;
 
-    /// @notice mapping of account id to sUSD balance
+    /// @notice mapping of account id to sUSD balance (i.e. credit available to pay for fee(s))
     /// @dev sUSD can be deposited/withdrawn from the
     /// Engine contract to pay for fee(s) (conditional order execution, etc.)
-    mapping(uint128 accountId => uint256 ethBalance) public susdBalance;
+    mapping(uint128 accountId => uint256) public credit;
 
     /*//////////////////////////////////////////////////////////////
                               CONSTRUCTOR
@@ -79,7 +76,7 @@ contract Engine is IEngine, EIP712, EIP7412, ERC2771Context {
         address _perpsMarketProxy,
         address _spotMarketProxy,
         address _sUSDProxy
-    ) ERC2771Context(address(new TrustedForwarder())) {
+    ) {
         if (_perpsMarketProxy == address(0)) revert ZeroAddress();
         if (_spotMarketProxy == address(0)) revert ZeroAddress();
         if (_sUSDProxy == address(0)) revert ZeroAddress();
@@ -137,7 +134,7 @@ contract Engine is IEngine, EIP712, EIP7412, ERC2771Context {
         uint256 _wordPos,
         uint256 _mask
     ) external override {
-        if (_isAccountOwnerOrDelegate(_accountId, _msgSender())) {
+        if (_isAccountOwnerOrDelegate(_accountId, msg.sender)) {
             /// @dev using bitwise OR to set the bit at the bit position
             /// bitmap          = .......10001
             /// mask            = .......00110
@@ -250,16 +247,14 @@ contract Engine is IEngine, EIP712, EIP7412, ERC2771Context {
     ) external override {
         IERC20 synth = IERC20(_getSynthAddress(_synthMarketId));
 
-        address caller = _msgSender();
-
         if (_amount > 0) {
             _depositCollateral(
-                caller, synth, _accountId, _synthMarketId, _amount
+                msg.sender, synth, _accountId, _synthMarketId, _amount
             );
         } else {
-            if (!isAccountOwner(_accountId, caller)) revert Unauthorized();
+            if (!isAccountOwner(_accountId, msg.sender)) revert Unauthorized();
             _withdrawCollateral(
-                caller, synth, _accountId, _synthMarketId, _amount
+                msg.sender, synth, _accountId, _synthMarketId, _amount
             );
         }
     }
@@ -324,7 +319,7 @@ contract Engine is IEngine, EIP712, EIP7412, ERC2771Context {
         returns (IPerpsMarketProxy.Data memory retOrder, uint256 fees)
     {
         /// @dev the account owner or the delegate may commit async orders
-        if (_isAccountOwnerOrDelegate(_accountId, _msgSender())) {
+        if (_isAccountOwnerOrDelegate(_accountId, msg.sender)) {
             (retOrder, fees) = _commitOrder({
                 _perpsMarketId: _perpsMarketId,
                 _accountId: _accountId,
@@ -373,22 +368,19 @@ contract Engine is IEngine, EIP712, EIP7412, ERC2771Context {
             revert AccountDoesNotExist();
         }
 
-        if (!SUSD.transferFrom(msg.sender, address(this), _amount)) {
-            revert DepositFailed();
-        }
+        /// @dev sUSD transfers that fail will revert
+        SUSD.transferFrom(msg.sender, address(this), _amount);
 
-        susdBalance[_accountId] += _amount;
+        credit[_accountId] += _amount;
 
         emit Deposit(_accountId, _amount);
     }
 
     /// @inheritdoc IEngine
     function withdraw(uint128 _accountId, uint256 _amount) external override {
-        address caller = _msgSender();
+        if (!isAccountOwner(_accountId, msg.sender)) revert Unauthorized();
 
-        if (!isAccountOwner(_accountId, caller)) revert Unauthorized();
-
-        _withdraw(caller, _accountId, _amount);
+        _withdraw(msg.sender, _accountId, _amount);
 
         emit Withdraw(_accountId, _amount);
     }
@@ -400,14 +392,13 @@ contract Engine is IEngine, EIP712, EIP7412, ERC2771Context {
     function _withdraw(address _caller, uint128 _accountId, uint256 _amount)
         internal
     {
-        if (_amount > susdBalance[_accountId]) revert InsufficientBalance();
+        if (_amount > credit[_accountId]) revert InsufficientBalance();
 
         // decrement the sUSD balance of the account prior to transferring sUSD to the caller
-        susdBalance[_accountId] -= _amount;
+        credit[_accountId] -= _amount;
 
-        if (!SUSD.transfer(_caller, _amount)) {
-            revert WithdrawalFailed();
-        }
+        /// @dev sUSD transfers that fail will revert
+        SUSD.transfer(_caller, _amount);
     }
 
     /*//////////////////////////////////////////////////////////////
@@ -439,7 +430,7 @@ contract Engine is IEngine, EIP712, EIP7412, ERC2771Context {
         /// @dev the fee is denoted in sUSD and is paid to the caller (conditional order executor)
         /// @dev the fee does not exceed the max fee set by the conditional order and
         /// this is enforced by the `canExecute` function
-        _withdraw(_msgSender(), _co.orderDetails.accountId, _fee);
+        if (_fee > 0) _withdraw(msg.sender, _co.orderDetails.accountId, _fee);
 
         /// @notice get size delta from order details
         int128 sizeDelta = _co.orderDetails.sizeDelta;
@@ -506,7 +497,7 @@ contract Engine is IEngine, EIP712, EIP7412, ERC2771Context {
         if (_fee > _co.maxExecutorFee) return false;
 
         // verify account has enough credit to pay the fee
-        if (_fee > susdBalance[_co.orderDetails.accountId]) return false;
+        if (_fee > credit[_co.orderDetails.accountId]) return false;
 
         // verify nonce has not been executed before
         if (hasUnorderedNonceBeenUsed(_co.orderDetails.accountId, _co.nonce)) {
@@ -527,7 +518,7 @@ contract Engine is IEngine, EIP712, EIP7412, ERC2771Context {
         } else {
             // if the order does not require verification, then the caller
             // must be the trusted executor defined by "trustedExecutor"
-            if (_msgSender() != _co.trustedExecutor) return false;
+            if (msg.sender != _co.trustedExecutor) return false;
         }
 
         return true;

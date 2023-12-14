@@ -104,4 +104,5 @@ contract SynthetixV3Errors {
     error InsufficientSynthCollateral(
         uint128 synthMarketId, uint256 collateralAmount, uint256 withdrawAmount
     );
+    error InsufficientAllowance(uint256 required, uint256 existing);
 }
