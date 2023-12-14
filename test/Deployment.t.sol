@@ -16,8 +16,7 @@ contract DeploymentTest is Test, Setup {
         (Engine engine) = setup.deploySystem({
             perpsMarketProxy: address(0x1),
             spotMarketProxy: address(0x2),
-            sUSDProxy: address(0x3),
-            oracle: address(0x4)
+            sUSDProxy: address(0x3)
         });
 
         assertTrue(address(engine) != address(0x0));
@@ -27,8 +26,7 @@ contract DeploymentTest is Test, Setup {
         try setup.deploySystem({
             perpsMarketProxy: address(0),
             spotMarketProxy: address(0x2),
-            sUSDProxy: address(0x3),
-            oracle: address(0x4)
+            sUSDProxy: address(0x3)
         }) {} catch (bytes memory reason) {
             assertEq(bytes4(reason), IEngine.ZeroAddress.selector);
         }
@@ -38,8 +36,7 @@ contract DeploymentTest is Test, Setup {
         try setup.deploySystem({
             perpsMarketProxy: address(0x1),
             spotMarketProxy: address(0),
-            sUSDProxy: address(0x3),
-            oracle: address(0x4)
+            sUSDProxy: address(0x3)
         }) {} catch (bytes memory reason) {
             assertEq(bytes4(reason), IEngine.ZeroAddress.selector);
         }
@@ -49,19 +46,7 @@ contract DeploymentTest is Test, Setup {
         try setup.deploySystem({
             perpsMarketProxy: address(0x1),
             spotMarketProxy: address(0x2),
-            sUSDProxy: address(0),
-            oracle: address(0x4)
-        }) {} catch (bytes memory reason) {
-            assertEq(bytes4(reason), IEngine.ZeroAddress.selector);
-        }
-    }
-
-    function test_deploy_oracle_zero_address() public {
-        try setup.deploySystem({
-            perpsMarketProxy: address(0x1),
-            spotMarketProxy: address(0x2),
-            sUSDProxy: address(0x3),
-            oracle: address(0)
+            sUSDProxy: address(0)
         }) {} catch (bytes memory reason) {
             assertEq(bytes4(reason), IEngine.ZeroAddress.selector);
         }

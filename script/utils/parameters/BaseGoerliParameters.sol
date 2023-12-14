@@ -11,8 +11,6 @@ contract BaseGoerliParameters {
     address public constant USD_PROXY =
         0x579c612E4Bf390f5504DB9f76b6F5759A3172279;
 
-    address public constant PYTH = 0x5955C1478F0dAD753C7E2B4dD1b4bC530C64749f;
-
     // https://usecannon.com/packages/synthetix-omnibus/latest/84531-andromeda
     address public constant PERPS_MARKET_PROXY_ANDROMEDA =
         0x75c43165ea38cB857C45216a37C5405A7656673c;

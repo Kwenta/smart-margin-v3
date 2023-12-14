@@ -9,9 +9,8 @@ contract EngineExposed is Engine {
     constructor(
         address _perpsMarketProxy,
         address _spotMarketProxy,
-        address _sUSDProxy,
-        address _oracle
-    ) Engine(_perpsMarketProxy, _spotMarketProxy, _sUSDProxy, _oracle) {}
+        address _sUSDProxy
+    ) Engine(_perpsMarketProxy, _spotMarketProxy, _sUSDProxy) {}
 
     function getSynthAddress(uint128 synthMarketId)
         public

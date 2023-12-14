@@ -88,6 +88,14 @@ contract NonceBitmapTest is Bootstrap, ConditionalOrderSignature {
         assertFalse(canExec);
     }
 
+    function test_invalidateUnorderedNonces_Unauthorized() public {
+        vm.prank(BAD_ACTOR);
+
+        vm.expectRevert(abi.encodeWithSelector(IEngine.Unauthorized.selector));
+
+        engine.invalidateUnorderedNonces(accountId, 0, type(uint256).max);
+    }
+
     function test_invalidateUnorderedNonces_event() public {
         vm.expectEmit(true, true, true, true);
         emit UnorderedNonceInvalidation(accountId, 0, type(uint256).max);

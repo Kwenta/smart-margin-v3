@@ -24,8 +24,6 @@ src/
 ├── Engine.sol
 ├── interfaces
 │   ├── IEngine.sol
-│   ├── oracles
-│   │   └── IPyth.sol
 │   ├── synthetix
 │   │   ├── IERC7412.sol
 │   │   ├── IPerpsMarketProxy.sol
@@ -81,7 +79,7 @@ npm run decode-custom-error -- <error hash 0x...>
 > project must be compiled first (see step 2)
 
 ```
-npx hardhat test
+npm run test:hh
 ```
 
 ## Deployment Addresses

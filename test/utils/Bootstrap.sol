@@ -16,7 +16,6 @@ import {
 import {IERC20} from "src/interfaces/tokens/IERC20.sol";
 import {IPerpsMarketProxy} from "test/utils/interfaces/IPerpsMarketProxy.sol";
 import {ISpotMarketProxy} from "src/interfaces/synthetix/ISpotMarketProxy.sol";
-import {IPyth} from "src/interfaces/oracles/IPyth.sol";
 import {SynthMinter} from "test/utils/SynthMinter.sol";
 
 contract Bootstrap is Test, Constants, Conditions, SynthetixV3Errors {
@@ -28,7 +27,6 @@ contract Bootstrap is Test, Constants, Conditions, SynthetixV3Errors {
     ISpotMarketProxy public spotMarketProxy;
     IERC20 public sUSD;
     IERC20 public sBTC;
-    IPyth public pyth;
 
     SynthMinter public synthMinter;
     uint128 public accountId;
@@ -42,8 +40,7 @@ contract Bootstrap is Test, Constants, Conditions, SynthetixV3Errors {
             address _engineExposedAddress,
             address _perpesMarketProxyAddress,
             address _spotMarketProxyAddress,
-            address _sUSDAddress,
-            address _pythAddress
+            address _sUSDAddress
         ) = bootstrap.init();
 
         engine = Engine(_engineAddress);
@@ -51,7 +48,6 @@ contract Bootstrap is Test, Constants, Conditions, SynthetixV3Errors {
         perpsMarketProxy = IPerpsMarketProxy(_perpesMarketProxyAddress);
         spotMarketProxy = ISpotMarketProxy(_spotMarketProxyAddress);
         sUSD = IERC20(_sUSDAddress);
-        pyth = IPyth(_pythAddress);
         synthMinter = new SynthMinter(_sUSDAddress, _spotMarketProxyAddress);
         sBTC = synthMinter.sBTC();
 
@@ -74,8 +70,7 @@ contract Bootstrap is Test, Constants, Conditions, SynthetixV3Errors {
             address _engineExposedAddress,
             address _perpesMarketProxyAddress,
             address _spotMarketProxyAddress,
-            address _sUSDAddress,
-            address _pythAddress
+            address _sUSDAddress
         ) = bootstrap.init();
 
         engine = Engine(_engineAddress);
@@ -83,7 +78,6 @@ contract Bootstrap is Test, Constants, Conditions, SynthetixV3Errors {
         perpsMarketProxy = IPerpsMarketProxy(_perpesMarketProxyAddress);
         spotMarketProxy = ISpotMarketProxy(_spotMarketProxyAddress);
         sUSD = IERC20(_sUSDAddress);
-        pyth = IPyth(_pythAddress);
         synthMinter = new SynthMinter(_sUSDAddress, _spotMarketProxyAddress);
         sBTC = synthMinter.sBTC();
 
@@ -103,20 +97,18 @@ contract Bootstrap is Test, Constants, Conditions, SynthetixV3Errors {
 contract BootstrapOptimism is Setup, OptimismParameters {
     function init()
         public
-        returns (address, address, address, address, address, address)
+        returns (address, address, address, address, address)
     {
         (Engine engine) = Setup.deploySystem({
             perpsMarketProxy: PERPS_MARKET_PROXY,
             spotMarketProxy: SPOT_MARKET_PROXY,
-            sUSDProxy: USD_PROXY,
-            oracle: PYTH
+            sUSDProxy: USD_PROXY
         });
 
         EngineExposed engineExposed = new EngineExposed({
             _perpsMarketProxy: PERPS_MARKET_PROXY,
             _spotMarketProxy: SPOT_MARKET_PROXY,
-            _sUSDProxy: USD_PROXY,
-            _oracle: PYTH
+            _sUSDProxy: USD_PROXY
         });
 
         return (
@@ -124,8 +116,7 @@ contract BootstrapOptimism is Setup, OptimismParameters {
             address(engineExposed),
             PERPS_MARKET_PROXY,
             SPOT_MARKET_PROXY,
-            USD_PROXY,
-            PYTH
+            USD_PROXY
         );
     }
 }
@@ -133,20 +124,18 @@ contract BootstrapOptimism is Setup, OptimismParameters {
 contract BootstrapOptimismGoerli is Setup, OptimismGoerliParameters {
     function init()
         public
-        returns (address, address, address, address, address, address)
+        returns (address, address, address, address, address)
     {
         (Engine engine) = Setup.deploySystem({
             perpsMarketProxy: PERPS_MARKET_PROXY,
             spotMarketProxy: SPOT_MARKET_PROXY,
-            sUSDProxy: USD_PROXY,
-            oracle: PYTH
+            sUSDProxy: USD_PROXY
         });
 
         EngineExposed engineExposed = new EngineExposed({
             _perpsMarketProxy: PERPS_MARKET_PROXY,
             _spotMarketProxy: SPOT_MARKET_PROXY,
-            _sUSDProxy: USD_PROXY,
-            _oracle: PYTH
+            _sUSDProxy: USD_PROXY
         });
 
         return (
@@ -154,8 +143,7 @@ contract BootstrapOptimismGoerli is Setup, OptimismGoerliParameters {
             address(engineExposed),
             PERPS_MARKET_PROXY,
             SPOT_MARKET_PROXY,
-            USD_PROXY,
-            PYTH
+            USD_PROXY
         );
     }
 }

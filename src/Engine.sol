@@ -7,7 +7,6 @@ import {EIP712} from "src/utils/EIP712.sol";
 import {EIP7412} from "src/utils/EIP7412.sol";
 import {IEngine, IPerpsMarketProxy} from "src/interfaces/IEngine.sol";
 import {IERC20} from "src/interfaces/tokens/IERC20.sol";
-import {IPyth, PythStructs} from "src/interfaces/oracles/IPyth.sol";
 import {ISpotMarketProxy} from "src/interfaces/synthetix/ISpotMarketProxy.sol";
 import {MathLib} from "src/libraries/MathLib.sol";
 import {SignatureCheckerLib} from "src/libraries/SignatureCheckerLib.sol";
@@ -62,9 +61,6 @@ contract Engine is IEngine, EIP712, EIP7412, ERC2771Context {
                                IMMUTABLES
     //////////////////////////////////////////////////////////////*/
 
-    /// @notice pyth oracle contract used to get asset prices
-    IPyth internal immutable ORACLE;
-
     /// @notice Synthetix v3 perps market proxy contract
     IPerpsMarketProxy internal immutable PERPS_MARKET_PROXY;
 
@@ -97,22 +93,18 @@ contract Engine is IEngine, EIP712, EIP7412, ERC2771Context {
     /// @param _perpsMarketProxy Synthetix v3 perps market proxy contract
     /// @param _spotMarketProxy Synthetix v3 spot market proxy contract
     /// @param _sUSDProxy Synthetix v3 sUSD contract
-    /// @param _oracle pyth oracle contract used to get asset prices
     constructor(
         address _perpsMarketProxy,
         address _spotMarketProxy,
-        address _sUSDProxy,
-        address _oracle
+        address _sUSDProxy
     ) ERC2771Context(address(new TrustedForwarder())) {
         if (_perpsMarketProxy == address(0)) revert ZeroAddress();
         if (_spotMarketProxy == address(0)) revert ZeroAddress();
         if (_sUSDProxy == address(0)) revert ZeroAddress();
-        if (_oracle == address(0)) revert ZeroAddress();
 
         PERPS_MARKET_PROXY = IPerpsMarketProxy(_perpsMarketProxy);
         SPOT_MARKET_PROXY = ISpotMarketProxy(_spotMarketProxy);
         SUSD = IERC20(_sUSDProxy);
-        ORACLE = IPyth(_oracle);
     }
 
     /*//////////////////////////////////////////////////////////////
@@ -653,31 +645,33 @@ contract Engine is IEngine, EIP712, EIP7412, ERC2771Context {
     }
 
     /// @inheritdoc IEngine
-    function isPriceAbove(
-        bytes32 _assetId,
-        int64 _price,
-        uint64 _confidenceInterval
-    ) public view override returns (bool) {
-        PythStructs.Price memory priceData = ORACLE.getPrice(_assetId);
+    function isPriceAbove(uint128 _marketId, uint256 _price)
+        public
+        view
+        override
+        returns (bool)
+    {
+        (, uint256 fillPrice) = PERPS_MARKET_PROXY.computeOrderFees({
+            marketId: _marketId,
+            sizeDelta: 0
+        });
 
-        /// @dev although counterintuitive, a smaller confidence interval is more accurate.
-        /// The Engine must ensure the current confidence interval is not
-        /// greater (i.e. less accurate) than the confidence interval defined by the condition.
-        return priceData.price > _price && priceData.conf <= _confidenceInterval;
+        return fillPrice > _price;
     }
 
     /// @inheritdoc IEngine
-    function isPriceBelow(
-        bytes32 _assetId,
-        int64 _price,
-        uint64 _confidenceInterval
-    ) public view override returns (bool) {
-        PythStructs.Price memory priceData = ORACLE.getPrice(_assetId);
+    function isPriceBelow(uint128 _marketId, uint256 _price)
+        public
+        view
+        override
+        returns (bool)
+    {
+        (, uint256 fillPrice) = PERPS_MARKET_PROXY.computeOrderFees({
+            marketId: _marketId,
+            sizeDelta: 0
+        });
 
-        /// @dev although counterintuitive, a smaller confidence interval is more accurate.
-        /// The Engine must ensure the current confidence interval is not
-        /// greater (i.e. less accurate) than the confidence interval defined by the condition.
-        return priceData.price < _price && priceData.conf <= _confidenceInterval;
+        return fillPrice < _price;
     }
 
     /// @inheritdoc IEngine

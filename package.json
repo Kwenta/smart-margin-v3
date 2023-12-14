@@ -6,6 +6,7 @@
   "scripts": {
     "compile": "forge build",
     "test": "forge test --fork-url $(grep OPTIMISM_GOERLI_RPC_URL .env | cut -d '=' -f2) --etherscan-api-key $(grep OPTIMISM_ETHERSCAN_API_KEY .env | cut -d '=' -f2) --gas-report -vvv",
+    "test:hh": "npx hardhat test",
     "format": "forge fmt",
     "coverage": "forge coverage --fork-url $(grep OPTIMISM_GOERLI_RPC_URL .env | cut -d '=' -f2)",
     "coverage:generate-lcov": "forge coverage --fork-url $(grep OPTIMISM_GOERLI_RPC_URL .env | cut -d '=' -f2) --report lcov",
