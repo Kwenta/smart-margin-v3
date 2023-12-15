@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 pragma solidity 0.8.20;
 
+import {IEngine} from "src/interfaces/IEngine.sol";
 import {Bootstrap} from "test/utils/Bootstrap.sol";
 
 contract CreditTest is Bootstrap {
@@ -11,43 +12,161 @@ contract CreditTest is Bootstrap {
 }
 
 contract Deposit is CreditTest {
+    event Deposit(uint128 indexed accountId, uint256 amount);
+
     function test_deposit(uint256 amount) public {
-        // amount 0
-        // amount exceeds callers balance
-        // 0 < amount <= callers balance
-        assert(false);
+        vm.startPrank(ACTOR);
+
+        sUSD.approve(address(engine), amount);
+
+        if (amount == 0) {
+            string memory parameter = "amount";
+            string memory reason = "Zero amount";
+
+            vm.expectRevert(
+                abi.encodeWithSelector(
+                    InvalidParameter.selector, parameter, reason
+                )
+            );
+
+            engine.deposit(accountId, amount);
+        } else if (amount > sUSD.balanceOf(ACTOR)) {
+            vm.expectRevert(
+                abi.encodeWithSelector(
+                    InsufficientBalance.selector, amount, sUSD.balanceOf(ACTOR)
+                )
+            );
+
+            engine.deposit(accountId, amount);
+        } else {
+            uint256 preEngineBalance = sUSD.balanceOf(address(engine));
+            uint256 preActorBalance = sUSD.balanceOf(ACTOR);
+
+            engine.deposit(accountId, amount);
+
+            uint256 postEngineBalance = sUSD.balanceOf(address(engine));
+            uint256 postActorBalance = sUSD.balanceOf(ACTOR);
+
+            assert(postEngineBalance == preEngineBalance + amount);
+            assert(postActorBalance == preActorBalance - amount);
+        }
+
+        vm.stopPrank();
     }
 
     function test_deposit_AccountDoesNotExist() public {
-        assert(false);
+        assertEq(
+            perpsMarketProxy.getAccountOwner(type(uint128).max), address(0)
+        );
+
+        vm.expectRevert(
+            abi.encodeWithSelector(IEngine.AccountDoesNotExist.selector)
+        );
+
+        engine.deposit(type(uint128).max, AMOUNT);
     }
 
     function test_deposit_event() public {
-        assert(false);
+        vm.startPrank(ACTOR);
+
+        sUSD.approve(address(engine), AMOUNT);
+
+        vm.expectEmit(true, true, true, true);
+        emit Deposit(accountId, AMOUNT);
+
+        engine.deposit(accountId, AMOUNT);
+
+        vm.stopPrank();
     }
 }
 
 contract Withdraw is CreditTest {
+    event Withdraw(uint128 indexed accountId, uint256 amount);
+
     function test_withdraw(uint256 amount) public {
-        // amount 0
-        // amount exceeds account's credit
-        // 0 < amount <= account's credit
-        assert(false);
+        vm.startPrank(ACTOR);
+
+        sUSD.approve(address(engine), type(uint256).max);
+
+        engine.deposit(accountId, AMOUNT);
+
+        if (amount == 0) {
+            string memory parameter = "amount";
+            string memory reason = "Zero amount";
+
+            vm.expectRevert(
+                abi.encodeWithSelector(
+                    InvalidParameter.selector, parameter, reason
+                )
+            );
+
+            engine.withdraw(accountId, amount);
+        } else if (amount > engine.credit(accountId)) {
+            vm.expectRevert(
+                abi.encodeWithSelector(IEngine.InsufficientCredit.selector)
+            );
+
+            engine.withdraw(accountId, amount);
+        } else {
+            uint256 preEngineBalance = sUSD.balanceOf(address(engine));
+            uint256 preActorBalance = sUSD.balanceOf(ACTOR);
+
+            engine.withdraw(accountId, amount);
+
+            uint256 postEngineBalance = sUSD.balanceOf(address(engine));
+            uint256 postActorBalance = sUSD.balanceOf(ACTOR);
+
+            assert(postEngineBalance == preEngineBalance - amount);
+            assert(postActorBalance == preActorBalance + amount);
+        }
+
+        vm.stopPrank();
     }
 
     function test_withdraw_Unauthorized() public {
-        assert(false);
+        vm.startPrank(ACTOR);
+
+        sUSD.approve(address(engine), type(uint256).max);
+
+        engine.deposit(accountId, AMOUNT);
+
+        vm.stopPrank();
+
+        vm.expectRevert(abi.encodeWithSelector(IEngine.Unauthorized.selector));
+
+        vm.prank(BAD_ACTOR);
+
+        engine.withdraw(accountId, AMOUNT);
     }
 
     function test_withdraw_event() public {
-        assert(false);
+        vm.startPrank(ACTOR);
+
+        sUSD.approve(address(engine), type(uint256).max);
+
+        engine.deposit(accountId, AMOUNT);
+
+        vm.expectEmit(true, true, true, true);
+        emit Withdraw(accountId, AMOUNT);
+
+        engine.withdraw(accountId, AMOUNT);
+
+        vm.stopPrank();
     }
 
     function test_withdraw_InsufficientBalance() public {
-        assert(false);
-    }
+        vm.startPrank(ACTOR);
 
-    function test_withdraw_transfer_fails() public {
-        assert(false);
+        sUSD.approve(address(engine), type(uint256).max);
+
+        engine.deposit(accountId, AMOUNT);
+
+        vm.expectRevert(
+            abi.encodeWithSelector(IEngine.InsufficientCredit.selector)
+        );
+
+        engine.withdraw(accountId, AMOUNT + 1);
+
+        vm.stopPrank();
     }
 }

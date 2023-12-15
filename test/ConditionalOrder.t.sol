@@ -728,7 +728,7 @@ contract Fee is ConditionalOrderTest {
 
         vm.expectRevert(IEngine.CannotExecuteOrder.selector);
 
-        engine.execute(co, signature, CO_FEE);
+        engine.execute(co, signature, CO_FEE + 1);
     }
 
     function test_fee_exceeds_maxExecutorFee() public {
