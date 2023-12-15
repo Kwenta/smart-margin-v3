@@ -12,12 +12,42 @@ contract CreditTest is Bootstrap {
 
 contract Deposit is CreditTest {
     function test_deposit(uint256 amount) public {
-        assert(true);
+        // amount 0
+        // amount exceeds callers balance
+        // 0 < amount <= callers balance
+        assert(false);
+    }
+
+    function test_deposit_AccountDoesNotExist() public {
+        assert(false);
+    }
+
+    function test_deposit_event() public {
+        assert(false);
     }
 }
 
 contract Withdraw is CreditTest {
     function test_withdraw(uint256 amount) public {
-        assert(true);
+        // amount 0
+        // amount exceeds account's credit
+        // 0 < amount <= account's credit
+        assert(false);
+    }
+
+    function test_withdraw_Unauthorized() public {
+        assert(false);
+    }
+
+    function test_withdraw_event() public {
+        assert(false);
+    }
+
+    function test_withdraw_InsufficientBalance() public {
+        assert(false);
+    }
+
+    function test_withdraw_transfer_fails() public {
+        assert(false);
     }
 }
