@@ -69,7 +69,6 @@ contract Engine is IEngine, EIP712, EIP7412, Multicallable {
     //////////////////////////////////////////////////////////////*/
 
     /// @notice Constructs the Engine contract
-    /// @dev a trusted forwarder is deployed with the Engine contract
     /// @param _perpsMarketProxy Synthetix v3 perps market proxy contract
     /// @param _spotMarketProxy Synthetix v3 spot market proxy contract
     /// @param _sUSDProxy Synthetix v3 sUSD contract
@@ -254,6 +253,7 @@ contract Engine is IEngine, EIP712, EIP7412, Multicallable {
             );
         } else {
             if (!isAccountOwner(_accountId, msg.sender)) revert Unauthorized();
+
             _withdrawCollateral(
                 msg.sender, synth, _accountId, _synthMarketId, _amount
             );
