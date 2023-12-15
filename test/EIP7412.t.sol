@@ -7,17 +7,17 @@ import {
     EIP7412MockRefund,
     EIP7412MockRevert
 } from "test/utils/mocks/EIP7412Mock.sol";
-import {SynthetixMock} from "test/utils/mocks/SynthetixMock.sol";
-import {Test} from "lib/forge-std/src/Test.sol";
+import {Bootstrap} from "test/utils/Bootstrap.sol";
 
-contract EIP7412Test is Test, SynthetixMock {
+contract EIP7412Test is Bootstrap {
     EIP7412Mock eip7412Mock;
     EIP7412MockRefund eip7412MockRefund;
     EIP7412MockRevert eip7412MockRevert;
 
-    uint256 amount = 1 ether;
-
     function setUp() public {
+        vm.rollFork(GOERLI_BLOCK_NUMBER);
+        initializeOptimismGoerli();
+
         eip7412Mock = new EIP7412Mock();
         eip7412MockRefund = new EIP7412MockRefund();
         eip7412MockRevert = new EIP7412MockRevert();
@@ -26,30 +26,26 @@ contract EIP7412Test is Test, SynthetixMock {
     function test_fulfillOracleQuery(bytes calldata signedOffchainData)
         public
     {
-        EIP7412 eip7412 = new EIP7412();
-
         uint256 preBalance = address(this).balance;
         uint256 preBalanceeip7412Mock = address(eip7412Mock).balance;
 
-        eip7412.fulfillOracleQuery{value: amount}(
+        engine.fulfillOracleQuery{value: AMOUNT}(
             payable(address(eip7412Mock)), signedOffchainData
         );
 
         assertLt(address(this).balance, preBalance);
-        assertEq(address(eip7412Mock).balance, preBalanceeip7412Mock + amount);
+        assertEq(address(eip7412Mock).balance, preBalanceeip7412Mock + AMOUNT);
     }
 
     function test_fulfillOracleQuery_refund(bytes calldata signedOffchainData)
         public
     {
-        EIP7412 eip7412 = new EIP7412();
-
         uint256 preBalance = address(this).balance;
 
         // refunds are not supported
         vm.expectRevert("EIP7412MockRefund");
 
-        eip7412.fulfillOracleQuery{value: amount}(
+        engine.fulfillOracleQuery{value: AMOUNT}(
             payable(address(eip7412MockRefund)), signedOffchainData
         );
 
@@ -59,16 +55,54 @@ contract EIP7412Test is Test, SynthetixMock {
     function test_fulfillOracleQuery_revert(bytes calldata signedOffchainData)
         public
     {
-        EIP7412 eip7412 = new EIP7412();
-
         uint256 preBalance = address(this).balance;
 
         vm.expectRevert("EIP7412MockRevert");
 
-        eip7412.fulfillOracleQuery{value: amount}(
+        engine.fulfillOracleQuery{value: AMOUNT}(
             payable(address(eip7412MockRevert)), signedOffchainData
         );
 
         assert(address(this).balance == preBalance);
+    }
+
+    function test_fulfillOracleQuery_multicall(
+        bytes calldata signedOffchainData
+    ) public {
+        bytes[] memory data = new bytes[](1);
+        data[0] = abi.encodeWithSelector(
+            EIP7412.fulfillOracleQuery.selector,
+            payable(address(eip7412Mock)),
+            signedOffchainData
+        );
+
+        uint256 preBalance = address(this).balance;
+        uint256 preBalanceeip7412Mock = address(eip7412Mock).balance;
+
+        engine.multicall{value: AMOUNT}(data);
+
+        assertLt(address(this).balance, preBalance);
+        assertEq(address(eip7412Mock).balance, preBalanceeip7412Mock + AMOUNT);
+    }
+
+    function test_fulfillOracleQuery_multicall_double_spend(
+        bytes calldata signedOffchainData
+    ) public {
+        bytes[] memory data = new bytes[](2);
+        data[0] = abi.encodeWithSelector(
+            EIP7412.fulfillOracleQuery.selector,
+            payable(address(eip7412Mock)),
+            signedOffchainData
+        );
+        data[1] = abi.encodeWithSelector(
+            EIP7412.fulfillOracleQuery.selector,
+            payable(address(eip7412Mock)),
+            signedOffchainData
+        );
+
+        // Reason: EvmError
+        vm.expectRevert();
+
+        engine.multicall{value: AMOUNT}(data);
     }
 }
