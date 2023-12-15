@@ -28,7 +28,7 @@ import {SynthMinter} from "test/utils/SynthMinter.sol";
 /// @dev it gives the Engine contract ADMIN_PERMISSION over the account owned by the ACTOR
 /// which is defined by its accountId
 ///
-/// @custom:network it can deploy the SMv3 system to the 
+/// @custom:network it can deploy the SMv3 system to the
 /// Optimism Goerli or Optimism network in a forked environment (relies on up-to-date constants)
 ///
 /// @custom:deployment it uses the deploy script in the script/ directory to deploy the SMv3 system
@@ -36,7 +36,7 @@ import {SynthMinter} from "test/utils/SynthMinter.sol";
 ///
 /// @author JaredBorders (jaredborders@pm.me)
 contract Bootstrap is Test, Constants, Conditions, SynthetixV3Errors {
-    // lets any test contract that inherits from this contract 
+    // lets any test contract that inherits from this contract
     // use the console.log()
     using console2 for *;
 

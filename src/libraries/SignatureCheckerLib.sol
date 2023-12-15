@@ -93,7 +93,7 @@ library SignatureCheckerLib {
         return recovered;
     }
 
-    /// @dev Overload of {ECDSA-tryRecover} that receives 
+    /// @dev Overload of {ECDSA-tryRecover} that receives
     /// the `v`, `r` and `s` signature fields separately.
     function tryRecover(bytes32 hash, uint8 v, bytes32 r, bytes32 s)
         internal
