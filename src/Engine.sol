@@ -358,7 +358,7 @@ contract Engine is IEngine, EIP712, EIP7412, Multicallable {
     }
 
     /*//////////////////////////////////////////////////////////////
-                       CONDITIONAL ORDER PAYMENT
+                           CREDIT MANAGEMENT
     //////////////////////////////////////////////////////////////*/
 
     /// @inheritdoc IEngine

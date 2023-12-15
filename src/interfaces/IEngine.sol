@@ -141,7 +141,7 @@ interface IEngine {
         returns (bool);
 
     /*//////////////////////////////////////////////////////////////
-                       CONDITIONAL ORDER PAYMENT
+                           CREDIT MANAGEMENT
     //////////////////////////////////////////////////////////////*/
 
     /// @notice deposit sUSD into the engine and credit the account identified by the accountId
@@ -274,7 +274,7 @@ interface IEngine {
     ///
     /// 1. Check if the fee specified by the executor is less than or equal to the maxExecutorFee
     /// 2. Check if the account has sufficient sUSD credit to pay the fee
-    ///    (see CONDITIONAL ORDER PAYMENT for how that can be accomplished)
+    ///    (see CREDIT MANAGEMENT for how that can be accomplished)
     /// 3. Check if the nonce has been used (see NONCE MANAGEMENT for how that can be accomplished)
     /// 4. Check if the signer is the owner or delegate of the account
     /// 5. Check if the signature is valid for the given co and signer
@@ -297,7 +297,7 @@ interface IEngine {
     /// The Engine contract does not store co's. It only stores the nonceBitmaps for each account.
     /// The Engine does hold and account for sUSD credit and can modify the sUSD credit of an account.
     ///
-    /// Conditional Order Payment:
+    /// Credit Management:
     /// With the introduction of co's, the Engine contract now holds sUSD credit for accounts.
     /// Using collateral to pay for fees is not ideal due to accounting risks associated with
     /// orders that are close to max leverage. To mitigate this risk, the Engine contract
