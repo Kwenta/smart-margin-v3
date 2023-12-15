@@ -22,7 +22,9 @@ contract EIP7412Test is Bootstrap {
         eip7412MockRefund = new EIP7412MockRefund();
         eip7412MockRevert = new EIP7412MockRevert();
     }
+}
 
+contract FulfillOracleQuery is EIP7412Test {
     function test_fulfillOracleQuery(bytes calldata signedOffchainData)
         public
     {
@@ -65,7 +67,9 @@ contract EIP7412Test is Bootstrap {
 
         assert(address(this).balance == preBalance);
     }
+}
 
+contract MulticallFulfillOracleQuery is EIP7412Test {
     function test_fulfillOracleQuery_multicall(
         bytes calldata signedOffchainData
     ) public {
