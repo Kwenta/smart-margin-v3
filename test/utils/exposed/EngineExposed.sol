@@ -3,6 +3,8 @@ pragma solidity 0.8.20;
 
 import {Engine, MathLib} from "src/Engine.sol";
 
+/// @title Contract for exposing internal Engine functions for testing purposes
+/// @author JaredBorders (jaredborders@pm.me)
 contract EngineExposed is Engine {
     using MathLib for uint256;
 

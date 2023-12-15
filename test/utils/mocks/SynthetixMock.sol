@@ -4,6 +4,8 @@ pragma solidity 0.8.20;
 import {IPerpsMarketProxy} from "test/utils/interfaces/IPerpsMarketProxy.sol";
 import {Test} from "lib/forge-std/src/Test.sol";
 
+/// @title Mocking contract for mocking Synthetix v3 functionality for testing purposes
+/// @author JaredBorders (jaredborders@pm.me)
 contract SynthetixMock is Test {
     function mock_getOpenPosition(
         address perpsMarketProxy,

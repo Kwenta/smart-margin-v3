@@ -3,6 +3,9 @@ pragma solidity 0.8.20;
 
 import {Engine} from "src/Engine.sol";
 
+/// @title Contract for generating function signatures that define valid conditions
+/// for conditional orders for testing purposes
+/// @author JaredBorders (jaredborders@pm.me)
 contract Conditions {
     function isTimestampAfter(uint256 timestamp)
         public

@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 pragma solidity 0.8.20;
 
+/// @title Contract for defining constants used in testing
+/// @author JaredBorders (jaredborders@pm.me)
 contract Constants {
     uint256 internal constant GOERLI_BLOCK_NUMBER = 14_862_158;
 

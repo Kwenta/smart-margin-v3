@@ -1,12 +1,13 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 pragma solidity 0.8.20;
 
+/// @title Contract(s) used to mock EIP-7412 Oracle functionality for testing purposes
+/// @author JaredBorders (jaredborders@pm.me)
 contract EIP7412Mock {
     event Success();
 
     function fulfillOracleQuery(bytes calldata) external payable {
         require(msg.value > 0, "EIP7412Mock");
-
         emit Success();
     }
 }

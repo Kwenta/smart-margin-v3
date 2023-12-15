@@ -18,20 +18,41 @@ import {IPerpsMarketProxy} from "test/utils/interfaces/IPerpsMarketProxy.sol";
 import {ISpotMarketProxy} from "src/interfaces/synthetix/ISpotMarketProxy.sol";
 import {SynthMinter} from "test/utils/SynthMinter.sol";
 
+/// @title Contract for bootstrapping the SMv3 system for testing purposes
+/// @dev it deploys the SMv3 Engine and EngineExposed, and defines
+/// the perpsMarketProxy, spotMarketProxy, sUSD, and sBTC contracts (notably)
+/// @dev it deploys a SynthMinter contract for minting sUSD and sBTC
+/// @dev it creates a Synthetix v3 perps market account for the "ACTOR" whose
+/// address is defined in the Constants contract
+/// @dev it mints "AMOUNT" of sUSD to the ACTOR for testing purposes
+/// @dev it gives the Engine contract ADMIN_PERMISSION over the account owned by the ACTOR
+/// which is defined by its accountId
+///
+/// @custom:network it can deploy the SMv3 system to the 
+/// Optimism Goerli or Optimism network in a forked environment (relies on up-to-date constants)
+///
+/// @custom:deployment it uses the deploy script in the script/ directory to deploy the SMv3 system
+/// and effectively tests the deploy script as well
+///
+/// @author JaredBorders (jaredborders@pm.me)
 contract Bootstrap is Test, Constants, Conditions, SynthetixV3Errors {
+    // lets any test contract that inherits from this contract 
+    // use the console.log()
     using console2 for *;
 
+    // deployed contracts
     Engine public engine;
     EngineExposed public engineExposed;
+    SynthMinter public synthMinter;
+
+    // defined contracts
     IPerpsMarketProxy public perpsMarketProxy;
     ISpotMarketProxy public spotMarketProxy;
     IERC20 public sUSD;
     IERC20 public sBTC;
 
-    SynthMinter public synthMinter;
+    // ACTOR's account id in the Synthetix v3 perps market
     uint128 public accountId;
-
-    receive() external payable {}
 
     function initializeOptimismGoerli() public {
         BootstrapOptimismGoerli bootstrap = new BootstrapOptimismGoerli();

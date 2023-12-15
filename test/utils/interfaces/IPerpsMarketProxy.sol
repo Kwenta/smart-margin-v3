@@ -1,6 +1,9 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 pragma solidity 0.8.20;
 
+/// @title Consolidated functions from Synthetix v3 Perps Market contracts
+/// @dev Used for testing purposes but not used in the src/* contracts
+/// @author JaredBorders (jaredborders@pm.me)
 interface IPerpsMarketProxy {
     function createAccount() external returns (uint128 accountId);
 

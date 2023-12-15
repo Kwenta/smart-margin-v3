@@ -5,6 +5,7 @@ import {Multicallable} from "src/utils/Multicallable.sol";
 
 /// @dev WARNING! This mock is strictly intended for testing purposes only.
 /// Do NOT copy anything here into production code unless you really know what you are doing.
+/// @author Solady
 contract MockMulticallable is Multicallable {
     error CustomError();
 
