@@ -646,7 +646,7 @@ contract Execute is ConditionalOrderTest {
 }
 
 contract Fee is ConditionalOrderTest {
-    function test_fee_imposed() public {
+    function creditAccount() internal {
         // prank ACTOR because this address has sUSD
         vm.startPrank(ACTOR);
 
@@ -655,6 +655,10 @@ contract Fee is ConditionalOrderTest {
         engine.deposit(accountId, CO_FEE);
 
         vm.stopPrank();
+    }
+
+    function test_fee_imposed() public {
+        creditAccount();
 
         IEngine.OrderDetails memory orderDetails = IEngine.OrderDetails({
             marketId: SETH_PERPS_MARKET_ID,
@@ -693,14 +697,7 @@ contract Fee is ConditionalOrderTest {
     }
 
     function test_fee_exceeds_account_credit() public {
-        // prank ACTOR because this address has sUSD
-        vm.startPrank(ACTOR);
-
-        sUSD.approve(address(engine), type(uint256).max);
-
-        engine.deposit(accountId, CO_FEE - 1);
-
-        vm.stopPrank();
+        creditAccount();
 
         IEngine.OrderDetails memory orderDetails = IEngine.OrderDetails({
             marketId: SETH_PERPS_MARKET_ID,
@@ -735,14 +732,7 @@ contract Fee is ConditionalOrderTest {
     }
 
     function test_fee_exceeds_maxExecutorFee() public {
-        // prank ACTOR because this address has sUSD
-        vm.startPrank(ACTOR);
-
-        sUSD.approve(address(engine), type(uint256).max);
-
-        engine.deposit(accountId, CO_FEE);
-
-        vm.stopPrank();
+        creditAccount();
 
         IEngine.OrderDetails memory orderDetails = IEngine.OrderDetails({
             marketId: SETH_PERPS_MARKET_ID,
