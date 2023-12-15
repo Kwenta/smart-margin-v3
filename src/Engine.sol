@@ -393,7 +393,7 @@ contract Engine is IEngine, EIP712, EIP7412, Multicallable {
     function _withdraw(address _caller, uint128 _accountId, uint256 _amount)
         internal
     {
-        if (_amount > credit[_accountId]) revert InsufficientBalance();
+        if (_amount > credit[_accountId]) revert InsufficientCredit();
 
         // decrement the sUSD balance of the account prior to transferring sUSD to the caller
         credit[_accountId] -= _amount;
