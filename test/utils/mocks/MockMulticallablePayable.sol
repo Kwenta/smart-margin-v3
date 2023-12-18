@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 pragma solidity 0.8.20;
 
-import {Multicallable} from "src/utils/Multicallable.sol";
+import {MulticallablePayable} from "src/utils/MulticallablePayable.sol";
 
 /// @dev WARNING! This mock is strictly intended for testing purposes only.
 /// Do NOT copy anything here into production code unless you really know what you are doing.
 /// @author Solady
-contract MockMulticallable is Multicallable {
+contract MockMulticallablePayable is MulticallablePayable {
     error CustomError();
 
     struct Tuple {

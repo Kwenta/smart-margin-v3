@@ -2,25 +2,25 @@
 pragma solidity 0.8.20;
 
 import {Test} from "lib/forge-std/src/Test.sol";
-import {MockMulticallable} from "./utils/mocks/MockMulticallable.sol";
+import {MockMulticallablePayable as MP} from
+    "./utils/mocks/MockMulticallablePayable.sol";
 
 /// @author Solady
-contract MulticallableTest is Test {
-    MockMulticallable multicallable;
+contract MulticallablePayableTest is Test {
+    MP mp;
 
     function setUp() public {
-        multicallable = new MockMulticallable();
+        mp = new MP();
     }
 
     function testMulticallableRevertWithMessage(string memory revertMessage)
         public
     {
         bytes[] memory data = new bytes[](1);
-        data[0] = abi.encodeWithSelector(
-            MockMulticallable.revertsWithString.selector, revertMessage
-        );
+        data[0] =
+            abi.encodeWithSelector(MP.revertsWithString.selector, revertMessage);
         vm.expectRevert(bytes(revertMessage));
-        multicallable.multicall(data);
+        mp.multicall(data);
     }
 
     function testMulticallableRevertWithMessage() public {
@@ -29,20 +29,16 @@ contract MulticallableTest is Test {
 
     function testMulticallableRevertWithCustomError() public {
         bytes[] memory data = new bytes[](1);
-        data[0] = abi.encodeWithSelector(
-            MockMulticallable.revertsWithCustomError.selector
-        );
-        vm.expectRevert(MockMulticallable.CustomError.selector);
-        multicallable.multicall(data);
+        data[0] = abi.encodeWithSelector(MP.revertsWithCustomError.selector);
+        vm.expectRevert(MP.CustomError.selector);
+        mp.multicall(data);
     }
 
     function testMulticallableRevertWithNothing() public {
         bytes[] memory data = new bytes[](1);
-        data[0] = abi.encodeWithSelector(
-            MockMulticallable.revertsWithNothing.selector
-        );
+        data[0] = abi.encodeWithSelector(MP.revertsWithNothing.selector);
         vm.expectRevert();
-        multicallable.multicall(data);
+        mp.multicall(data);
     }
 
     function testMulticallableReturnDataIsProperlyEncoded(
@@ -52,17 +48,11 @@ contract MulticallableTest is Test {
         uint256 b1
     ) public {
         bytes[] memory data = new bytes[](2);
-        data[0] = abi.encodeWithSelector(
-            MockMulticallable.returnsTuple.selector, a0, b0
-        );
-        data[1] = abi.encodeWithSelector(
-            MockMulticallable.returnsTuple.selector, a1, b1
-        );
-        bytes[] memory returnedData = multicallable.multicall(data);
-        MockMulticallable.Tuple memory t0 =
-            abi.decode(returnedData[0], (MockMulticallable.Tuple));
-        MockMulticallable.Tuple memory t1 =
-            abi.decode(returnedData[1], (MockMulticallable.Tuple));
+        data[0] = abi.encodeWithSelector(MP.returnsTuple.selector, a0, b0);
+        data[1] = abi.encodeWithSelector(MP.returnsTuple.selector, a1, b1);
+        bytes[] memory returnedData = mp.multicall(data);
+        MP.Tuple memory t0 = abi.decode(returnedData[0], (MP.Tuple));
+        MP.Tuple memory t1 = abi.decode(returnedData[1], (MP.Tuple));
         assertEq(t0.a, a0);
         assertEq(t0.b, b0);
         assertEq(t1.a, a1);
@@ -77,16 +67,12 @@ contract MulticallableTest is Test {
         n = n % 2;
         bytes[] memory dataIn = new bytes[](n);
         if (n > 0) {
-            dataIn[0] = abi.encodeWithSelector(
-                MockMulticallable.returnsString.selector, sIn0
-            );
+            dataIn[0] = abi.encodeWithSelector(MP.returnsString.selector, sIn0);
         }
         if (n > 1) {
-            dataIn[1] = abi.encodeWithSelector(
-                MockMulticallable.returnsString.selector, sIn1
-            );
+            dataIn[1] = abi.encodeWithSelector(MP.returnsString.selector, sIn1);
         }
-        bytes[] memory dataOut = multicallable.multicall(dataIn);
+        bytes[] memory dataOut = mp.multicall(dataIn);
         if (n > 0) {
             assertEq(abi.decode(dataOut[0], (string)), sIn0);
         }
@@ -103,11 +89,10 @@ contract MulticallableTest is Test {
         unchecked {
             bytes[] memory data = new bytes[](10);
             for (uint256 i; i != data.length; ++i) {
-                data[i] = abi.encodeWithSelector(
-                    MockMulticallable.returnsTuple.selector, i, i + 1
-                );
+                data[i] =
+                    abi.encodeWithSelector(MP.returnsTuple.selector, i, i + 1);
             }
-            bytes[] memory returnedData = multicallable.multicall(data);
+            bytes[] memory returnedData = mp.multicall(data);
             assertEq(returnedData.length, data.length);
         }
     }
@@ -116,28 +101,25 @@ contract MulticallableTest is Test {
         unchecked {
             bytes[] memory data = new bytes[](10);
             for (uint256 i; i != data.length; ++i) {
-                data[i] = abi.encodeWithSelector(
-                    MockMulticallable.returnsTuple.selector, i, i + 1
-                );
+                data[i] =
+                    abi.encodeWithSelector(MP.returnsTuple.selector, i, i + 1);
             }
-            bytes[] memory returnedData = multicallable.multicallOriginal(data);
+            bytes[] memory returnedData = mp.multicallOriginal(data);
             assertEq(returnedData.length, data.length);
         }
     }
 
     function testMulticallableWithNoData() public {
         bytes[] memory data = new bytes[](0);
-        assertEq(multicallable.multicall(data).length, 0);
+        assertEq(mp.multicall(data).length, 0);
     }
 
     function testMulticallablePreservesMsgSender() public {
         address caller = address(uint160(0xbeef));
         bytes[] memory data = new bytes[](1);
-        data[0] =
-            abi.encodeWithSelector(MockMulticallable.returnsSender.selector);
+        data[0] = abi.encodeWithSelector(MP.returnsSender.selector);
         vm.prank(caller);
-        address returnedAddress =
-            abi.decode(multicallable.multicall(data)[0], (address));
+        address returnedAddress = abi.decode(mp.multicall(data)[0], (address));
         assertEq(caller, returnedAddress);
     }
 }
