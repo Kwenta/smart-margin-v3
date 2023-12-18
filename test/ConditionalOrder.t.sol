@@ -838,9 +838,9 @@ contract ReduceOnly is ConditionalOrderTest {
             domainSeparator: engine.DOMAIN_SEPARATOR()
         });
 
-        (, uint256 fees) = engine.execute(co, signature, ZERO_CO_FEE);
+        vm.expectRevert(IEngine.CannotExecuteOrder.selector);
 
-        assertEq(0, fees);
+        engine.execute(co, signature, ZERO_CO_FEE);
     }
 
     function test_reduce_only_zero_size_delta() public {
@@ -875,21 +875,9 @@ contract ReduceOnly is ConditionalOrderTest {
             domainSeparator: engine.DOMAIN_SEPARATOR()
         });
 
-        (IPerpsMarketProxy.Data memory retOrder, uint256 fees) =
-            engine.execute(co, signature, ZERO_CO_FEE);
+        vm.expectRevert(IEngine.CannotExecuteOrder.selector);
 
-        // retOrder
-        assertTrue(retOrder.settlementTime == 0);
-        assertTrue(retOrder.request.marketId == 0);
-        assertTrue(retOrder.request.accountId == 0);
-        assertTrue(retOrder.request.sizeDelta == 0);
-        assertTrue(retOrder.request.settlementStrategyId == 0);
-        assertTrue(retOrder.request.acceptablePrice == 0);
-        assertTrue(retOrder.request.trackingCode == bytes32(0));
-        assertTrue(retOrder.request.referrer == address(0));
-
-        // fees
-        assertTrue(fees == 0);
+        engine.execute(co, signature, ZERO_CO_FEE);
     }
 
     function test_reduce_only_same_sign() public {
@@ -928,21 +916,9 @@ contract ReduceOnly is ConditionalOrderTest {
             domainSeparator: engine.DOMAIN_SEPARATOR()
         });
 
-        (IPerpsMarketProxy.Data memory retOrder, uint256 fees) =
-            engine.execute(co, signature, ZERO_CO_FEE);
+        vm.expectRevert(IEngine.CannotExecuteOrder.selector);
 
-        // retOrder
-        assertTrue(retOrder.settlementTime == 0);
-        assertTrue(retOrder.request.marketId == 0);
-        assertTrue(retOrder.request.accountId == 0);
-        assertTrue(retOrder.request.sizeDelta == 0);
-        assertTrue(retOrder.request.settlementStrategyId == 0);
-        assertTrue(retOrder.request.acceptablePrice == 0);
-        assertTrue(retOrder.request.trackingCode == bytes32(0));
-        assertTrue(retOrder.request.referrer == address(0));
-
-        // fees
-        assertTrue(fees == 0);
+        engine.execute(co, signature, ZERO_CO_FEE);
     }
 
     function test_reduce_only_truncate_size_down() public {
