@@ -102,15 +102,16 @@ contract EIP712 {
         view
         returns (bytes32 digest)
     {
-        bytes32 separator = _cachedDomainSeparator;
+        // We will use `digest` to store the domain separator to save a bit of gas.
+        digest = _cachedDomainSeparator;
         if (_cachedDomainSeparatorInvalidated()) {
-            separator = _buildDomainSeparator();
+            digest = _buildDomainSeparator();
         }
         /// @solidity memory-safe-assembly
         assembly {
             // Compute the digest.
             mstore(0x00, 0x1901000000000000) // Store "\x19\x01".
-            mstore(0x1a, separator) // Store the domain separator.
+            mstore(0x1a, digest) // Store the domain separator.
             mstore(0x3a, structHash) // Store the struct hash.
             digest := keccak256(0x18, 0x42)
             // Restore the part of the free memory slot that was overwritten.
@@ -151,13 +152,14 @@ contract EIP712 {
 
     /// @dev Returns the EIP-712 domain separator.
     function _buildDomainSeparator() private view returns (bytes32 separator) {
-        bytes32 nameHash = _cachedNameHash;
+        // We will use `separator` to store the name hash to save a bit of gas.
+        separator = _cachedNameHash;
         bytes32 versionHash = _cachedVersionHash;
         /// @solidity memory-safe-assembly
         assembly {
             let m := mload(0x40) // Load the free memory pointer.
             mstore(m, _DOMAIN_TYPEHASH)
-            mstore(add(m, 0x20), nameHash)
+            mstore(add(m, 0x20), separator)
             mstore(add(m, 0x40), versionHash)
             mstore(add(m, 0x60), chainid())
             mstore(add(m, 0x80), address())
