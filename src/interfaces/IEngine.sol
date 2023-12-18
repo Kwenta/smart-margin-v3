@@ -78,12 +78,6 @@ interface IEngine {
     /// @notice thrown when attempting to withdraw more sUSD from the Engine than the account has been credited
     error InsufficientCredit();
 
-    /// @notice thrown when attempt to deposit sUSD into the Engine fails
-    error DepositFailed();
-
-    /// @notice thrown when attempt to withdraw sUSD from the Engine fails
-    error WithdrawFailed();
-
     /*//////////////////////////////////////////////////////////////
                                  EVENTS
     //////////////////////////////////////////////////////////////*/
