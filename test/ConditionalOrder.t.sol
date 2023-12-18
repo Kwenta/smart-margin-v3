@@ -652,7 +652,7 @@ contract Fee is ConditionalOrderTest {
 
         sUSD.approve(address(engine), type(uint256).max);
 
-        engine.deposit(accountId, CO_FEE);
+        engine.creditAccount(accountId, CO_FEE);
 
         vm.stopPrank();
     }

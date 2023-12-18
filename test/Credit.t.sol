@@ -5,16 +5,17 @@ import {IEngine} from "src/interfaces/IEngine.sol";
 import {Bootstrap} from "test/utils/Bootstrap.sol";
 
 contract CreditTest is Bootstrap {
+    event Credited(uint128 indexed accountId, uint256 amount);
+    event Debited(uint128 indexed accountId, uint256 amount);
+
     function setUp() public {
         vm.rollFork(GOERLI_BLOCK_NUMBER);
         initializeOptimismGoerli();
     }
 }
 
-contract Deposit is CreditTest {
-    event Deposit(uint128 indexed accountId, uint256 amount);
-
-    function test_deposit(uint256 amount) public {
+contract Credit is CreditTest {
+    function test_credit(uint256 amount) public {
         vm.startPrank(ACTOR);
 
         sUSD.approve(address(engine), amount);
@@ -29,7 +30,7 @@ contract Deposit is CreditTest {
                 )
             );
 
-            engine.deposit(accountId, amount);
+            engine.creditAccount(accountId, amount);
         } else if (amount > sUSD.balanceOf(ACTOR)) {
             vm.expectRevert(
                 abi.encodeWithSelector(
@@ -37,12 +38,12 @@ contract Deposit is CreditTest {
                 )
             );
 
-            engine.deposit(accountId, amount);
+            engine.creditAccount(accountId, amount);
         } else {
             uint256 preEngineBalance = sUSD.balanceOf(address(engine));
             uint256 preActorBalance = sUSD.balanceOf(ACTOR);
 
-            engine.deposit(accountId, amount);
+            engine.creditAccount(accountId, amount);
 
             uint256 postEngineBalance = sUSD.balanceOf(address(engine));
             uint256 postActorBalance = sUSD.balanceOf(ACTOR);
@@ -54,7 +55,7 @@ contract Deposit is CreditTest {
         vm.stopPrank();
     }
 
-    function test_deposit_AccountDoesNotExist() public {
+    function test_credit_AccountDoesNotExist() public {
         assertEq(
             perpsMarketProxy.getAccountOwner(type(uint128).max), address(0)
         );
@@ -63,32 +64,30 @@ contract Deposit is CreditTest {
             abi.encodeWithSelector(IEngine.AccountDoesNotExist.selector)
         );
 
-        engine.deposit(type(uint128).max, AMOUNT);
+        engine.creditAccount(type(uint128).max, AMOUNT);
     }
 
-    function test_deposit_event() public {
+    function test_credit_event() public {
         vm.startPrank(ACTOR);
 
         sUSD.approve(address(engine), AMOUNT);
 
         vm.expectEmit(true, true, true, true);
-        emit Deposit(accountId, AMOUNT);
+        emit Credited(accountId, AMOUNT);
 
-        engine.deposit(accountId, AMOUNT);
+        engine.creditAccount(accountId, AMOUNT);
 
         vm.stopPrank();
     }
 }
 
-contract Withdraw is CreditTest {
-    event Withdraw(uint128 indexed accountId, uint256 amount);
-
-    function test_withdraw(uint256 amount) public {
+contract Debit is CreditTest {
+    function test_debit(uint256 amount) public {
         vm.startPrank(ACTOR);
 
         sUSD.approve(address(engine), type(uint256).max);
 
-        engine.deposit(accountId, AMOUNT);
+        engine.creditAccount(accountId, AMOUNT);
 
         if (amount == 0) {
             string memory parameter = "amount";
@@ -100,18 +99,18 @@ contract Withdraw is CreditTest {
                 )
             );
 
-            engine.withdraw(accountId, amount);
+            engine.debitAccount(accountId, amount);
         } else if (amount > engine.credit(accountId)) {
             vm.expectRevert(
                 abi.encodeWithSelector(IEngine.InsufficientCredit.selector)
             );
 
-            engine.withdraw(accountId, amount);
+            engine.debitAccount(accountId, amount);
         } else {
             uint256 preEngineBalance = sUSD.balanceOf(address(engine));
             uint256 preActorBalance = sUSD.balanceOf(ACTOR);
 
-            engine.withdraw(accountId, amount);
+            engine.debitAccount(accountId, amount);
 
             uint256 postEngineBalance = sUSD.balanceOf(address(engine));
             uint256 postActorBalance = sUSD.balanceOf(ACTOR);
@@ -123,12 +122,12 @@ contract Withdraw is CreditTest {
         vm.stopPrank();
     }
 
-    function test_withdraw_Unauthorized() public {
+    function test_debit_Unauthorized() public {
         vm.startPrank(ACTOR);
 
         sUSD.approve(address(engine), type(uint256).max);
 
-        engine.deposit(accountId, AMOUNT);
+        engine.creditAccount(accountId, AMOUNT);
 
         vm.stopPrank();
 
@@ -136,36 +135,36 @@ contract Withdraw is CreditTest {
 
         vm.prank(BAD_ACTOR);
 
-        engine.withdraw(accountId, AMOUNT);
+        engine.debitAccount(accountId, AMOUNT);
     }
 
-    function test_withdraw_event() public {
+    function test_debit_event() public {
         vm.startPrank(ACTOR);
 
         sUSD.approve(address(engine), type(uint256).max);
 
-        engine.deposit(accountId, AMOUNT);
+        engine.creditAccount(accountId, AMOUNT);
 
         vm.expectEmit(true, true, true, true);
-        emit Withdraw(accountId, AMOUNT);
+        emit Debited(accountId, AMOUNT);
 
-        engine.withdraw(accountId, AMOUNT);
+        engine.debitAccount(accountId, AMOUNT);
 
         vm.stopPrank();
     }
 
-    function test_withdraw_InsufficientBalance() public {
+    function test_debit_InsufficientBalance() public {
         vm.startPrank(ACTOR);
 
         sUSD.approve(address(engine), type(uint256).max);
 
-        engine.deposit(accountId, AMOUNT);
+        engine.creditAccount(accountId, AMOUNT);
 
         vm.expectRevert(
             abi.encodeWithSelector(IEngine.InsufficientCredit.selector)
         );
 
-        engine.withdraw(accountId, AMOUNT + 1);
+        engine.debitAccount(accountId, AMOUNT + 1);
 
         vm.stopPrank();
     }
