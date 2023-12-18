@@ -444,13 +444,13 @@ contract Engine is IEngine, EIP712, EIP7412, Multicallable {
 
             // ensure position exists; reduce only orders cannot increase position size
             if (positionSize == 0) {
-                return (retOrder, 0);
+                revert CannotExecuteOrder();
             }
 
             // ensure incoming size delta is non-zero and NOT the same sign;
             // i.e. reduce only orders cannot increase position size
             if (sizeDelta == 0 || positionSize.isSameSign(sizeDelta)) {
-                return (retOrder, 0);
+                revert CannotExecuteOrder();
             }
 
             // ensure incoming size delta is not larger than current position size
