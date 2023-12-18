@@ -9,13 +9,15 @@ import {IEngine, IPerpsMarketProxy} from "src/interfaces/IEngine.sol";
 import {IERC20} from "src/interfaces/tokens/IERC20.sol";
 import {ISpotMarketProxy} from "src/interfaces/synthetix/ISpotMarketProxy.sol";
 import {MathLib} from "src/libraries/MathLib.sol";
-import {Multicallable} from "src/utils/Multicallable.sol";
+import {MulticallablePayable} from "src/utils/MulticallablePayable.sol";
 import {SignatureCheckerLib} from "src/libraries/SignatureCheckerLib.sol";
 
 /// @title Kwenta Smart Margin v3: Engine contract
 /// @notice Responsible for interacting with Synthetix v3 perps markets
+/// @custom:caution Engine should never hold an ETH balance so long as it is MulticallablePayable
+/// @custom:caution Add payable functions to the Engine with extreme caution
 /// @author JaredBorders (jaredborders@pm.me)
-contract Engine is IEngine, EIP712, EIP7412, Multicallable {
+contract Engine is IEngine, EIP712, EIP7412, MulticallablePayable {
     using MathLib for int128;
     using MathLib for int256;
     using MathLib for uint256;

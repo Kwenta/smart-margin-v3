@@ -4,7 +4,7 @@ pragma solidity 0.8.20;
 /// @notice Contract that enables a single call to call multiple methods on itself.
 /// @author Solady (https://github.com/vectorized/solady/blob/main/src/utils/Multicallable.sol)
 /// @author Modified from Solmate (https://github.com/transmissions11/solmate/blob/main/src/utils/Multicallable.sol)
-contract Multicallable {
+contract MulticallablePayable {
     /// @dev Apply `DELEGATECALL` with the current contract to each calldata in `data`,
     /// and store the `abi.encode` formatted results of each `DELEGATECALL` into `results`.
     /// If any of the `DELEGATECALL`s reverts, the entire context is reverted,
