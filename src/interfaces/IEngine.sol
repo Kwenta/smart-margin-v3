@@ -75,7 +75,7 @@ interface IEngine {
     /// @notice thrown when attempting to deposit sUSD into an account that does not exist
     error AccountDoesNotExist();
 
-    /// @notice thrown when attempting to withdraw more sUSD from the Engine than the account has been credited
+    /// @notice thrown when attempting to debit more sUSD from the Engine than the account has been credited
     error InsufficientCredit();
 
     /*//////////////////////////////////////////////////////////////
@@ -93,12 +93,12 @@ interface IEngine {
     /// @notice emitted when sUSD is deposited into the engine and credited to an account
     /// @param accountId the id of the account that was credited
     /// @param amount the amount of sUSD deposited
-    event Deposit(uint128 indexed accountId, uint256 amount);
+    event Credited(uint128 indexed accountId, uint256 amount);
 
     /// @notice emitted when sUSD is withdrawn from the engine and debited from an account
     /// @param accountId the id of the account that was debited
     /// @param amount the amount of sUSD withdrawn
-    event Withdraw(uint128 indexed accountId, uint256 amount);
+    event Debited(uint128 indexed accountId, uint256 amount);
 
     /// @notice emitted when a co is executed
     /// @param order the order commited to the perps market
@@ -133,19 +133,6 @@ interface IEngine {
         external
         view
         returns (bool);
-
-    /*//////////////////////////////////////////////////////////////
-                           CREDIT MANAGEMENT
-    //////////////////////////////////////////////////////////////*/
-
-    /// @notice deposit sUSD into the engine and credit the account identified by the accountId
-    /// @param _accountId the id of the account to credit
-    function deposit(uint128 _accountId, uint256 _amount) external;
-
-    /// @notice withdraw sUSD from the engine and debit the account identified by the accountId
-    /// @param _accountId the id of the account to debit
-    /// @param _amount the amount of sUSD to withdraw
-    function withdraw(uint128 _accountId, uint256 _amount) external;
 
     /*//////////////////////////////////////////////////////////////
                             NONCE MANAGEMENT
@@ -209,6 +196,19 @@ interface IEngine {
         bytes32 _trackingCode,
         address _referrer
     ) external returns (IPerpsMarketProxy.Data memory retOrder, uint256 fees);
+
+    /*//////////////////////////////////////////////////////////////
+                           CREDIT MANAGEMENT
+    //////////////////////////////////////////////////////////////*/
+
+    /// @notice tranfer sUSD into the engine and credit the account identified by the accountId
+    /// @param _accountId the id of the account to credit
+    function creditAccount(uint128 _accountId, uint256 _amount) external;
+
+    /// @notice withdraw sUSD from the engine and debit the account identified by the accountId
+    /// @param _accountId the id of the account to debit
+    /// @param _amount the amount of sUSD to withdraw
+    function debitAccount(uint128 _accountId, uint256 _amount) external;
 
     /*//////////////////////////////////////////////////////////////
                       CONDITIONAL ORDER MANAGEMENT

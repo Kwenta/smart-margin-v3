@@ -60,8 +60,7 @@ contract Engine is IEngine, EIP712, EIP7412, Multicallable {
         public nonceBitmap;
 
     /// @notice mapping of account id to sUSD balance (i.e. credit available to pay for fee(s))
-    /// @dev sUSD can be deposited/withdrawn from the
-    /// Engine contract to pay for fee(s) (conditional order execution, etc.)
+    /// @dev sUSD can be credited to the Engine to pay for fee(s)
     mapping(uint128 accountId => uint256) public credit;
 
     /*//////////////////////////////////////////////////////////////
@@ -362,7 +361,10 @@ contract Engine is IEngine, EIP712, EIP7412, Multicallable {
     //////////////////////////////////////////////////////////////*/
 
     /// @inheritdoc IEngine
-    function deposit(uint128 _accountId, uint256 _amount) external override {
+    function creditAccount(uint128 _accountId, uint256 _amount)
+        external
+        override
+    {
         // ensure account exists (i.e. owner is not the zero address)
         /// @notice this does not check if the caller is the account owner
         if (PERPS_MARKET_PROXY.getAccountOwner(_accountId) == address(0)) {
@@ -374,23 +376,26 @@ contract Engine is IEngine, EIP712, EIP7412, Multicallable {
 
         credit[_accountId] += _amount;
 
-        emit Deposit(_accountId, _amount);
+        emit Credited(_accountId, _amount);
     }
 
     /// @inheritdoc IEngine
-    function withdraw(uint128 _accountId, uint256 _amount) external override {
+    function debitAccount(uint128 _accountId, uint256 _amount)
+        external
+        override
+    {
         if (!isAccountOwner(_accountId, msg.sender)) revert Unauthorized();
 
-        _withdraw(msg.sender, _accountId, _amount);
+        _debit(msg.sender, _accountId, _amount);
 
-        emit Withdraw(_accountId, _amount);
+        emit Debited(_accountId, _amount);
     }
 
     /// @notice debit sUSD from the account and transfer it to the caller
-    /// @dev UNSAFE to call directly; use `withdraw` instead
+    /// @dev UNSAFE to call directly; use `debit` instead
     /// @param _caller the caller of the function
     /// @param _accountId the account id to debit sUSD from
-    function _withdraw(address _caller, uint128 _accountId, uint256 _amount)
+    function _debit(address _caller, uint128 _accountId, uint256 _amount)
         internal
     {
         if (_amount > credit[_accountId]) revert InsufficientCredit();
@@ -431,7 +436,7 @@ contract Engine is IEngine, EIP712, EIP7412, Multicallable {
         /// @dev the fee is denoted in sUSD and is paid to the caller (conditional order executor)
         /// @dev the fee does not exceed the max fee set by the conditional order and
         /// this is enforced by the `canExecute` function
-        if (_fee > 0) _withdraw(msg.sender, _co.orderDetails.accountId, _fee);
+        if (_fee > 0) _debit(msg.sender, _co.orderDetails.accountId, _fee);
 
         /// @notice get size delta from order details
         int128 sizeDelta = _co.orderDetails.sizeDelta;
