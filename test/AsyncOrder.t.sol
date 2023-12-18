@@ -109,8 +109,7 @@ contract CommitOrder is AsyncOrderTest {
 
         vm.expectRevert(abi.encodeWithSelector(IEngine.Unauthorized.selector));
 
-        (IPerpsMarketProxy.Data memory retOrder, uint256 fees) = engine
-            .commitOrder({
+        engine.commitOrder({
             _perpsMarketId: SETH_PERPS_MARKET_ID,
             _accountId: accountId,
             _sizeDelta: 1 ether,
