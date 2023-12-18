@@ -4,6 +4,7 @@ pragma solidity 0.8.20;
 import {Test} from "lib/forge-std/src/Test.sol";
 import {MockMulticallable} from "./utils/mocks/MockMulticallable.sol";
 
+/// @author Solady
 contract MulticallableTest is Test {
     MockMulticallable multicallable;
 
