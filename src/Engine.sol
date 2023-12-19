@@ -373,10 +373,10 @@ contract Engine is IEngine, EIP712, EIP7412, MulticallablePayable {
             revert AccountDoesNotExist();
         }
 
+        credit[_accountId] += _amount;
+
         /// @dev sUSD transfers that fail will revert
         SUSD.transferFrom(msg.sender, address(this), _amount);
-
-        credit[_accountId] += _amount;
 
         emit Credited(_accountId, _amount);
     }
