@@ -1,6 +1,10 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 pragma solidity 0.8.20;
 
+// proxy
+import {ERC1967Proxy as Proxy} from
+    "lib/openzeppelin-contracts/contracts/proxy/ERC1967/ERC1967Proxy.sol";
+
 // contracts
 import {Engine} from "src/Engine.sol";
 
@@ -24,13 +28,21 @@ contract Setup is Script {
     function deploySystem(
         address perpsMarketProxy,
         address spotMarketProxy,
-        address sUSDProxy
+        address sUSDProxy,
+        address pDAO
     ) public returns (Engine engine) {
         engine = new Engine({
             _perpsMarketProxy: perpsMarketProxy,
             _spotMarketProxy: spotMarketProxy,
-            _sUSDProxy: sUSDProxy
+            _sUSDProxy: sUSDProxy,
+            _pDAO: pDAO
         });
+
+        // deploy ERC1967 proxy and set implementation to engine
+        Proxy proxy = new Proxy(address(engine), "");
+
+        // "wrap" proxy in IEngine interface
+        engine = Engine(address(proxy));
     }
 }
 
@@ -45,7 +57,8 @@ contract DeployBase_Synthetix is Setup, BaseParameters {
         Setup.deploySystem({
             perpsMarketProxy: PERPS_MARKET_PROXY,
             spotMarketProxy: SPOT_MARKET_PROXY,
-            sUSDProxy: USD_PROXY
+            sUSDProxy: USD_PROXY,
+            pDAO: PDAO
         });
 
         vm.stopBroadcast();
@@ -63,7 +76,8 @@ contract DeployBaseGoerli_Synthetix is Setup, BaseGoerliParameters {
         Setup.deploySystem({
             perpsMarketProxy: PERPS_MARKET_PROXY,
             spotMarketProxy: SPOT_MARKET_PROXY,
-            sUSDProxy: USD_PROXY
+            sUSDProxy: USD_PROXY,
+            pDAO: PDAO
         });
 
         vm.stopBroadcast();
@@ -84,7 +98,8 @@ contract DeployBaseGoerli_KwentaFork is
         Setup.deploySystem({
             perpsMarketProxy: PERPS_MARKET_PROXY,
             spotMarketProxy: SPOT_MARKET_PROXY,
-            sUSDProxy: USD_PROXY
+            sUSDProxy: USD_PROXY,
+            pDAO: PDAO
         });
 
         vm.stopBroadcast();
@@ -102,7 +117,8 @@ contract DeployBaseGoerli_Andromeda is Setup, BaseGoerliParameters {
         Setup.deploySystem({
             perpsMarketProxy: PERPS_MARKET_PROXY_ANDROMEDA,
             spotMarketProxy: SPOT_MARKET_PROXY_ANDROMEDA,
-            sUSDProxy: USD_PROXY_ANDROMEDA
+            sUSDProxy: USD_PROXY_ANDROMEDA,
+            pDAO: PDAO
         });
 
         vm.stopBroadcast();
@@ -120,7 +136,8 @@ contract DeployOptimism_Synthetix is Setup, OptimismParameters {
         Setup.deploySystem({
             perpsMarketProxy: PERPS_MARKET_PROXY,
             spotMarketProxy: SPOT_MARKET_PROXY,
-            sUSDProxy: USD_PROXY
+            sUSDProxy: USD_PROXY,
+            pDAO: PDAO
         });
 
         vm.stopBroadcast();
@@ -138,7 +155,8 @@ contract DeployOptimismGoerli_Synthetix is Setup, OptimismGoerliParameters {
         Setup.deploySystem({
             perpsMarketProxy: PERPS_MARKET_PROXY,
             spotMarketProxy: SPOT_MARKET_PROXY,
-            sUSDProxy: USD_PROXY
+            sUSDProxy: USD_PROXY,
+            pDAO: PDAO
         });
 
         vm.stopBroadcast();
