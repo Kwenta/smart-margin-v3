@@ -4,6 +4,9 @@ pragma solidity 0.8.20;
 import {IEngine} from "src/interfaces/IEngine.sol";
 import {Vm} from "lib/forge-std/src/Vm.sol";
 
+/// @title Contract for generating signatures for conditional orders for testing purposes
+/// @custom:docs see https://mirror.xyz/jaredborders.eth/G2RP5XAfLbNZv01DXgxuzv_34bQF_PuO1X2u0Nhop9g
+/// @author JaredBorders (jaredborders@pm.me)
 contract ConditionalOrderSignature {
     Vm private constant vm =
         Vm(address(uint160(uint256(keccak256("hevm cheat code")))));

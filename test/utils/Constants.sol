@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 pragma solidity 0.8.20;
 
+/// @title Contract for defining constants used in testing
+/// @author JaredBorders (jaredborders@pm.me)
 contract Constants {
     uint256 internal constant GOERLI_BLOCK_NUMBER = 14_862_158;
 
@@ -52,9 +54,6 @@ contract Constants {
 
     uint128 constant SETH_PERPS_MARKET_ID = 200;
 
-    bytes32 constant PYTH_ETH_USD_ASSET_ID =
-        0xca80ba6dc32e08d06f1aa886011eed1d77c77be9eb761cc10d72b7d0a2fd57a6;
-
     uint256 internal constant AMOUNT = 10_000 ether;
 
     address internal constant MARKET_CONFIGURATION_MODULE =
@@ -62,5 +61,5 @@ contract Constants {
 
     uint256 internal constant ZERO_CO_FEE = 0;
 
-    uint256 internal constant CO_FEE = 100 wei;
+    uint256 internal constant CO_FEE = 620_198 wei;
 }

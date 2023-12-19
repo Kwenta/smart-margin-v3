@@ -1,17 +1,16 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 pragma solidity 0.8.20;
 
-import {Bootstrap, IPerpsMarketProxy} from "test/utils/Bootstrap.sol";
+import {Bootstrap} from "test/utils/Bootstrap.sol";
 import {ConditionalOrderSignature} from
     "test/utils/ConditionalOrderSignature.sol";
 import {IEngine} from "src/interfaces/IEngine.sol";
-import {PythMock} from "test/utils/mocks/PythMock.sol";
+import {IPerpsMarketProxy} from "src/interfaces/synthetix/IPerpsMarketProxy.sol";
 import {SynthetixMock} from "test/utils/mocks/SynthetixMock.sol";
 
 contract ConditionalOrderTest is
     Bootstrap,
     ConditionalOrderSignature,
-    PythMock,
     SynthetixMock
 {
     address signer;
@@ -116,7 +115,7 @@ contract CanExecute is ConditionalOrderTest {
         _defineConditionalOrder();
 
         // ensure the account has no credit
-        assertEq(engine.ethBalances(accountId), 0);
+        assertEq(engine.credit(accountId), 0);
 
         // CO_FEE is non-zero, and the account has no credit
         bool canExec = engine.canExecute(co, signature, CO_FEE);
@@ -169,6 +168,42 @@ contract CanExecute is ConditionalOrderTest {
         _defineConditionalOrder();
 
         vm.prank(BAD_ACTOR);
+
+        bool canExec = engine.canExecute(co, signature, ZERO_CO_FEE);
+
+        assertFalse(canExec);
+    }
+
+    function test_canExecute_false_require_verify_condition_not_met() public {
+        bytes[] memory conditions = new bytes[](1);
+        conditions[0] = isTimestampAfter(block.timestamp + 100); // condition not met
+
+        orderDetails = IEngine.OrderDetails({
+            marketId: SETH_PERPS_MARKET_ID,
+            accountId: accountId,
+            sizeDelta: SIZE_DELTA,
+            settlementStrategyId: SETTLEMENT_STRATEGY_ID,
+            acceptablePrice: ACCEPTABLE_PRICE,
+            isReduceOnly: false,
+            trackingCode: TRACKING_CODE,
+            referrer: REFERRER
+        });
+
+        co = IEngine.ConditionalOrder({
+            orderDetails: orderDetails,
+            signer: signer,
+            nonce: 0,
+            requireVerified: true,
+            trustedExecutor: address(this),
+            maxExecutorFee: type(uint256).max,
+            conditions: conditions
+        });
+
+        signature = getConditionalOrderSignature({
+            co: co,
+            privateKey: signerPrivateKey,
+            domainSeparator: engine.DOMAIN_SEPARATOR()
+        });
 
         bool canExec = engine.canExecute(co, signature, ZERO_CO_FEE);
 
@@ -324,16 +359,6 @@ contract VerifyConditions is ConditionalOrderTest {
     }
 
     function test_verify_conditions_verified() public {
-        int64 mock_price = 173_078_000_000;
-        bytes32 mock_assetId = PYTH_ETH_USD_ASSET_ID;
-        mock_pyth_getPrice({
-            pyth: address(pyth),
-            id: mock_assetId,
-            price: mock_price,
-            conf: 45_999_999,
-            expo: -8
-        });
-
         mock_getOpenPosition({
             perpsMarketProxy: address(perpsMarketProxy),
             accountId: accountId,
@@ -344,10 +369,13 @@ contract VerifyConditions is ConditionalOrderTest {
         bytes[] memory conditions = new bytes[](8);
         conditions[0] = isTimestampAfter(0);
         conditions[1] = isTimestampBefore(type(uint256).max);
-        conditions[2] = isPriceAbove(PYTH_ETH_USD_ASSET_ID, 0, type(uint64).max);
-        conditions[3] = isPriceBelow(
-            PYTH_ETH_USD_ASSET_ID, type(int64).max, type(uint64).max
-        );
+        conditions[2] =
+            isPriceAbove({_marketId: SETH_PERPS_MARKET_ID, _price: 0, _size: 0});
+        conditions[3] = isPriceBelow({
+            _marketId: SETH_PERPS_MARKET_ID,
+            _price: type(uint256).max,
+            _size: 0
+        });
         conditions[4] = isMarketOpen(SETH_PERPS_MARKET_ID);
         conditions[5] = isPositionSizeAbove(accountId, SETH_PERPS_MARKET_ID, 0);
         conditions[6] = isPositionSizeBelow(
@@ -374,21 +402,16 @@ contract VerifyConditions is ConditionalOrderTest {
     }
 
     function test_verify_conditions_not_verified() public {
-        int64 mock_price = 173_078_000_000;
-        bytes32 mock_assetId = PYTH_ETH_USD_ASSET_ID;
-        mock_pyth_getPrice({
-            pyth: address(pyth),
-            id: mock_assetId,
-            price: mock_price,
-            conf: 45_999_999,
-            expo: -8
-        });
-
         bytes[] memory conditions = new bytes[](5);
         conditions[0] = isTimestampAfter(0);
         conditions[1] = isTimestampBefore(type(uint256).max);
-        conditions[2] = isPriceAbove(PYTH_ETH_USD_ASSET_ID, 0, type(uint64).max);
-        conditions[3] = isPriceBelow(PYTH_ETH_USD_ASSET_ID, 0, type(uint64).max); // false
+        conditions[2] =
+            isPriceAbove({_marketId: SETH_PERPS_MARKET_ID, _price: 0, _size: 0});
+        conditions[3] = isPriceBelow({
+            _marketId: SETH_PERPS_MARKET_ID,
+            _price: 0, // false; price not below 0
+            _size: 0
+        });
         conditions[4] = isMarketOpen(SETH_PERPS_MARKET_ID);
 
         IEngine.OrderDetails memory orderDetails;
@@ -633,8 +656,19 @@ contract Execute is ConditionalOrderTest {
 }
 
 contract Fee is ConditionalOrderTest {
+    function creditAccount() internal {
+        // prank ACTOR because this address has sUSD
+        vm.startPrank(ACTOR);
+
+        sUSD.approve(address(engine), type(uint256).max);
+
+        engine.creditAccount(accountId, CO_FEE);
+
+        vm.stopPrank();
+    }
+
     function test_fee_imposed() public {
-        engine.depositEth{value: 1 ether}(accountId);
+        creditAccount();
 
         IEngine.OrderDetails memory orderDetails = IEngine.OrderDetails({
             marketId: SETH_PERPS_MARKET_ID,
@@ -663,17 +697,17 @@ contract Fee is ConditionalOrderTest {
             domainSeparator: engine.DOMAIN_SEPARATOR()
         });
 
-        uint256 preExecutorBalance = address(this).balance;
+        uint256 preExecutorBalance = sUSD.balanceOf(address(this));
 
         engine.execute(co, signature, CO_FEE);
 
-        uint256 postExecutorBalance = address(this).balance;
+        uint256 postExecutorBalance = sUSD.balanceOf(address(this));
 
         assertEq(preExecutorBalance + CO_FEE, postExecutorBalance);
     }
 
     function test_fee_exceeds_account_credit() public {
-        engine.depositEth{value: CO_FEE - 1}(accountId);
+        creditAccount();
 
         IEngine.OrderDetails memory orderDetails = IEngine.OrderDetails({
             marketId: SETH_PERPS_MARKET_ID,
@@ -704,11 +738,11 @@ contract Fee is ConditionalOrderTest {
 
         vm.expectRevert(IEngine.CannotExecuteOrder.selector);
 
-        engine.execute(co, signature, CO_FEE);
+        engine.execute(co, signature, CO_FEE + 1);
     }
 
     function test_fee_exceeds_maxExecutorFee() public {
-        engine.depositEth{value: 1 ether}(accountId);
+        creditAccount();
 
         IEngine.OrderDetails memory orderDetails = IEngine.OrderDetails({
             marketId: SETH_PERPS_MARKET_ID,
@@ -782,7 +816,11 @@ contract ReduceOnly is ConditionalOrderTest {
         assertTrue(fees > 0);
     }
 
-    function test_reduce_only_zero_size() public {
+    function test_reduce_only_when_position_doesnt_exist() public {
+        /*
+            ensure position exists; reduce only orders cannot increase position size
+        */
+
         IEngine.OrderDetails memory orderDetails = IEngine.OrderDetails({
             marketId: SETH_PERPS_MARKET_ID,
             accountId: accountId,
@@ -810,12 +848,53 @@ contract ReduceOnly is ConditionalOrderTest {
             domainSeparator: engine.DOMAIN_SEPARATOR()
         });
 
-        (, uint256 fees) = engine.execute(co, signature, ZERO_CO_FEE);
+        vm.expectRevert(IEngine.CannotExecuteOrder.selector);
 
-        assertEq(0, fees);
+        engine.execute(co, signature, ZERO_CO_FEE);
+    }
+
+    function test_reduce_only_zero_size_delta() public {
+        /*
+            ensure incoming size delta is non-zero
+        */
+
+        IEngine.OrderDetails memory orderDetails = IEngine.OrderDetails({
+            marketId: SETH_PERPS_MARKET_ID,
+            accountId: accountId,
+            sizeDelta: 0, // zero sizeDelta
+            settlementStrategyId: SETTLEMENT_STRATEGY_ID,
+            acceptablePrice: ACCEPTABLE_PRICE,
+            isReduceOnly: true,
+            trackingCode: TRACKING_CODE,
+            referrer: REFERRER
+        });
+
+        IEngine.ConditionalOrder memory co = IEngine.ConditionalOrder({
+            orderDetails: orderDetails,
+            signer: signer,
+            nonce: 0,
+            requireVerified: false,
+            trustedExecutor: address(this),
+            maxExecutorFee: type(uint256).max,
+            conditions: new bytes[](0)
+        });
+
+        bytes memory signature = getConditionalOrderSignature({
+            co: co,
+            privateKey: signerPrivateKey,
+            domainSeparator: engine.DOMAIN_SEPARATOR()
+        });
+
+        vm.expectRevert(IEngine.CannotExecuteOrder.selector);
+
+        engine.execute(co, signature, ZERO_CO_FEE);
     }
 
     function test_reduce_only_same_sign() public {
+        /*
+           ensure incoming size delta is NOT the same sign
+        */
+
         mock_getOpenPosition(
             address(perpsMarketProxy), accountId, SETH_PERPS_MARKET_ID, 1 ether
         );
@@ -847,9 +926,9 @@ contract ReduceOnly is ConditionalOrderTest {
             domainSeparator: engine.DOMAIN_SEPARATOR()
         });
 
-        (, uint256 fees) = engine.execute(co, signature, ZERO_CO_FEE);
+        vm.expectRevert(IEngine.CannotExecuteOrder.selector);
 
-        assertEq(0, fees);
+        engine.execute(co, signature, ZERO_CO_FEE);
     }
 
     function test_reduce_only_truncate_size_down() public {
@@ -955,68 +1034,68 @@ contract Conditions is ConditionalOrderTest {
     }
 
     function test_isPriceAbove() public {
-        int64 mock_price = 173_078_000_000;
-        bytes32 mock_assetId = PYTH_ETH_USD_ASSET_ID;
-        uint64 mock_confidenceInterval = 45_999_999;
-        mock_pyth_getPrice({
-            pyth: address(pyth),
-            id: mock_assetId,
-            price: 173_078_000_000,
-            conf: mock_confidenceInterval,
-            expo: -8
-        });
+        (, uint256 currentFillPrice) =
+            perpsMarketProxy.computeOrderFees(SETH_PERPS_MARKET_ID, 0);
 
-        bool isAbove = engine.isPriceAbove(
-            mock_assetId, mock_price - 1, mock_confidenceInterval
-        );
+        bool isAbove = engine.isPriceAbove({
+            _marketId: SETH_PERPS_MARKET_ID,
+            _price: 0,
+            _size: 0
+        });
         assertTrue(isAbove);
 
-        isAbove = engine.isPriceAbove(
-            mock_assetId, mock_price, mock_confidenceInterval
-        );
+        isAbove = engine.isPriceAbove({
+            _marketId: SETH_PERPS_MARKET_ID,
+            _price: currentFillPrice,
+            _size: 0
+        });
         assertFalse(isAbove);
 
-        isAbove = engine.isPriceAbove(
-            mock_assetId, mock_price + 1, mock_confidenceInterval
-        );
+        isAbove = engine.isPriceAbove({
+            _marketId: SETH_PERPS_MARKET_ID,
+            _price: currentFillPrice + 1,
+            _size: 0
+        });
         assertFalse(isAbove);
 
-        isAbove = engine.isPriceAbove(
-            mock_assetId, mock_price - 1, mock_confidenceInterval - 1
-        );
-        assertFalse(isAbove);
+        isAbove = isAbove = engine.isPriceAbove({
+            _marketId: SETH_PERPS_MARKET_ID,
+            _price: currentFillPrice - 1,
+            _size: 0
+        });
+        assertTrue(isAbove);
     }
 
     function test_isPriceBelow() public {
-        int64 mock_price = 173_078_000_000;
-        bytes32 mock_assetId = PYTH_ETH_USD_ASSET_ID;
-        uint64 mock_confidenceInterval = 45_999_999;
-        mock_pyth_getPrice({
-            pyth: address(pyth),
-            id: mock_assetId,
-            price: 173_078_000_000,
-            conf: mock_confidenceInterval,
-            expo: -8
+        (, uint256 currentFillPrice) =
+            perpsMarketProxy.computeOrderFees(SETH_PERPS_MARKET_ID, 0);
+
+        bool isBelow = engine.isPriceBelow({
+            _marketId: SETH_PERPS_MARKET_ID,
+            _price: type(uint256).max,
+            _size: 0
         });
-
-        bool isBelow = engine.isPriceBelow(
-            mock_assetId, mock_price - 1, mock_confidenceInterval
-        );
-        assertFalse(isBelow);
-
-        isBelow = engine.isPriceBelow(
-            mock_assetId, mock_price, mock_confidenceInterval
-        );
-        assertFalse(isBelow);
-
-        isBelow = engine.isPriceBelow(
-            mock_assetId, mock_price + 1, mock_confidenceInterval
-        );
         assertTrue(isBelow);
 
-        isBelow = engine.isPriceBelow(
-            mock_assetId, mock_price + 1, mock_confidenceInterval - 1
-        );
+        isBelow = engine.isPriceBelow({
+            _marketId: SETH_PERPS_MARKET_ID,
+            _price: currentFillPrice,
+            _size: 0
+        });
+        assertFalse(isBelow);
+
+        isBelow = engine.isPriceBelow({
+            _marketId: SETH_PERPS_MARKET_ID,
+            _price: currentFillPrice + 1,
+            _size: 0
+        });
+        assertTrue(isBelow);
+
+        isBelow = isBelow = engine.isPriceBelow({
+            _marketId: SETH_PERPS_MARKET_ID,
+            _price: currentFillPrice - 1,
+            _size: 0
+        });
         assertFalse(isBelow);
     }
 

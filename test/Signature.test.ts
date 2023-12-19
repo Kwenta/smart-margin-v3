@@ -41,11 +41,9 @@ describe("Signature", function () {
 
     const Engine = await ethers.getContractFactory("Engine");
     const engine = await Engine.deploy(
-      ONE_ADDRESS,
-      ONE_ADDRESS,
-      ONE_ADDRESS,
-      ONE_ADDRESS,
-      ONE_ADDRESS
+      ONE_ADDRESS, // Perps Market Proxy Address
+      ONE_ADDRESS, // Spot Market Proxy Address
+      ONE_ADDRESS // sUSD Token Proxy Address
     );
     await engine.waitForDeployment();
 

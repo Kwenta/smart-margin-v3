@@ -6,6 +6,8 @@ import {IERC20} from "src/interfaces/tokens/IERC20.sol";
 import {ISpotMarketProxy} from "src/interfaces/synthetix/ISpotMarketProxy.sol";
 import {Test} from "lib/forge-std/src/Test.sol";
 
+/// @title Contract for minting sUSD and sBTC for testing purposes
+/// @author JaredBorders (jaredborders@pm.me)
 contract SynthMinter is Test, Constants {
     address public immutable sUSD;
     IERC20 public immutable sBTC;

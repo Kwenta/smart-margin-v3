@@ -1,6 +1,10 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 pragma solidity 0.8.20;
 
+/// @title Cosolidated Errors from Synthetix v3 contracts
+/// @notice This contract consolidates all errors from Synthetix v3 contracts
+/// and is used for testing purposes
+/// @author JaredBorders (jaredborders@pm.me)
 contract SynthetixV3Errors {
     enum SettlementStrategyType {PYTH}
 
@@ -104,4 +108,6 @@ contract SynthetixV3Errors {
     error InsufficientSynthCollateral(
         uint128 synthMarketId, uint256 collateralAmount, uint256 withdrawAmount
     );
+    error InsufficientAllowance(uint256 required, uint256 existing);
+    error InvalidParameter(string parameter, string reason);
 }

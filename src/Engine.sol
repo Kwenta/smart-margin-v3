@@ -5,25 +5,23 @@ import {ConditionalOrderHashLib} from
     "src/libraries/ConditionalOrderHashLib.sol";
 import {EIP712} from "src/utils/EIP712.sol";
 import {EIP7412} from "src/utils/EIP7412.sol";
-import {ERC2771Context} from
-    "lib/openzeppelin-contracts/contracts/metatx/ERC2771Context.sol";
 import {IEngine, IPerpsMarketProxy} from "src/interfaces/IEngine.sol";
 import {IERC20} from "src/interfaces/tokens/IERC20.sol";
-import {IPyth, PythStructs} from "src/interfaces/oracles/IPyth.sol";
 import {ISpotMarketProxy} from "src/interfaces/synthetix/ISpotMarketProxy.sol";
 import {MathLib} from "src/libraries/MathLib.sol";
+import {MulticallablePayable} from "src/utils/MulticallablePayable.sol";
 import {SignatureCheckerLib} from "src/libraries/SignatureCheckerLib.sol";
 
 /// @title Kwenta Smart Margin v3: Engine contract
 /// @notice Responsible for interacting with Synthetix v3 perps markets
+/// @custom:caution Engine should never hold an ETH balance so long as it is MulticallablePayable
+/// @custom:caution Add payable functions to the Engine with extreme caution
 /// @author JaredBorders (jaredborders@pm.me)
-/// @custom:auditor this contract does not prevent reentrancy.
-/// Please review the contract carefully.
-contract Engine is IEngine, EIP712, EIP7412, ERC2771Context {
+contract Engine is IEngine, EIP712, EIP7412, MulticallablePayable {
     using MathLib for int128;
     using MathLib for int256;
     using MathLib for uint256;
-    using SignatureCheckerLib for bytes;
+    using SignatureCheckerLib for bytes32;
     using ConditionalOrderHashLib for ConditionalOrder;
 
     /*//////////////////////////////////////////////////////////////
@@ -41,30 +39,9 @@ contract Engine is IEngine, EIP712, EIP7412, ERC2771Context {
     /// @notice max number of conditions that can be defined for a conditional order
     uint256 internal constant MAX_CONDITIONS = 8;
 
-    /// @notice condition selector constant(s)
-    bytes4 internal constant isTimestampAfterSelector =
-        IEngine.isTimestampAfter.selector;
-    bytes4 internal constant isTimestampBeforeSelector =
-        IEngine.isTimestampBefore.selector;
-    bytes4 internal constant isPriceAboveSelector =
-        IEngine.isPriceAbove.selector;
-    bytes4 internal constant isPriceBelowSelector =
-        IEngine.isPriceBelow.selector;
-    bytes4 internal constant isMarketOpenSelector =
-        IEngine.isMarketOpen.selector;
-    bytes4 internal constant isPositionSizeAboveSelector =
-        IEngine.isPositionSizeAbove.selector;
-    bytes4 internal constant isPositionSizeBelowSelector =
-        IEngine.isPositionSizeBelow.selector;
-    bytes4 internal constant isOrderFeeBelowSelector =
-        IEngine.isOrderFeeBelow.selector;
-
     /*//////////////////////////////////////////////////////////////
                                IMMUTABLES
     //////////////////////////////////////////////////////////////*/
-
-    /// @notice pyth oracle contract used to get asset prices
-    IPyth internal immutable ORACLE;
 
     /// @notice Synthetix v3 perps market proxy contract
     IPerpsMarketProxy internal immutable PERPS_MARKET_PROXY;
@@ -84,10 +61,9 @@ contract Engine is IEngine, EIP712, EIP7412, ERC2771Context {
     mapping(uint128 accountId => mapping(uint256 index => uint256 bitmap))
         public nonceBitmap;
 
-    /// @notice mapping of account id to ETH balance
-    /// @dev ETH can be deposited/withdrawn from the
-    /// Engine contract to pay for fee(s) (conditional order execution, etc.)
-    mapping(uint128 accountId => uint256 ethBalance) public ethBalances;
+    /// @notice mapping of account id to sUSD balance (i.e. credit available to pay for fee(s))
+    /// @dev sUSD can be credited to the Engine to pay for fee(s)
+    mapping(uint128 accountId => uint256) public credit;
 
     /*//////////////////////////////////////////////////////////////
                               CONSTRUCTOR
@@ -97,25 +73,18 @@ contract Engine is IEngine, EIP712, EIP7412, ERC2771Context {
     /// @param _perpsMarketProxy Synthetix v3 perps market proxy contract
     /// @param _spotMarketProxy Synthetix v3 spot market proxy contract
     /// @param _sUSDProxy Synthetix v3 sUSD contract
-    /// @param _oracle pyth oracle contract used to get asset prices
-    /// @param _trustedForwarder trusted forwarder contract used for meta transactions
     constructor(
         address _perpsMarketProxy,
         address _spotMarketProxy,
-        address _sUSDProxy,
-        address _oracle,
-        address _trustedForwarder
-    ) ERC2771Context(_trustedForwarder) {
+        address _sUSDProxy
+    ) {
         if (_perpsMarketProxy == address(0)) revert ZeroAddress();
         if (_spotMarketProxy == address(0)) revert ZeroAddress();
         if (_sUSDProxy == address(0)) revert ZeroAddress();
-        if (_oracle == address(0)) revert ZeroAddress();
-        if (_trustedForwarder == address(0)) revert ZeroAddress();
 
         PERPS_MARKET_PROXY = IPerpsMarketProxy(_perpsMarketProxy);
         SPOT_MARKET_PROXY = ISpotMarketProxy(_spotMarketProxy);
         SUSD = IERC20(_sUSDProxy);
-        ORACLE = IPyth(_oracle);
     }
 
     /*//////////////////////////////////////////////////////////////
@@ -129,7 +98,8 @@ contract Engine is IEngine, EIP712, EIP7412, ERC2771Context {
         override
         returns (bool)
     {
-        return PERPS_MARKET_PROXY.getAccountOwner(_accountId) == _caller;
+        return _caller != address(0)
+            && PERPS_MARKET_PROXY.getAccountOwner(_accountId) == _caller;
     }
 
     /// @inheritdoc IEngine
@@ -149,57 +119,10 @@ contract Engine is IEngine, EIP712, EIP7412, ERC2771Context {
         view
         returns (bool)
     {
-        return PERPS_MARKET_PROXY.isAuthorized(
-            _accountId, PERPS_COMMIT_ASYNC_ORDER_PERMISSION, _caller
-        );
-    }
-
-    /*//////////////////////////////////////////////////////////////
-                             ETH MANAGEMENT
-    //////////////////////////////////////////////////////////////*/
-
-    /// @inheritdoc IEngine
-    function depositEth(uint128 _accountId) external payable override {
-        // ensure account exists (i.e. owner is not the zero address)
-        /// @notice this does not check if the caller is the account owner
-        if (PERPS_MARKET_PROXY.getAccountOwner(_accountId) == address(0)) {
-            revert AccountDoesNotExist();
-        }
-
-        ethBalances[_accountId] += msg.value;
-
-        emit EthDeposit(_accountId, msg.value);
-    }
-
-    /// @inheritdoc IEngine
-    function withdrawEth(uint128 _accountId, uint256 _amount)
-        external
-        override
-    {
-        address caller = _msgSender();
-
-        if (!isAccountOwner(_accountId, caller)) revert Unauthorized();
-
-        _withdrawEth(caller, _accountId, _amount);
-
-        emit EthWithdraw(_accountId, _amount);
-    }
-
-    /// @notice debit ETH from the account and transfer it to the caller
-    /// @dev UNSAFE to call directly; use `withdrawEth` instead
-    /// @param _caller the caller of the function
-    /// @param _accountId the account id to debit ETH from
-    function _withdrawEth(address _caller, uint128 _accountId, uint256 _amount)
-        internal
-    {
-        if (_amount > ethBalances[_accountId]) revert InsufficientEthBalance();
-
-        // decrement the ETH balance of the account prior to transferring ETH to the caller
-        ethBalances[_accountId] -= _amount;
-
-        (bool sent,) = _caller.call{value: _amount}("");
-
-        if (!sent) revert EthTransferFailed();
+        return _caller != address(0)
+            && PERPS_MARKET_PROXY.isAuthorized(
+                _accountId, PERPS_COMMIT_ASYNC_ORDER_PERMISSION, _caller
+            );
     }
 
     /*//////////////////////////////////////////////////////////////
@@ -212,7 +135,7 @@ contract Engine is IEngine, EIP712, EIP7412, ERC2771Context {
         uint256 _wordPos,
         uint256 _mask
     ) external override {
-        if (_isAccountOwnerOrDelegate(_accountId, _msgSender())) {
+        if (_isAccountOwnerOrDelegate(_accountId, msg.sender)) {
             /// @dev using bitwise OR to set the bit at the bit position
             /// bitmap          = .......10001
             /// mask            = .......00110
@@ -268,7 +191,7 @@ contract Engine is IEngine, EIP712, EIP7412, ERC2771Context {
     {
         // shift _nonce to the right by 8 bits and cast to uint248
         /// @dev wordPos == 0 if 0 <= _nonce <= 255, 1 if 256 <= _nonce <= 511, etc.
-        wordPos = uint248(_nonce >> 8);
+        wordPos = _nonce >> 8;
 
         // cast the last 8 bits of _nonce to uint8
         /// @dev 0 <= bitPos <= 255
@@ -325,16 +248,15 @@ contract Engine is IEngine, EIP712, EIP7412, ERC2771Context {
     ) external override {
         IERC20 synth = IERC20(_getSynthAddress(_synthMarketId));
 
-        address caller = _msgSender();
-
         if (_amount > 0) {
             _depositCollateral(
-                caller, synth, _accountId, _synthMarketId, _amount
+                msg.sender, synth, _accountId, _synthMarketId, _amount
             );
         } else {
-            if (!isAccountOwner(_accountId, caller)) revert Unauthorized();
+            if (!isAccountOwner(_accountId, msg.sender)) revert Unauthorized();
+
             _withdrawCollateral(
-                caller, synth, _accountId, _synthMarketId, _amount
+                msg.sender, synth, _accountId, _synthMarketId, _amount
             );
         }
     }
@@ -398,8 +320,8 @@ contract Engine is IEngine, EIP712, EIP7412, ERC2771Context {
         override
         returns (IPerpsMarketProxy.Data memory retOrder, uint256 fees)
     {
-        /// @dev only the account owner can withdraw collateral
-        if (_isAccountOwnerOrDelegate(_accountId, _msgSender())) {
+        /// @dev the account owner or the delegate may commit async orders
+        if (_isAccountOwnerOrDelegate(_accountId, msg.sender)) {
             (retOrder, fees) = _commitOrder({
                 _perpsMarketId: _perpsMarketId,
                 _accountId: _accountId,
@@ -437,6 +359,57 @@ contract Engine is IEngine, EIP712, EIP7412, ERC2771Context {
     }
 
     /*//////////////////////////////////////////////////////////////
+                           CREDIT MANAGEMENT
+    //////////////////////////////////////////////////////////////*/
+
+    /// @inheritdoc IEngine
+    function creditAccount(uint128 _accountId, uint256 _amount)
+        external
+        override
+    {
+        // ensure account exists (i.e. owner is not the zero address)
+        /// @notice this does not check if the caller is the account owner
+        if (PERPS_MARKET_PROXY.getAccountOwner(_accountId) == address(0)) {
+            revert AccountDoesNotExist();
+        }
+
+        credit[_accountId] += _amount;
+
+        /// @dev sUSD transfers that fail will revert
+        SUSD.transferFrom(msg.sender, address(this), _amount);
+
+        emit Credited(_accountId, _amount);
+    }
+
+    /// @inheritdoc IEngine
+    function debitAccount(uint128 _accountId, uint256 _amount)
+        external
+        override
+    {
+        if (!isAccountOwner(_accountId, msg.sender)) revert Unauthorized();
+
+        _debit(msg.sender, _accountId, _amount);
+
+        emit Debited(_accountId, _amount);
+    }
+
+    /// @notice debit sUSD from the account and transfer it to the caller
+    /// @dev UNSAFE to call directly; use `debit` instead
+    /// @param _caller the caller of the function
+    /// @param _accountId the account id to debit sUSD from
+    function _debit(address _caller, uint128 _accountId, uint256 _amount)
+        internal
+    {
+        if (_amount > credit[_accountId]) revert InsufficientCredit();
+
+        // decrement the sUSD balance of the account prior to transferring sUSD to the caller
+        credit[_accountId] -= _amount;
+
+        /// @dev sUSD transfers that fail will revert
+        SUSD.transfer(_caller, _amount);
+    }
+
+    /*//////////////////////////////////////////////////////////////
                       CONDITIONAL ORDER MANAGEMENT
     //////////////////////////////////////////////////////////////*/
 
@@ -462,13 +435,12 @@ contract Engine is IEngine, EIP712, EIP7412, ERC2771Context {
         _useUnorderedNonce(_co.orderDetails.accountId, _co.nonce);
 
         /// @dev impose a fee for executing the conditional order
-        /// @dev the fee is denoted in ETH and is paid to the caller (conditional order executor)
+        /// @dev the fee is denoted in sUSD and is paid to the caller (conditional order executor)
         /// @dev the fee does not exceed the max fee set by the conditional order and
         /// this is enforced by the `canExecute` function
-        _withdrawEth(_msgSender(), _co.orderDetails.accountId, _fee);
+        if (_fee > 0) _debit(msg.sender, _co.orderDetails.accountId, _fee);
 
         /// @notice get size delta from order details
-        /// @dev up to the caller to not waste gas by passing in a size delta of zero
         int128 sizeDelta = _co.orderDetails.sizeDelta;
 
         /// @notice handle reduce only orders
@@ -479,12 +451,13 @@ contract Engine is IEngine, EIP712, EIP7412, ERC2771Context {
 
             // ensure position exists; reduce only orders cannot increase position size
             if (positionSize == 0) {
-                return (retOrder, 0);
+                revert CannotExecuteOrder();
             }
 
-            // ensure incoming size delta is NOT the same sign; i.e. reduce only orders cannot increase position size
-            if (positionSize.isSameSign(sizeDelta)) {
-                return (retOrder, 0);
+            // ensure incoming size delta is non-zero and NOT the same sign;
+            // i.e. reduce only orders cannot increase position size
+            if (sizeDelta == 0 || positionSize.isSameSign(sizeDelta)) {
+                revert CannotExecuteOrder();
             }
 
             // ensure incoming size delta is not larger than current position size
@@ -504,7 +477,7 @@ contract Engine is IEngine, EIP712, EIP7412, ERC2771Context {
             }
         }
 
-        /// @dev execute the order
+        /// @dev commit async order
         (retOrder, synthetixFees) = _commitOrder({
             _perpsMarketId: _co.orderDetails.marketId,
             _accountId: _co.orderDetails.accountId,
@@ -531,8 +504,8 @@ contract Engine is IEngine, EIP712, EIP7412, ERC2771Context {
         // verify fee does not exceed the max fee set by the conditional order
         if (_fee > _co.maxExecutorFee) return false;
 
-        // verify account has enough credit (ETH) to pay the fee
-        if (_fee > ethBalances[_co.orderDetails.accountId]) return false;
+        // verify account has enough credit to pay the fee
+        if (_fee > credit[_co.orderDetails.accountId]) return false;
 
         // verify nonce has not been executed before
         if (hasUnorderedNonceBeenUsed(_co.orderDetails.accountId, _co.nonce)) {
@@ -553,7 +526,7 @@ contract Engine is IEngine, EIP712, EIP7412, ERC2771Context {
         } else {
             // if the order does not require verification, then the caller
             // must be the trusted executor defined by "trustedExecutor"
-            if (_msgSender() != _co.trustedExecutor) return false;
+            if (msg.sender != _co.trustedExecutor) return false;
         }
 
         return true;
@@ -578,9 +551,7 @@ contract Engine is IEngine, EIP712, EIP7412, ERC2771Context {
         ConditionalOrder calldata _co,
         bytes calldata _signature
     ) public view override returns (bool) {
-        return _signature.isValidSignatureNowCalldata(
-            _hashTypedData(_co.hash()), _co.signer
-        );
+        return _hashTypedData(_co.hash()).recover(_signature) == _co.signer;
     }
 
     /// @inheritdoc IEngine
@@ -605,14 +576,14 @@ contract Engine is IEngine, EIP712, EIP7412, ERC2771Context {
             /// @dev checking if the selector is valid prevents the possibility of
             /// a malicious condition from griefing the executor
             if (
-                selector == isTimestampAfterSelector
-                    || selector == isTimestampBeforeSelector
-                    || selector == isPriceAboveSelector
-                    || selector == isPriceBelowSelector
-                    || selector == isMarketOpenSelector
-                    || selector == isPositionSizeAboveSelector
-                    || selector == isPositionSizeBelowSelector
-                    || selector == isOrderFeeBelowSelector
+                selector == this.isPriceAbove.selector
+                    || selector == this.isPriceBelow.selector
+                    || selector == this.isTimestampAfter.selector
+                    || selector == this.isTimestampBefore.selector
+                    || selector == this.isMarketOpen.selector
+                    || selector == this.isPositionSizeAbove.selector
+                    || selector == this.isPositionSizeBelow.selector
+                    || selector == this.isOrderFeeBelow.selector
             ) {
                 // @dev staticcall to prevent state changes in the case a condition is malicious
                 (success, response) =
@@ -656,31 +627,33 @@ contract Engine is IEngine, EIP712, EIP7412, ERC2771Context {
     }
 
     /// @inheritdoc IEngine
-    function isPriceAbove(
-        bytes32 _assetId,
-        int64 _price,
-        uint64 _confidenceInterval
-    ) public view override returns (bool) {
-        PythStructs.Price memory priceData = ORACLE.getPrice(_assetId);
+    function isPriceAbove(uint128 _marketId, uint256 _price, int128 _size)
+        public
+        view
+        override
+        returns (bool)
+    {
+        (, uint256 fillPrice) = PERPS_MARKET_PROXY.computeOrderFees({
+            marketId: _marketId,
+            sizeDelta: _size
+        });
 
-        /// @dev although counterintuitive, a smaller confidence interval is more accurate.
-        /// The Engine must ensure the current confidence interval is not
-        /// greater (i.e. less accurate) than the confidence interval defined by the condition.
-        return priceData.price > _price && priceData.conf <= _confidenceInterval;
+        return fillPrice > _price;
     }
 
     /// @inheritdoc IEngine
-    function isPriceBelow(
-        bytes32 _assetId,
-        int64 _price,
-        uint64 _confidenceInterval
-    ) public view override returns (bool) {
-        PythStructs.Price memory priceData = ORACLE.getPrice(_assetId);
+    function isPriceBelow(uint128 _marketId, uint256 _price, int128 _size)
+        public
+        view
+        override
+        returns (bool)
+    {
+        (, uint256 fillPrice) = PERPS_MARKET_PROXY.computeOrderFees({
+            marketId: _marketId,
+            sizeDelta: _size
+        });
 
-        /// @dev although counterintuitive, a smaller confidence interval is more accurate.
-        /// The Engine must ensure the current confidence interval is not
-        /// greater (i.e. less accurate) than the confidence interval defined by the condition.
-        return priceData.price < _price && priceData.conf <= _confidenceInterval;
+        return fillPrice < _price;
     }
 
     /// @inheritdoc IEngine
