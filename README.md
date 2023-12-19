@@ -37,7 +37,7 @@ src/
 └── utils
     ├── EIP712.sol
     ├── EIP7412.sol
-    └── Multicallable.sol
+    └── MulticallablePayable.sol
 ```
 
 ## Tests
