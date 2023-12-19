@@ -400,8 +400,9 @@ interface IEngine {
     /// @param _marketId id a market used to check the price of the
     /// underlying asset of that market (i.e. BTC Perp Market -> BTC)
     /// @param _price the price to compare against
+    /// @param _size the order size to use for the simulated fill price
     /// @return true if the simulated fill price is above the given `_price`, false otherwise
-    function isPriceAbove(uint128 _marketId, uint256 _price)
+    function isPriceAbove(uint128 _marketId, uint256 _price, int128 _size)
         external
         view
         returns (bool);
@@ -411,8 +412,9 @@ interface IEngine {
     /// @param _marketId id a market used to check the price of the
     /// underlying asset of that market (i.e. BTC Perp Market -> BTC)
     /// @param _price the price to compare against
+    /// @param _size the order size to use for the simulated fill price
     /// @return true if the simulated fill price is below the given `_price`, false otherwise
-    function isPriceBelow(uint128 _marketId, uint256 _price)
+    function isPriceBelow(uint128 _marketId, uint256 _price, int128 _size)
         external
         view
         returns (bool);

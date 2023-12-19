@@ -627,7 +627,7 @@ contract Engine is IEngine, EIP712, EIP7412, MulticallablePayable {
     }
 
     /// @inheritdoc IEngine
-    function isPriceAbove(uint128 _marketId, uint256 _price)
+    function isPriceAbove(uint128 _marketId, uint256 _price, int128 _size)
         public
         view
         override
@@ -635,14 +635,14 @@ contract Engine is IEngine, EIP712, EIP7412, MulticallablePayable {
     {
         (, uint256 fillPrice) = PERPS_MARKET_PROXY.computeOrderFees({
             marketId: _marketId,
-            sizeDelta: 0
+            sizeDelta: _size
         });
 
         return fillPrice > _price;
     }
 
     /// @inheritdoc IEngine
-    function isPriceBelow(uint128 _marketId, uint256 _price)
+    function isPriceBelow(uint128 _marketId, uint256 _price, int128 _size)
         public
         view
         override
@@ -650,7 +650,7 @@ contract Engine is IEngine, EIP712, EIP7412, MulticallablePayable {
     {
         (, uint256 fillPrice) = PERPS_MARKET_PROXY.computeOrderFees({
             marketId: _marketId,
-            sizeDelta: 0
+            sizeDelta: _size
         });
 
         return fillPrice < _price;
