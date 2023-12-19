@@ -78,6 +78,9 @@ interface IEngine {
     /// @notice thrown when attempting to debit more sUSD from the Engine than the account has been credited
     error InsufficientCredit();
 
+    /// @notice thrown when attempting to update the Engine when caller is not the Kwenta pDAO
+    error OnlyPDAO();
+
     /*//////////////////////////////////////////////////////////////
                                  EVENTS
     //////////////////////////////////////////////////////////////*/
