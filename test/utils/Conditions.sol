@@ -25,23 +25,23 @@ contract Conditions {
             abi.encodeWithSelector(Engine.isTimestampBefore.selector, timestamp);
     }
 
-    function isPriceAbove(uint128 _marketId, uint256 _price)
+    function isPriceAbove(uint128 _marketId, uint256 _price, int128 _size)
         public
         pure
         returns (bytes memory)
     {
         return abi.encodeWithSelector(
-            Engine.isPriceAbove.selector, _marketId, _price
+            Engine.isPriceAbove.selector, _marketId, _price, _size
         );
     }
 
-    function isPriceBelow(uint128 _marketId, uint256 _price)
+    function isPriceBelow(uint128 _marketId, uint256 _price, int128 _size)
         public
         pure
         returns (bytes memory)
     {
         return abi.encodeWithSelector(
-            Engine.isPriceBelow.selector, _marketId, _price
+            Engine.isPriceBelow.selector, _marketId, _price, _size
         );
     }
 

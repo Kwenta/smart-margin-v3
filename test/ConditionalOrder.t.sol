@@ -369,8 +369,13 @@ contract VerifyConditions is ConditionalOrderTest {
         bytes[] memory conditions = new bytes[](8);
         conditions[0] = isTimestampAfter(0);
         conditions[1] = isTimestampBefore(type(uint256).max);
-        conditions[2] = isPriceAbove(SETH_PERPS_MARKET_ID, 0);
-        conditions[3] = isPriceBelow(SETH_PERPS_MARKET_ID, type(uint256).max);
+        conditions[2] =
+            isPriceAbove({_marketId: SETH_PERPS_MARKET_ID, _price: 0, _size: 0});
+        conditions[3] = isPriceBelow({
+            _marketId: SETH_PERPS_MARKET_ID,
+            _price: type(uint256).max,
+            _size: 0
+        });
         conditions[4] = isMarketOpen(SETH_PERPS_MARKET_ID);
         conditions[5] = isPositionSizeAbove(accountId, SETH_PERPS_MARKET_ID, 0);
         conditions[6] = isPositionSizeBelow(
@@ -400,8 +405,13 @@ contract VerifyConditions is ConditionalOrderTest {
         bytes[] memory conditions = new bytes[](5);
         conditions[0] = isTimestampAfter(0);
         conditions[1] = isTimestampBefore(type(uint256).max);
-        conditions[2] = isPriceAbove(SETH_PERPS_MARKET_ID, 0);
-        conditions[3] = isPriceBelow(SETH_PERPS_MARKET_ID, 0); // false; price not below 0
+        conditions[2] =
+            isPriceAbove({_marketId: SETH_PERPS_MARKET_ID, _price: 0, _size: 0});
+        conditions[3] = isPriceBelow({
+            _marketId: SETH_PERPS_MARKET_ID,
+            _price: 0, // false; price not below 0
+            _size: 0
+        });
         conditions[4] = isMarketOpen(SETH_PERPS_MARKET_ID);
 
         IEngine.OrderDetails memory orderDetails;
@@ -1027,18 +1037,32 @@ contract Conditions is ConditionalOrderTest {
         (, uint256 currentFillPrice) =
             perpsMarketProxy.computeOrderFees(SETH_PERPS_MARKET_ID, 0);
 
-        bool isAbove = engine.isPriceAbove(SETH_PERPS_MARKET_ID, 0);
+        bool isAbove = engine.isPriceAbove({
+            _marketId: SETH_PERPS_MARKET_ID,
+            _price: 0,
+            _size: 0
+        });
         assertTrue(isAbove);
 
-        isAbove = engine.isPriceAbove(SETH_PERPS_MARKET_ID, currentFillPrice);
+        isAbove = engine.isPriceAbove({
+            _marketId: SETH_PERPS_MARKET_ID,
+            _price: currentFillPrice,
+            _size: 0
+        });
         assertFalse(isAbove);
 
-        isAbove =
-            engine.isPriceAbove(SETH_PERPS_MARKET_ID, currentFillPrice + 1);
+        isAbove = engine.isPriceAbove({
+            _marketId: SETH_PERPS_MARKET_ID,
+            _price: currentFillPrice + 1,
+            _size: 0
+        });
         assertFalse(isAbove);
 
-        isAbove = isAbove =
-            engine.isPriceAbove(SETH_PERPS_MARKET_ID, currentFillPrice - 1);
+        isAbove = isAbove = engine.isPriceAbove({
+            _marketId: SETH_PERPS_MARKET_ID,
+            _price: currentFillPrice - 1,
+            _size: 0
+        });
         assertTrue(isAbove);
     }
 
@@ -1046,19 +1070,32 @@ contract Conditions is ConditionalOrderTest {
         (, uint256 currentFillPrice) =
             perpsMarketProxy.computeOrderFees(SETH_PERPS_MARKET_ID, 0);
 
-        bool isBelow =
-            engine.isPriceBelow(SETH_PERPS_MARKET_ID, type(uint256).max);
+        bool isBelow = engine.isPriceBelow({
+            _marketId: SETH_PERPS_MARKET_ID,
+            _price: type(uint256).max,
+            _size: 0
+        });
         assertTrue(isBelow);
 
-        isBelow = engine.isPriceBelow(SETH_PERPS_MARKET_ID, currentFillPrice);
+        isBelow = engine.isPriceBelow({
+            _marketId: SETH_PERPS_MARKET_ID,
+            _price: currentFillPrice,
+            _size: 0
+        });
         assertFalse(isBelow);
 
-        isBelow =
-            engine.isPriceBelow(SETH_PERPS_MARKET_ID, currentFillPrice + 1);
+        isBelow = engine.isPriceBelow({
+            _marketId: SETH_PERPS_MARKET_ID,
+            _price: currentFillPrice + 1,
+            _size: 0
+        });
         assertTrue(isBelow);
 
-        isBelow = isBelow =
-            engine.isPriceBelow(SETH_PERPS_MARKET_ID, currentFillPrice - 1);
+        isBelow = isBelow = engine.isPriceBelow({
+            _marketId: SETH_PERPS_MARKET_ID,
+            _price: currentFillPrice - 1,
+            _size: 0
+        });
         assertFalse(isBelow);
     }
 
