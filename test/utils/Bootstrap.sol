@@ -123,13 +123,15 @@ contract BootstrapOptimism is Setup, OptimismParameters {
         (Engine engine) = Setup.deploySystem({
             perpsMarketProxy: PERPS_MARKET_PROXY,
             spotMarketProxy: SPOT_MARKET_PROXY,
-            sUSDProxy: USD_PROXY
+            sUSDProxy: USD_PROXY,
+            pDAO: PDAO
         });
 
         EngineExposed engineExposed = new EngineExposed({
             _perpsMarketProxy: PERPS_MARKET_PROXY,
             _spotMarketProxy: SPOT_MARKET_PROXY,
-            _sUSDProxy: USD_PROXY
+            _sUSDProxy: USD_PROXY,
+            _pDAO: PDAO
         });
 
         return (
@@ -150,13 +152,15 @@ contract BootstrapOptimismGoerli is Setup, OptimismGoerliParameters {
         (Engine engine) = Setup.deploySystem({
             perpsMarketProxy: PERPS_MARKET_PROXY,
             spotMarketProxy: SPOT_MARKET_PROXY,
-            sUSDProxy: USD_PROXY
+            sUSDProxy: USD_PROXY,
+            pDAO: PDAO
         });
 
         EngineExposed engineExposed = new EngineExposed({
             _perpsMarketProxy: PERPS_MARKET_PROXY,
             _spotMarketProxy: SPOT_MARKET_PROXY,
-            _sUSDProxy: USD_PROXY
+            _sUSDProxy: USD_PROXY,
+            _pDAO: PDAO
         });
 
         return (
