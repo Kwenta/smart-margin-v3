@@ -7,4 +7,6 @@ contract BaseParameters {
     address public constant SPOT_MARKET_PROXY = address(0);
 
     address public constant USD_PROXY = address(0);
+
+    address public constant PDAO = address(0);
 }

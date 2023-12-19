@@ -9,4 +9,6 @@ contract OptimismParameters {
 
     address public constant USD_PROXY =
         0xb2F30A7C980f052f02563fb518dcc39e6bf38175;
+
+    address public constant PDAO = address(0);
 }

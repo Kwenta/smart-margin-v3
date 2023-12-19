@@ -10,4 +10,6 @@ contract BaseGoerliKwentaForkParameters {
 
     address public constant USD_PROXY =
         0xD3bcDae94B0c2EF16d1c43d29c23b1735d864fC6;
+
+    address public constant PDAO = address(0);
 }
