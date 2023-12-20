@@ -40,6 +40,9 @@ contract Bootstrap is Test, Constants, Conditions, SynthetixV3Errors {
     // use the console.log()
     using console2 for *;
 
+    // pDAO address
+    address public pDAO;
+
     // deployed contracts
     Engine public engine;
     EngineExposed public engineExposed;
@@ -61,7 +64,8 @@ contract Bootstrap is Test, Constants, Conditions, SynthetixV3Errors {
             address _engineExposedAddress,
             address _perpesMarketProxyAddress,
             address _spotMarketProxyAddress,
-            address _sUSDAddress
+            address _sUSDAddress,
+            address _pDAOAddress
         ) = bootstrap.init();
 
         engine = Engine(_engineAddress);
@@ -71,6 +75,7 @@ contract Bootstrap is Test, Constants, Conditions, SynthetixV3Errors {
         sUSD = IERC20(_sUSDAddress);
         synthMinter = new SynthMinter(_sUSDAddress, _spotMarketProxyAddress);
         sBTC = synthMinter.sBTC();
+        pDAO = _pDAOAddress;
 
         vm.startPrank(ACTOR);
         accountId = perpsMarketProxy.createAccount();
@@ -91,7 +96,8 @@ contract Bootstrap is Test, Constants, Conditions, SynthetixV3Errors {
             address _engineExposedAddress,
             address _perpesMarketProxyAddress,
             address _spotMarketProxyAddress,
-            address _sUSDAddress
+            address _sUSDAddress,
+            address _pDAOAddress
         ) = bootstrap.init();
 
         engine = Engine(_engineAddress);
@@ -101,6 +107,7 @@ contract Bootstrap is Test, Constants, Conditions, SynthetixV3Errors {
         sUSD = IERC20(_sUSDAddress);
         synthMinter = new SynthMinter(_sUSDAddress, _spotMarketProxyAddress);
         sBTC = synthMinter.sBTC();
+        pDAO = _pDAOAddress;
 
         vm.startPrank(ACTOR);
         accountId = perpsMarketProxy.createAccount();
@@ -118,7 +125,7 @@ contract Bootstrap is Test, Constants, Conditions, SynthetixV3Errors {
 contract BootstrapOptimism is Setup, OptimismParameters {
     function init()
         public
-        returns (address, address, address, address, address)
+        returns (address, address, address, address, address, address)
     {
         (Engine engine) = Setup.deploySystem({
             perpsMarketProxy: PERPS_MARKET_PROXY,
@@ -139,7 +146,8 @@ contract BootstrapOptimism is Setup, OptimismParameters {
             address(engineExposed),
             PERPS_MARKET_PROXY,
             SPOT_MARKET_PROXY,
-            USD_PROXY
+            USD_PROXY,
+            PDAO
         );
     }
 }
@@ -147,7 +155,7 @@ contract BootstrapOptimism is Setup, OptimismParameters {
 contract BootstrapOptimismGoerli is Setup, OptimismGoerliParameters {
     function init()
         public
-        returns (address, address, address, address, address)
+        returns (address, address, address, address, address, address)
     {
         (Engine engine) = Setup.deploySystem({
             perpsMarketProxy: PERPS_MARKET_PROXY,
@@ -168,7 +176,8 @@ contract BootstrapOptimismGoerli is Setup, OptimismGoerliParameters {
             address(engineExposed),
             PERPS_MARKET_PROXY,
             SPOT_MARKET_PROXY,
-            USD_PROXY
+            USD_PROXY,
+            PDAO
         );
     }
 }
