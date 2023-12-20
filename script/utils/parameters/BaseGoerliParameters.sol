@@ -2,6 +2,8 @@
 pragma solidity 0.8.20;
 
 contract BaseGoerliParameters {
+    address public constant PDAO = address(0xDA0);
+
     address public constant PERPS_MARKET_PROXY =
         0x9863Dae3f4b5F4Ffe3A841a21565d57F2BA10E87;
 
@@ -10,8 +12,6 @@ contract BaseGoerliParameters {
 
     address public constant USD_PROXY =
         0x579c612E4Bf390f5504DB9f76b6F5759A3172279;
-
-    address public constant PDAO = address(0);
 
     // https://usecannon.com/packages/synthetix-omnibus/latest/84531-andromeda
     address public constant PERPS_MARKET_PROXY_ANDROMEDA =
