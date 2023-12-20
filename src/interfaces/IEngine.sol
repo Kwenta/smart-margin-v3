@@ -3,7 +3,7 @@ pragma solidity 0.8.20;
 
 import {IPerpsMarketProxy} from "src/interfaces/synthetix/IPerpsMarketProxy.sol";
 
-/// @title Kwenta Smart Margin v3: Engine Interface]
+/// @title Kwenta Smart Margin v3: Engine Interface
 /// @notice Conditional Order -> "co"
 /// @author JaredBorders (jaredborders@pm.me)
 interface IEngine {
