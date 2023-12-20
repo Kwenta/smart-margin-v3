@@ -81,6 +81,10 @@ interface IEngine {
     /// @notice thrown when attempting to update the Engine when caller is not the Kwenta pDAO
     error OnlyPDAO();
 
+    /// @notice thrown when attempting to upgrade the Engine when the Engine is not upgradeable
+    /// @dev the Engine is not upgradeable when the pDAO has been set to the zero address
+    error NonUpgradeable();
+
     /*//////////////////////////////////////////////////////////////
                                  EVENTS
     //////////////////////////////////////////////////////////////*/

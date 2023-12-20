@@ -117,6 +117,7 @@ contract Engine is
         view
         override
     {
+        if (pDAO == address(0)) revert NonUpgradeable();
         if (msg.sender != pDAO) revert OnlyPDAO();
     }
 
