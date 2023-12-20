@@ -3,9 +3,9 @@ pragma solidity 0.8.20;
 
 import {Engine} from "src/Engine.sol";
 
-/// @title Contract for exposing internal Engine functions for testing purposes
+/// @title Example upgraded Engine contract for testing purposes
 /// @author JaredBorders (jaredborders@pm.me)
-contract EngineExposed is Engine {
+contract MockEngineUpgrade is Engine {
     constructor(
         address _perpsMarketProxy,
         address _spotMarketProxy,
@@ -13,11 +13,7 @@ contract EngineExposed is Engine {
         address _pDAO
     ) Engine(_perpsMarketProxy, _spotMarketProxy, _sUSDProxy, _pDAO) {}
 
-    function getSynthAddress(uint128 synthMarketId)
-        public
-        view
-        returns (address)
-    {
-        return _getSynthAddress(synthMarketId);
+    function echo(string memory message) public pure returns (string memory) {
+        return message;
     }
 }
