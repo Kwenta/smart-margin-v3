@@ -16,7 +16,8 @@ contract DeploymentTest is Test, Setup {
         (Engine engine) = setup.deploySystem({
             perpsMarketProxy: address(0x1),
             spotMarketProxy: address(0x2),
-            sUSDProxy: address(0x3)
+            sUSDProxy: address(0x3),
+            pDAO: address(0x4)
         });
 
         assertTrue(address(engine) != address(0x0));
@@ -26,7 +27,8 @@ contract DeploymentTest is Test, Setup {
         try setup.deploySystem({
             perpsMarketProxy: address(0),
             spotMarketProxy: address(0x2),
-            sUSDProxy: address(0x3)
+            sUSDProxy: address(0x3),
+            pDAO: address(0x4)
         }) {} catch (bytes memory reason) {
             assertEq(bytes4(reason), IEngine.ZeroAddress.selector);
         }
@@ -36,7 +38,8 @@ contract DeploymentTest is Test, Setup {
         try setup.deploySystem({
             perpsMarketProxy: address(0x1),
             spotMarketProxy: address(0),
-            sUSDProxy: address(0x3)
+            sUSDProxy: address(0x3),
+            pDAO: address(0x4)
         }) {} catch (bytes memory reason) {
             assertEq(bytes4(reason), IEngine.ZeroAddress.selector);
         }
@@ -46,7 +49,8 @@ contract DeploymentTest is Test, Setup {
         try setup.deploySystem({
             perpsMarketProxy: address(0x1),
             spotMarketProxy: address(0x2),
-            sUSDProxy: address(0)
+            sUSDProxy: address(0),
+            pDAO: address(0x4)
         }) {} catch (bytes memory reason) {
             assertEq(bytes4(reason), IEngine.ZeroAddress.selector);
         }

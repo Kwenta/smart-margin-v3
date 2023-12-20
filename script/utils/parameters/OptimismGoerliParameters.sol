@@ -2,6 +2,8 @@
 pragma solidity 0.8.20;
 
 contract OptimismGoerliParameters {
+    address public constant PDAO = address(0xDA0);
+
     address public constant PERPS_MARKET_PROXY =
         0xf272382cB3BE898A8CdB1A23BE056fA2Fcf4513b;
 

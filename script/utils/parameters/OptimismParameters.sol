@@ -2,6 +2,8 @@
 pragma solidity 0.8.20;
 
 contract OptimismParameters {
+    address public constant PDAO = address(0xDA0);
+
     address public constant PERPS_MARKET_PROXY = address(0);
 
     address public constant SPOT_MARKET_PROXY =

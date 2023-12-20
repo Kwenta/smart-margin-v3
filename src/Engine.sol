@@ -12,12 +12,22 @@ import {MathLib} from "src/libraries/MathLib.sol";
 import {MulticallablePayable} from "src/utils/MulticallablePayable.sol";
 import {SignatureCheckerLib} from "src/libraries/SignatureCheckerLib.sol";
 
+/// @custom:upgradability
+import {UUPSUpgradeable} from
+    "lib/openzeppelin-contracts/contracts/proxy/utils/UUPSUpgradeable.sol";
+
 /// @title Kwenta Smart Margin v3: Engine contract
 /// @notice Responsible for interacting with Synthetix v3 perps markets
 /// @custom:caution Engine should never hold an ETH balance so long as it is MulticallablePayable
 /// @custom:caution Add payable functions to the Engine with extreme caution
 /// @author JaredBorders (jaredborders@pm.me)
-contract Engine is IEngine, EIP712, EIP7412, MulticallablePayable {
+contract Engine is
+    IEngine,
+    EIP712,
+    EIP7412,
+    MulticallablePayable,
+    UUPSUpgradeable
+{
     using MathLib for int128;
     using MathLib for int256;
     using MathLib for uint256;
@@ -41,6 +51,11 @@ contract Engine is IEngine, EIP712, EIP7412, MulticallablePayable {
     /*//////////////////////////////////////////////////////////////
                                IMMUTABLES
     //////////////////////////////////////////////////////////////*/
+
+    /// @notice Kwenta owned/operated multisig address that can authorize upgrades
+    /// @dev if this address is the zero address, then the Engine will no longer be upgradeable
+    /// @dev making immutable because the pDAO address will *never* change
+    address internal immutable pDAO;
 
     /// @notice Synthetix v3 perps market proxy contract
     IPerpsMarketProxy internal immutable PERPS_MARKET_PROXY;
@@ -72,10 +87,13 @@ contract Engine is IEngine, EIP712, EIP7412, MulticallablePayable {
     /// @param _perpsMarketProxy Synthetix v3 perps market proxy contract
     /// @param _spotMarketProxy Synthetix v3 spot market proxy contract
     /// @param _sUSDProxy Synthetix v3 sUSD contract
+    /// @param _pDAO Kwenta owned/operated multisig address that can authorize upgrades
+    /// @custom:oz-upgrades-unsafe-allow constructor
     constructor(
         address _perpsMarketProxy,
         address _spotMarketProxy,
-        address _sUSDProxy
+        address _sUSDProxy,
+        address _pDAO
     ) {
         if (_perpsMarketProxy == address(0)) revert ZeroAddress();
         if (_spotMarketProxy == address(0)) revert ZeroAddress();
@@ -84,6 +102,23 @@ contract Engine is IEngine, EIP712, EIP7412, MulticallablePayable {
         PERPS_MARKET_PROXY = IPerpsMarketProxy(_perpsMarketProxy);
         SPOT_MARKET_PROXY = ISpotMarketProxy(_spotMarketProxy);
         SUSD = IERC20(_sUSDProxy);
+
+        /// @dev pDAO address can be the zero address to make the Engine non-upgradeable
+        pDAO = _pDAO;
+    }
+
+    /*//////////////////////////////////////////////////////////////
+                           UPGRADE MANAGEMENT
+    //////////////////////////////////////////////////////////////*/
+
+    /// @inheritdoc UUPSUpgradeable
+    function _authorizeUpgrade(address /* _newImplementation */ )
+        internal
+        view
+        override
+    {
+        if (pDAO == address(0)) revert NonUpgradeable();
+        if (msg.sender != pDAO) revert OnlyPDAO();
     }
 
     /*//////////////////////////////////////////////////////////////

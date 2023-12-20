@@ -2,6 +2,8 @@
 pragma solidity 0.8.20;
 
 contract BaseGoerliKwentaForkParameters {
+    address public constant PDAO = address(0xDA0);
+
     address public constant PERPS_MARKET_PROXY =
         0x5D48528E90EDEFA8cff2A23E1e3fda46Acef0E2d;
 

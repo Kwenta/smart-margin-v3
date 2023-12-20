@@ -3,7 +3,7 @@ pragma solidity 0.8.20;
 
 import {IPerpsMarketProxy} from "src/interfaces/synthetix/IPerpsMarketProxy.sol";
 
-/// @title Kwenta Smart Margin v3: Engine Interface]
+/// @title Kwenta Smart Margin v3: Engine Interface
 /// @notice Conditional Order -> "co"
 /// @author JaredBorders (jaredborders@pm.me)
 interface IEngine {
@@ -77,6 +77,13 @@ interface IEngine {
 
     /// @notice thrown when attempting to debit more sUSD from the Engine than the account has been credited
     error InsufficientCredit();
+
+    /// @notice thrown when attempting to update the Engine when caller is not the Kwenta pDAO
+    error OnlyPDAO();
+
+    /// @notice thrown when attempting to upgrade the Engine when the Engine is not upgradeable
+    /// @dev the Engine is not upgradeable when the pDAO has been set to the zero address
+    error NonUpgradeable();
 
     /*//////////////////////////////////////////////////////////////
                                  EVENTS

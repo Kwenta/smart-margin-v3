@@ -43,7 +43,8 @@ describe("Signature", function () {
     const engine = await Engine.deploy(
       ONE_ADDRESS, // Perps Market Proxy Address
       ONE_ADDRESS, // Spot Market Proxy Address
-      ONE_ADDRESS // sUSD Token Proxy Address
+      ONE_ADDRESS, // sUSD Token Proxy Address
+      ONE_ADDRESS // pDAO Multisig Address
     );
     await engine.waitForDeployment();
 
