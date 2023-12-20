@@ -2,7 +2,8 @@
 pragma solidity 0.8.20;
 
 contract OptimismGoerliParameters {
-    address public constant PDAO = address(0xDA0);
+    /// @dev this is an EOA used on testnet only
+    address public constant PDAO = 0x1b4fCFE451A15218aEeC811B508B4aa3f2A35904;
 
     address public constant PERPS_MARKET_PROXY =
         0xf272382cB3BE898A8CdB1A23BE056fA2Fcf4513b;

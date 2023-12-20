@@ -1,11 +1,14 @@
 {
     "Synthetix": {
-        "Engine": ""
+        "EngineImplementation": "0xEeceA5D2504657BCe29ee68c0bA7Ea5F2A9bf6Ec",
+        "EngineProxy": "0xe11A40e72f5148c0460Bf39359e9d14aD7aE16B3"
     },
     "Andromeda": {
-        "Engine": ""
+        "EngineImplementation": "",
+        "EngineProxy": ""
     },
     "Kwenta": {
-        "Engine": ""
+        "EngineImplementation": "",
+        "EngineProxy": ""
     }
 }
