@@ -11,6 +11,7 @@ import {ISpotMarketProxy} from "src/interfaces/synthetix/ISpotMarketProxy.sol";
 import {MathLib} from "src/libraries/MathLib.sol";
 import {MulticallablePayable} from "src/utils/MulticallablePayable.sol";
 import {SignatureCheckerLib} from "src/libraries/SignatureCheckerLib.sol";
+import {Zap} from "lib/Zap/src/Zap.sol";
 
 /// @custom:upgradability
 import {UUPSUpgradeable} from
@@ -26,6 +27,7 @@ contract Engine is
     EIP712,
     EIP7412,
     MulticallablePayable,
+    Zap,
     UUPSUpgradeable
 {
     using MathLib for int128;
@@ -94,7 +96,7 @@ contract Engine is
         address _spotMarketProxy,
         address _sUSDProxy,
         address _pDAO
-    ) {
+    ) Zap(_sUSDProxy, _sUSDProxy, _spotMarketProxy, 1) {
         if (_perpsMarketProxy == address(0)) revert ZeroAddress();
         if (_spotMarketProxy == address(0)) revert ZeroAddress();
         if (_sUSDProxy == address(0)) revert ZeroAddress();
