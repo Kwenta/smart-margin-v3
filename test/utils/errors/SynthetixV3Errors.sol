@@ -6,7 +6,9 @@ pragma solidity 0.8.20;
 /// and is used for testing purposes
 /// @author JaredBorders (jaredborders@pm.me)
 contract SynthetixV3Errors {
-    enum SettlementStrategyType {PYTH}
+    enum SettlementStrategyType {
+        PYTH
+    }
 
     error OffchainLookup(
         address sender,
