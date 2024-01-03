@@ -29,13 +29,17 @@ contract Setup is Script {
         address perpsMarketProxy,
         address spotMarketProxy,
         address sUSDProxy,
-        address pDAO
+        address pDAO,
+        address usdc,
+        uint128 sUSDCId
     ) public returns (Engine engine) {
         engine = new Engine({
             _perpsMarketProxy: perpsMarketProxy,
             _spotMarketProxy: spotMarketProxy,
             _sUSDProxy: sUSDProxy,
-            _pDAO: pDAO
+            _pDAO: pDAO,
+            _usdc: usdc,
+            _sUSDCId: sUSDCId
         });
 
         // deploy ERC1967 proxy and set implementation to engine
@@ -58,7 +62,9 @@ contract DeployBase_Synthetix is Setup, BaseParameters {
             perpsMarketProxy: PERPS_MARKET_PROXY,
             spotMarketProxy: SPOT_MARKET_PROXY,
             sUSDProxy: USD_PROXY,
-            pDAO: PDAO
+            pDAO: PDAO,
+            usdc: USDC,
+            sUSDCId: SUSDC_SPOT_MARKET_ID
         });
 
         vm.stopBroadcast();
@@ -77,7 +83,9 @@ contract DeployBaseGoerli_Synthetix is Setup, BaseGoerliParameters {
             perpsMarketProxy: PERPS_MARKET_PROXY,
             spotMarketProxy: SPOT_MARKET_PROXY,
             sUSDProxy: USD_PROXY,
-            pDAO: PDAO
+            pDAO: PDAO,
+            usdc: USDC,
+            sUSDCId: SUSDC_SPOT_MARKET_ID
         });
 
         vm.stopBroadcast();
@@ -99,7 +107,9 @@ contract DeployBaseGoerli_KwentaFork is
             perpsMarketProxy: PERPS_MARKET_PROXY,
             spotMarketProxy: SPOT_MARKET_PROXY,
             sUSDProxy: USD_PROXY,
-            pDAO: PDAO
+            pDAO: PDAO,
+            usdc: USDC,
+            sUSDCId: SUSDC_SPOT_MARKET_ID
         });
 
         vm.stopBroadcast();
@@ -118,7 +128,9 @@ contract DeployBaseGoerli_Andromeda is Setup, BaseGoerliParameters {
             perpsMarketProxy: PERPS_MARKET_PROXY_ANDROMEDA,
             spotMarketProxy: SPOT_MARKET_PROXY_ANDROMEDA,
             sUSDProxy: USD_PROXY_ANDROMEDA,
-            pDAO: PDAO
+            pDAO: PDAO,
+            usdc: USDC,
+            sUSDCId: SUSDC_SPOT_MARKET_ID
         });
 
         vm.stopBroadcast();
@@ -137,7 +149,9 @@ contract DeployOptimism_Synthetix is Setup, OptimismParameters {
             perpsMarketProxy: PERPS_MARKET_PROXY,
             spotMarketProxy: SPOT_MARKET_PROXY,
             sUSDProxy: USD_PROXY,
-            pDAO: PDAO
+            pDAO: PDAO,
+            usdc: USDC,
+            sUSDCId: SUSDC_SPOT_MARKET_ID
         });
 
         vm.stopBroadcast();
@@ -156,7 +170,9 @@ contract DeployOptimismGoerli_Synthetix is Setup, OptimismGoerliParameters {
             perpsMarketProxy: PERPS_MARKET_PROXY,
             spotMarketProxy: SPOT_MARKET_PROXY,
             sUSDProxy: USD_PROXY,
-            pDAO: PDAO
+            pDAO: PDAO,
+            usdc: USDC,
+            sUSDCId: SUSDC_SPOT_MARKET_ID
         });
 
         vm.stopBroadcast();
