@@ -103,8 +103,6 @@ contract Engine is
         uint128 _sUSDCId
     ) Zap(_usdc, _sUSDProxy, _spotMarketProxy, _sUSDCId) {
         if (_perpsMarketProxy == address(0)) revert ZeroAddress();
-        if (_spotMarketProxy == address(0)) revert ZeroAddress();
-        if (_sUSDProxy == address(0)) revert ZeroAddress();
 
         PERPS_MARKET_PROXY = IPerpsMarketProxy(_perpsMarketProxy);
         SPOT_MARKET_PROXY = ISpotMarketProxy(_spotMarketProxy);
