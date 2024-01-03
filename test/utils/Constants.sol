@@ -4,14 +4,13 @@ pragma solidity 0.8.20;
 /// @title Contract for defining constants used in testing
 /// @author JaredBorders (jaredborders@pm.me)
 contract Constants {
-    uint256 internal constant GOERLI_BLOCK_NUMBER = 14_862_158;
+    uint256 public constant BASE_BLOCK_NUMBER = 8_163_300;
 
     address internal constant OWNER = address(0x01);
 
     bytes32 internal constant TRACKING_CODE = "KWENTA";
 
-    address internal constant REFERRER =
-        0xF510a2Ff7e9DD7e18629137adA4eb56B9c13E885;
+    address internal constant REFERRER = address(0xEFEFE);
 
     int128 internal constant SIZE_DELTA = 1 ether;
 
@@ -56,8 +55,7 @@ contract Constants {
 
     uint256 internal constant AMOUNT = 10_000 ether;
 
-    address internal constant MARKET_CONFIGURATION_MODULE =
-        0xE3b87A4c0E5F77504D6fa7656Cd8Caf2Ef331162;
+    address internal constant MARKET_CONFIGURATION_MODULE = address(0xC0FE);
 
     uint256 internal constant ZERO_CO_FEE = 0;
 
