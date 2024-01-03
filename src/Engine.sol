@@ -86,17 +86,22 @@ contract Engine is
     //////////////////////////////////////////////////////////////*/
 
     /// @notice Constructs the Engine contract
+    /// @dev Zap constructor will revert if any of the addresses are zero
     /// @param _perpsMarketProxy Synthetix v3 perps market proxy contract
     /// @param _spotMarketProxy Synthetix v3 spot market proxy contract
-    /// @param _sUSDProxy Synthetix v3 sUSD contract
+    /// @param _sUSDProxy Synthetix v3 $sUSD contract
     /// @param _pDAO Kwenta owned/operated multisig address that can authorize upgrades
+    /// @param _usdc $USDC token contract address
+    /// @param _sUSDCId Synthetix v3 Spot Market ID for $sUSDC
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor(
         address _perpsMarketProxy,
         address _spotMarketProxy,
         address _sUSDProxy,
-        address _pDAO
-    ) Zap(_sUSDProxy, _sUSDProxy, _spotMarketProxy, 1) {
+        address _pDAO,
+        address _usdc,
+        uint128 _sUSDCId
+    ) Zap(_usdc, _sUSDProxy, _spotMarketProxy, _sUSDCId) {
         if (_perpsMarketProxy == address(0)) revert ZeroAddress();
         if (_spotMarketProxy == address(0)) revert ZeroAddress();
         if (_sUSDProxy == address(0)) revert ZeroAddress();
