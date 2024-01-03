@@ -23,7 +23,7 @@ jobs:
 
             - name: Report Coverage
               run: |
-                forge coverage --fork-url ${{ secrets.OPTIMISM_GOERLI_RPC_URL }} --report lcov
+                forge coverage --fork-url ${{ secrets.BASE_RPC_URL }} --report lcov
 
             - name: Upload Coverage Report
               uses: codecov/codecov-action@v3
