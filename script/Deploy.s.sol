@@ -71,18 +71,18 @@ contract DeployBase_Synthetix is Setup, BaseParameters {
     }
 }
 
-/// @dev steps to deploy and verify on Base Goerli:
+/// @dev steps to deploy and verify on Base:
 /// (1) load the variables in the .env file via `source .env`
-/// (2) run `forge script script/Deploy.s.sol:DeployBaseGoerli_Synthetix --rpc-url $BASE_GOERLI_RPC_URL --etherscan-api-key $BASESCAN_API_KEY --broadcast --verify -vvvv`
-contract DeployBaseGoerli_Synthetix is Setup, BaseGoerliParameters {
+/// (2) run `forge script script/Deploy.s.sol:DeployBase_Andromeda --rpc-url $BASE_RPC_URL --etherscan-api-key $BASESCAN_API_KEY --broadcast --verify -vvvv`
+contract DeployBase_Andromeda is Setup, BaseParameters {
     function run() public {
         uint256 privateKey = vm.envUint("PRIVATE_KEY");
         vm.startBroadcast(privateKey);
 
         Setup.deploySystem({
-            perpsMarketProxy: PERPS_MARKET_PROXY,
-            spotMarketProxy: SPOT_MARKET_PROXY,
-            sUSDProxy: USD_PROXY,
+            perpsMarketProxy: PERPS_MARKET_PROXY_ANDROMEDA,
+            spotMarketProxy: SPOT_MARKET_PROXY_ANDROMEDA,
+            sUSDProxy: USD_PROXY_ANDROMEDA,
             pDAO: PDAO,
             usdc: USDC,
             sUSDCId: SUSDC_SPOT_MARKET_ID
@@ -92,13 +92,10 @@ contract DeployBaseGoerli_Synthetix is Setup, BaseGoerliParameters {
     }
 }
 
-/// @dev steps to deploy and verify on Base Goerli for the Kwenta Synthetix V3 Fork:
+/// @dev steps to deploy and verify on Base Goerli:
 /// (1) load the variables in the .env file via `source .env`
-/// (2) run `forge script script/Deploy.s.sol:DeployBaseGoerli_KwentaFork --rpc-url $BASE_GOERLI_RPC_URL --etherscan-api-key $BASESCAN_API_KEY --broadcast --verify -vvvv`
-contract DeployBaseGoerli_KwentaFork is
-    Setup,
-    BaseGoerliKwentaForkParameters
-{
+/// (2) run `forge script script/Deploy.s.sol:DeployBaseGoerli_Synthetix --rpc-url $BASE_GOERLI_RPC_URL --etherscan-api-key $BASESCAN_API_KEY --broadcast --verify -vvvv`
+contract DeployBaseGoerli_Synthetix is Setup, BaseGoerliParameters {
     function run() public {
         uint256 privateKey = vm.envUint("PRIVATE_KEY");
         vm.startBroadcast(privateKey);
@@ -128,6 +125,30 @@ contract DeployBaseGoerli_Andromeda is Setup, BaseGoerliParameters {
             perpsMarketProxy: PERPS_MARKET_PROXY_ANDROMEDA,
             spotMarketProxy: SPOT_MARKET_PROXY_ANDROMEDA,
             sUSDProxy: USD_PROXY_ANDROMEDA,
+            pDAO: PDAO,
+            usdc: USDC,
+            sUSDCId: SUSDC_SPOT_MARKET_ID
+        });
+
+        vm.stopBroadcast();
+    }
+}
+
+/// @dev steps to deploy and verify on Base Goerli for the Kwenta Synthetix V3 Fork:
+/// (1) load the variables in the .env file via `source .env`
+/// (2) run `forge script script/Deploy.s.sol:DeployBaseGoerli_KwentaFork --rpc-url $BASE_GOERLI_RPC_URL --etherscan-api-key $BASESCAN_API_KEY --broadcast --verify -vvvv`
+contract DeployBaseGoerli_KwentaFork is
+    Setup,
+    BaseGoerliKwentaForkParameters
+{
+    function run() public {
+        uint256 privateKey = vm.envUint("PRIVATE_KEY");
+        vm.startBroadcast(privateKey);
+
+        Setup.deploySystem({
+            perpsMarketProxy: PERPS_MARKET_PROXY,
+            spotMarketProxy: SPOT_MARKET_PROXY,
+            sUSDProxy: USD_PROXY,
             pDAO: PDAO,
             usdc: USDC,
             sUSDCId: SUSDC_SPOT_MARKET_ID

@@ -55,7 +55,7 @@ contract DeployBase_Synthetix is Setup, BaseParameters {
             sUSDProxy: USD_PROXY,
             pDAO: PDAO,
             usdc: USDC,
-            sUSDCId: SUSD_ID
+            sUSDCId: SUSDC_SPOT_MARKET_ID
         });
 
         vm.stopBroadcast();
@@ -76,7 +76,7 @@ contract DeployBaseGoerli_Synthetix is Setup, BaseGoerliParameters {
             sUSDProxy: USD_PROXY,
             pDAO: PDAO,
             usdc: USDC,
-            sUSDCId: SUSD_ID
+            sUSDCId: SUSDC_SPOT_MARKET_ID
         });
 
         vm.stopBroadcast();
@@ -100,7 +100,7 @@ contract DeployBaseGoerli_KwentaFork is
             sUSDProxy: USD_PROXY,
             pDAO: PDAO,
             usdc: USDC,
-            sUSDCId: SUSD_ID
+            sUSDCId: SUSDC_SPOT_MARKET_ID
         });
 
         vm.stopBroadcast();
@@ -121,7 +121,7 @@ contract DeployBaseGoerli_Andromeda is Setup, BaseGoerliParameters {
             sUSDProxy: USD_PROXY_ANDROMEDA,
             pDAO: PDAO,
             usdc: USDC,
-            sUSDCId: SUSD_ID
+            sUSDCId: SUSDC_SPOT_MARKET_ID
         });
 
         vm.stopBroadcast();
@@ -142,7 +142,7 @@ contract DeployOptimism_Synthetix is Setup, OptimismParameters {
             sUSDProxy: USD_PROXY,
             pDAO: PDAO,
             usdc: USDC,
-            sUSDCId: SUSD_ID
+            sUSDCId: SUSDC_SPOT_MARKET_ID
         });
 
         vm.stopBroadcast();
@@ -163,7 +163,7 @@ contract DeployOptimismGoerli_Synthetix is Setup, OptimismGoerliParameters {
             sUSDProxy: USD_PROXY,
             pDAO: PDAO,
             usdc: USDC,
-            sUSDCId: SUSD_ID
+            sUSDCId: SUSDC_SPOT_MARKET_ID
         });
 
         vm.stopBroadcast();
