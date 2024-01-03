@@ -5,6 +5,7 @@ import {Engine, Setup} from "script/Deploy.s.sol";
 import {IEngine} from "src/interfaces/IEngine.sol";
 import {IERC20} from "lib/Zap/src/interfaces/IERC20.sol";
 import {ISpotMarketProxy} from "lib/Zap/src/interfaces/ISpotMarketProxy.sol";
+import {ZapErrors} from "lib/Zap/src/ZapErrors.sol";
 import {Test} from "lib/forge-std/src/Test.sol";
 
 contract DeploymentTest is Test, Setup {
@@ -35,12 +36,9 @@ contract DeploymentTest is Test, Setup {
         // mock calls to Synthetix v3 Spot Market Proxy that occurs in Zap constructor
         vm.mockCall(
             spotMarketProxy,
-            abi.encodeWithSelector(
-                ISpotMarketProxy.name.selector, _HASHED_SUSDC_NAME
-            ),
-            abi.encode(_HASHED_SUSDC_NAME)
+            abi.encodeWithSelector(ISpotMarketProxy.name.selector, sUSDCId),
+            abi.encode(abi.encodePacked("Synthetic USD Coin Spot Market"))
         );
-
         vm.mockCall(
             spotMarketProxy,
             abi.encodeWithSelector(ISpotMarketProxy.getSynth.selector, sUSDCId),
@@ -83,7 +81,7 @@ contract DeploymentTest is Test, Setup {
             usdc: usdc,
             sUSDCId: sUSDCId
         }) {} catch (bytes memory reason) {
-            assertEq(bytes4(reason), IEngine.ZeroAddress.selector);
+            assertEq(bytes4(reason), ZapErrors.SpotMarketZeroAddress.selector);
         }
     }
 
@@ -96,7 +94,7 @@ contract DeploymentTest is Test, Setup {
             usdc: usdc,
             sUSDCId: sUSDCId
         }) {} catch (bytes memory reason) {
-            assertEq(bytes4(reason), IEngine.ZeroAddress.selector);
+            assertEq(bytes4(reason), ZapErrors.SUSDZeroAddress.selector);
         }
     }
 }

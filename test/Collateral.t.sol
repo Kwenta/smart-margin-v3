@@ -5,8 +5,8 @@ import {Bootstrap} from "test/utils/Bootstrap.sol";
 
 contract CollateralTest is Bootstrap {
     function setUp() public {
-        vm.rollFork(GOERLI_BLOCK_NUMBER);
-        initializeOptimismGoerli();
+        vm.rollFork(BASE_BLOCK_NUMBER);
+        initializeBase();
     }
 }
 

@@ -9,8 +9,8 @@ contract CreditTest is Bootstrap {
     event Debited(uint128 indexed accountId, uint256 amount);
 
     function setUp() public {
-        vm.rollFork(GOERLI_BLOCK_NUMBER);
-        initializeOptimismGoerli();
+        vm.rollFork(BASE_BLOCK_NUMBER);
+        initializeBase();
     }
 }
 

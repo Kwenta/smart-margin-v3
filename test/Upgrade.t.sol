@@ -7,8 +7,8 @@ import {MockEngineUpgrade} from "test/utils/mocks/MockEngineUpgrade.sol";
 
 contract UpgradeTest is Bootstrap {
     function setUp() public {
-        vm.rollFork(GOERLI_BLOCK_NUMBER);
-        initializeOptimismGoerli();
+        vm.rollFork(BASE_BLOCK_NUMBER);
+        initializeBase();
     }
 }
 

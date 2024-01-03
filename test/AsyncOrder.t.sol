@@ -8,8 +8,8 @@ import {SynthetixMock} from "test/utils/mocks/SynthetixMock.sol";
 
 contract AsyncOrderTest is Bootstrap, SynthetixMock {
     function setUp() public {
-        vm.rollFork(GOERLI_BLOCK_NUMBER);
-        initializeOptimismGoerli();
+        vm.rollFork(BASE_BLOCK_NUMBER);
+        initializeBase();
 
         vm.startPrank(ACTOR);
 
