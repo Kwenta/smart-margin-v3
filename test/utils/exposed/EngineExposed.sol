@@ -10,8 +10,10 @@ contract EngineExposed is Engine {
         address _perpsMarketProxy,
         address _spotMarketProxy,
         address _sUSDProxy,
-        address _pDAO
-    ) Engine(_perpsMarketProxy, _spotMarketProxy, _sUSDProxy, _pDAO) {}
+        address _pDAO,
+        address _usdc,
+        uint128 _sUSDCId
+    ) Engine(_perpsMarketProxy, _spotMarketProxy, _sUSDProxy, _pDAO, _usdc, _sUSDCId) {}
 
     function getSynthAddress(uint128 synthMarketId)
         public
