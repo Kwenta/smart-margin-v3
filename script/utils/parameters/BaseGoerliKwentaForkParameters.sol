@@ -13,4 +13,9 @@ contract BaseGoerliKwentaForkParameters {
 
     address public constant USD_PROXY =
         0xD3bcDae94B0c2EF16d1c43d29c23b1735d864fC6;
+
+    // https://developers.circle.com/stablecoins/docs/usdc-on-test-networks#usdc-on-base-goerli
+    address public constant USDC = 0xF175520C52418dfE19C8098071a252da48Cd1C19;
+
+    uint128 public constant SUSDC_SPOT_MARKET_ID = type(uint128).max;
 }

@@ -25,4 +25,10 @@ contract BaseGoerliParameters {
     // https://usecannon.com/packages/synthetix/3.3.5/84531-andromeda
     address public constant USD_PROXY_ANDROMEDA =
         0xa89163A087fe38022690C313b5D4BBF12574637f;
+
+    // https://developers.circle.com/stablecoins/docs/usdc-on-test-networks#usdc-on-base-goerli
+    address public constant USDC = 0xF175520C52418dfE19C8098071a252da48Cd1C19;
+
+    // https://usecannon.com/packages/synthetix-spot-market/3.3.5/84531-andromeda
+    uint128 public constant SUSDC_SPOT_MARKET_ID = 1;
 }
