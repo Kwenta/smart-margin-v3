@@ -18,7 +18,7 @@ contract SynthetixV3Errors {
         bytes extraData
     );
     error InvalidVerificationResponse();
-    error InvalidSettlementStrategy(uint128 settlementStrategyId);
+    error InvalidSettlementStrategy(uint256 settlementStrategyId);
     error MinimumSettlementAmountNotMet(uint256 minimum, uint256 actual);
     error SettlementStrategyNotFound(SettlementStrategyType strategyType);
     error InvalidFeeCollectorInterface(address invalidFeeCollector);
