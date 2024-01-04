@@ -4,7 +4,7 @@ pragma solidity 0.8.20;
 /// @title Contract for defining constants used in testing
 /// @author JaredBorders (jaredborders@pm.me)
 contract Constants {
-    uint256 public constant BASE_BLOCK_NUMBER = 8_163_300;
+    uint256 public constant BASE_BLOCK_NUMBER = 8_767_000;
 
     address internal constant OWNER = address(0x01);
 
@@ -45,9 +45,7 @@ contract Constants {
 
     uint128 internal constant SUSD_SPOT_MARKET_ID = 0;
 
-    uint128 internal constant SBTC_SPOT_MARKET_ID = 1;
-
-    uint128 internal constant SETH_SPOT_MARKET_ID = 2;
+    uint128 internal constant SETH_SPOT_MARKET_ID = 2; // ?
 
     uint128 internal constant INVALID_PERPS_MARKET_ID = type(uint128).max;
 

@@ -22,8 +22,8 @@ import {SynthMinter} from "test/utils/SynthMinter.sol";
 
 /// @title Contract for bootstrapping the SMv3 system for testing purposes
 /// @dev it deploys the SMv3 Engine and EngineExposed, and defines
-/// the perpsMarketProxy, spotMarketProxy, sUSD, and sBTC contracts (notably)
-/// @dev it deploys a SynthMinter contract for minting sUSD and sBTC
+/// the perpsMarketProxy, spotMarketProxy, sUSD, and USDC contracts (notably)
+/// @dev it deploys a SynthMinter contract for minting sUSD
 /// @dev it creates a Synthetix v3 perps market account for the "ACTOR" whose
 /// address is defined in the Constants contract
 /// @dev it mints "AMOUNT" of sUSD to the ACTOR for testing purposes
@@ -54,7 +54,6 @@ contract Bootstrap is Test, Constants, Conditions, SynthetixV3Errors {
     IPerpsMarketProxy public perpsMarketProxy;
     ISpotMarketProxy public spotMarketProxy;
     IERC20 public sUSD;
-    IERC20 public sBTC;
     IERC20 public USDC;
 
     // Synthetix v3 Andromeda Spot Market ID for $sUSDC
@@ -68,7 +67,7 @@ contract Bootstrap is Test, Constants, Conditions, SynthetixV3Errors {
         (
             address _engineAddress,
             address _engineExposedAddress,
-            address _perpesMarketProxyAddress,
+            address _perpsMarketProxyAddress,
             address _spotMarketProxyAddress,
             address _sUSDAddress,
             address _pDAOAddress,
@@ -78,11 +77,10 @@ contract Bootstrap is Test, Constants, Conditions, SynthetixV3Errors {
 
         engine = Engine(_engineAddress);
         engineExposed = EngineExposed(_engineExposedAddress);
-        perpsMarketProxy = IPerpsMarketProxy(_perpesMarketProxyAddress);
+        perpsMarketProxy = IPerpsMarketProxy(_perpsMarketProxyAddress);
         spotMarketProxy = ISpotMarketProxy(_spotMarketProxyAddress);
         sUSD = IERC20(_sUSDAddress);
         synthMinter = new SynthMinter(_sUSDAddress, _spotMarketProxyAddress);
-        sBTC = synthMinter.sBTC();
         pDAO = _pDAOAddress;
         USDC = IERC20(_usdc);
         sUSDCId = _sUSDCId;
@@ -104,7 +102,7 @@ contract Bootstrap is Test, Constants, Conditions, SynthetixV3Errors {
         (
             address _engineAddress,
             address _engineExposedAddress,
-            address _perpesMarketProxyAddress,
+            address _perpsMarketProxyAddress,
             address _spotMarketProxyAddress,
             address _sUSDAddress,
             address _pDAOAddress,
@@ -114,11 +112,10 @@ contract Bootstrap is Test, Constants, Conditions, SynthetixV3Errors {
 
         engine = Engine(_engineAddress);
         engineExposed = EngineExposed(_engineExposedAddress);
-        perpsMarketProxy = IPerpsMarketProxy(_perpesMarketProxyAddress);
+        perpsMarketProxy = IPerpsMarketProxy(_perpsMarketProxyAddress);
         spotMarketProxy = ISpotMarketProxy(_spotMarketProxyAddress);
         sUSD = IERC20(_sUSDAddress);
         synthMinter = new SynthMinter(_sUSDAddress, _spotMarketProxyAddress);
-        sBTC = synthMinter.sBTC();
         pDAO = _pDAOAddress;
         USDC = IERC20(_usdc);
         sUSDCId = _sUSDCId;
@@ -140,7 +137,7 @@ contract Bootstrap is Test, Constants, Conditions, SynthetixV3Errors {
         (
             address _engineAddress,
             address _engineExposedAddress,
-            address _perpesMarketProxyAddress,
+            address _perpsMarketProxyAddress,
             address _spotMarketProxyAddress,
             address _sUSDAddress,
             address _pDAOAddress,
@@ -150,11 +147,10 @@ contract Bootstrap is Test, Constants, Conditions, SynthetixV3Errors {
 
         engine = Engine(_engineAddress);
         engineExposed = EngineExposed(_engineExposedAddress);
-        perpsMarketProxy = IPerpsMarketProxy(_perpesMarketProxyAddress);
+        perpsMarketProxy = IPerpsMarketProxy(_perpsMarketProxyAddress);
         spotMarketProxy = ISpotMarketProxy(_spotMarketProxyAddress);
         sUSD = IERC20(_sUSDAddress);
         synthMinter = new SynthMinter(_sUSDAddress, _spotMarketProxyAddress);
-        sBTC = synthMinter.sBTC();
         pDAO = _pDAOAddress;
         USDC = IERC20(_usdc);
         sUSDCId = _sUSDCId;
@@ -176,7 +172,7 @@ contract Bootstrap is Test, Constants, Conditions, SynthetixV3Errors {
         (
             address _engineAddress,
             address _engineExposedAddress,
-            address _perpesMarketProxyAddress,
+            address _perpsMarketProxyAddress,
             address _spotMarketProxyAddress,
             address _sUSDAddress,
             address _pDAOAddress,
@@ -186,11 +182,10 @@ contract Bootstrap is Test, Constants, Conditions, SynthetixV3Errors {
 
         engine = Engine(_engineAddress);
         engineExposed = EngineExposed(_engineExposedAddress);
-        perpsMarketProxy = IPerpsMarketProxy(_perpesMarketProxyAddress);
+        perpsMarketProxy = IPerpsMarketProxy(_perpsMarketProxyAddress);
         spotMarketProxy = ISpotMarketProxy(_spotMarketProxyAddress);
         sUSD = IERC20(_sUSDAddress);
         synthMinter = new SynthMinter(_sUSDAddress, _spotMarketProxyAddress);
-        sBTC = synthMinter.sBTC();
         pDAO = _pDAOAddress;
         USDC = IERC20(_usdc);
         sUSDCId = _sUSDCId;
@@ -333,9 +328,9 @@ contract BootstrapBase is Setup, BaseParameters {
         return (
             address(engine),
             address(engineExposed),
-            PERPS_MARKET_PROXY,
-            SPOT_MARKET_PROXY,
-            USD_PROXY,
+            PERPS_MARKET_PROXY_ANDROMEDA,
+            SPOT_MARKET_PROXY_ANDROMEDA,
+            USD_PROXY_ANDROMEDA,
             PDAO,
             USDC,
             SUSDC_SPOT_MARKET_ID
@@ -378,9 +373,9 @@ contract BootstrapBaseGoerli is Setup, BaseGoerliParameters {
         return (
             address(engine),
             address(engineExposed),
-            PERPS_MARKET_PROXY,
-            SPOT_MARKET_PROXY,
-            USD_PROXY,
+            PERPS_MARKET_PROXY_ANDROMEDA,
+            SPOT_MARKET_PROXY_ANDROMEDA,
+            USD_PROXY_ANDROMEDA,
             PDAO,
             USDC,
             SUSDC_SPOT_MARKET_ID
