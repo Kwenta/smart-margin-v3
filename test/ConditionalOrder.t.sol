@@ -63,7 +63,7 @@ contract CanExecute is ConditionalOrderTest {
             accountId: accountId,
             sizeDelta: SIZE_DELTA,
             settlementStrategyId: SETTLEMENT_STRATEGY_ID,
-            acceptablePrice: ACCEPTABLE_PRICE,
+            acceptablePrice: ACCEPTABLE_PRICE_LONG,
             isReduceOnly: false,
             trackingCode: TRACKING_CODE,
             referrer: REFERRER
@@ -183,7 +183,7 @@ contract CanExecute is ConditionalOrderTest {
             accountId: accountId,
             sizeDelta: SIZE_DELTA,
             settlementStrategyId: SETTLEMENT_STRATEGY_ID,
-            acceptablePrice: ACCEPTABLE_PRICE,
+            acceptablePrice: ACCEPTABLE_PRICE_LONG,
             isReduceOnly: false,
             trackingCode: TRACKING_CODE,
             referrer: REFERRER
@@ -470,7 +470,7 @@ contract Execute is ConditionalOrderTest {
             accountId: accountId,
             sizeDelta: SIZE_DELTA,
             settlementStrategyId: SETTLEMENT_STRATEGY_ID,
-            acceptablePrice: ACCEPTABLE_PRICE,
+            acceptablePrice: ACCEPTABLE_PRICE_LONG,
             isReduceOnly: false,
             trackingCode: TRACKING_CODE,
             referrer: REFERRER
@@ -499,7 +499,7 @@ contract Execute is ConditionalOrderTest {
         assertTrue(retOrder.settlementTime != 0);
         assertTrue(retOrder.request.marketId == SETH_PERPS_MARKET_ID);
         assertTrue(retOrder.request.accountId == accountId);
-        assertTrue(retOrder.request.sizeDelta == 1 ether);
+        assertTrue(retOrder.request.sizeDelta == SIZE_DELTA);
         assertTrue(retOrder.request.settlementStrategyId == 0);
         assertTrue(retOrder.request.acceptablePrice == type(uint256).max);
         assertTrue(retOrder.request.trackingCode == TRACKING_CODE);
@@ -515,7 +515,7 @@ contract Execute is ConditionalOrderTest {
             accountId: accountId,
             sizeDelta: SIZE_DELTA,
             settlementStrategyId: SETTLEMENT_STRATEGY_ID,
-            acceptablePrice: ACCEPTABLE_PRICE,
+            acceptablePrice: ACCEPTABLE_PRICE_LONG,
             isReduceOnly: false,
             trackingCode: TRACKING_CODE,
             referrer: REFERRER
@@ -552,7 +552,7 @@ contract Execute is ConditionalOrderTest {
             accountId: accountId,
             sizeDelta: INVALID_SIZE_DELTA,
             settlementStrategyId: SETTLEMENT_STRATEGY_ID,
-            acceptablePrice: ACCEPTABLE_PRICE,
+            acceptablePrice: ACCEPTABLE_PRICE_LONG,
             isReduceOnly: false,
             trackingCode: TRACKING_CODE,
             referrer: REFERRER
@@ -586,7 +586,7 @@ contract Execute is ConditionalOrderTest {
             accountId: accountId,
             sizeDelta: SIZE_DELTA,
             settlementStrategyId: SETTLEMENT_STRATEGY_ID,
-            acceptablePrice: INVALID_ACCEPTABLE_PRICE,
+            acceptablePrice: INVALID_ACCEPTABLE_PRICE_LONG,
             isReduceOnly: false,
             trackingCode: TRACKING_CODE,
             referrer: REFERRER
@@ -622,7 +622,7 @@ contract Execute is ConditionalOrderTest {
             accountId: accountId,
             sizeDelta: SIZE_DELTA,
             settlementStrategyId: INVALID_SETTLEMENT_STRATEGY_ID,
-            acceptablePrice: ACCEPTABLE_PRICE,
+            acceptablePrice: ACCEPTABLE_PRICE_LONG,
             isReduceOnly: false,
             trackingCode: TRACKING_CODE,
             referrer: REFERRER
@@ -675,7 +675,7 @@ contract Fee is ConditionalOrderTest {
             accountId: accountId,
             sizeDelta: SIZE_DELTA,
             settlementStrategyId: SETTLEMENT_STRATEGY_ID,
-            acceptablePrice: ACCEPTABLE_PRICE,
+            acceptablePrice: ACCEPTABLE_PRICE_LONG,
             isReduceOnly: false,
             trackingCode: TRACKING_CODE,
             referrer: REFERRER
@@ -714,7 +714,7 @@ contract Fee is ConditionalOrderTest {
             accountId: accountId,
             sizeDelta: SIZE_DELTA,
             settlementStrategyId: SETTLEMENT_STRATEGY_ID,
-            acceptablePrice: ACCEPTABLE_PRICE,
+            acceptablePrice: ACCEPTABLE_PRICE_LONG,
             isReduceOnly: false,
             trackingCode: TRACKING_CODE,
             referrer: REFERRER
@@ -749,7 +749,7 @@ contract Fee is ConditionalOrderTest {
             accountId: accountId,
             sizeDelta: SIZE_DELTA,
             settlementStrategyId: SETTLEMENT_STRATEGY_ID,
-            acceptablePrice: ACCEPTABLE_PRICE,
+            acceptablePrice: ACCEPTABLE_PRICE_LONG,
             isReduceOnly: false,
             trackingCode: TRACKING_CODE,
             referrer: REFERRER
@@ -788,7 +788,7 @@ contract ReduceOnly is ConditionalOrderTest {
             accountId: accountId,
             sizeDelta: SIZE_DELTA,
             settlementStrategyId: SETTLEMENT_STRATEGY_ID,
-            acceptablePrice: ACCEPTABLE_PRICE,
+            acceptablePrice: ACCEPTABLE_PRICE_LONG,
             isReduceOnly: true,
             trackingCode: TRACKING_CODE,
             referrer: REFERRER
@@ -826,7 +826,7 @@ contract ReduceOnly is ConditionalOrderTest {
             accountId: accountId,
             sizeDelta: SIZE_DELTA,
             settlementStrategyId: SETTLEMENT_STRATEGY_ID,
-            acceptablePrice: ACCEPTABLE_PRICE,
+            acceptablePrice: ACCEPTABLE_PRICE_LONG,
             isReduceOnly: true,
             trackingCode: TRACKING_CODE,
             referrer: REFERRER
@@ -863,7 +863,7 @@ contract ReduceOnly is ConditionalOrderTest {
             accountId: accountId,
             sizeDelta: 0, // zero sizeDelta
             settlementStrategyId: SETTLEMENT_STRATEGY_ID,
-            acceptablePrice: ACCEPTABLE_PRICE,
+            acceptablePrice: ACCEPTABLE_PRICE_LONG,
             isReduceOnly: true,
             trackingCode: TRACKING_CODE,
             referrer: REFERRER
@@ -904,7 +904,7 @@ contract ReduceOnly is ConditionalOrderTest {
             accountId: accountId,
             sizeDelta: SIZE_DELTA,
             settlementStrategyId: SETTLEMENT_STRATEGY_ID,
-            acceptablePrice: ACCEPTABLE_PRICE,
+            acceptablePrice: ACCEPTABLE_PRICE_LONG,
             isReduceOnly: true,
             trackingCode: TRACKING_CODE,
             referrer: REFERRER
@@ -941,7 +941,7 @@ contract ReduceOnly is ConditionalOrderTest {
             accountId: accountId,
             sizeDelta: type(int128).max,
             settlementStrategyId: SETTLEMENT_STRATEGY_ID,
-            acceptablePrice: ACCEPTABLE_PRICE,
+            acceptablePrice: ACCEPTABLE_PRICE_LONG,
             isReduceOnly: true,
             trackingCode: TRACKING_CODE,
             referrer: REFERRER

@@ -53,7 +53,7 @@ contract NonceBitmapTest is Bootstrap, ConditionalOrderSignature {
             accountId: accountId,
             sizeDelta: SIZE_DELTA,
             settlementStrategyId: SETTLEMENT_STRATEGY_ID,
-            acceptablePrice: ACCEPTABLE_PRICE,
+            acceptablePrice: ACCEPTABLE_PRICE_LONG,
             isReduceOnly: false,
             trackingCode: TRACKING_CODE,
             referrer: REFERRER
