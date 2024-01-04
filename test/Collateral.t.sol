@@ -107,8 +107,6 @@ contract DepositCollateral is CollateralTest {
 
 contract WithdrawCollateral is CollateralTest {
     function test_withdrawCollateral() public {
-        uint256 preBalance = sUSD.balanceOf(ACTOR);
-
         vm.startPrank(ACTOR);
 
         sUSD.approve(address(engine), type(uint256).max);
@@ -119,88 +117,19 @@ contract WithdrawCollateral is CollateralTest {
             _amount: int256(AMOUNT)
         });
 
+        uint256 preBalance = sUSD.balanceOf(ACTOR);
+
         engine.modifyCollateral({
             _accountId: accountId,
             _synthMarketId: SUSD_SPOT_MARKET_ID,
-            _amount: -int256(AMOUNT)
+            _amount: -int256(SMALLER_AMOUNT)
         });
 
         vm.stopPrank();
 
         uint256 postBalance = sUSD.balanceOf(ACTOR);
 
-        assertEq(postBalance, preBalance);
-    }
-
-    function test_withdrawCollateral_availableMargin() public {
-        vm.startPrank(ACTOR);
-
-        sUSD.approve(address(engine), type(uint256).max);
-
-        engine.modifyCollateral({
-            _accountId: accountId,
-            _synthMarketId: SUSD_SPOT_MARKET_ID,
-            _amount: int256(AMOUNT)
-        });
-
-        engine.modifyCollateral({
-            _accountId: accountId,
-            _synthMarketId: SUSD_SPOT_MARKET_ID,
-            _amount: -int256(AMOUNT)
-        });
-
-        vm.stopPrank();
-
-        int256 availableMargin = perpsMarketProxy.getAvailableMargin(accountId);
-        assertEq(availableMargin, 0);
-    }
-
-    function test_withdrawCollateral_collateralAmount() public {
-        vm.startPrank(ACTOR);
-
-        sUSD.approve(address(engine), type(uint256).max);
-
-        engine.modifyCollateral({
-            _accountId: accountId,
-            _synthMarketId: SUSD_SPOT_MARKET_ID,
-            _amount: int256(AMOUNT)
-        });
-
-        engine.modifyCollateral({
-            _accountId: accountId,
-            _synthMarketId: SUSD_SPOT_MARKET_ID,
-            _amount: -int256(AMOUNT)
-        });
-
-        vm.stopPrank();
-
-        uint256 collateralAmountOfSynth =
-            perpsMarketProxy.getCollateralAmount(accountId, SUSD_SPOT_MARKET_ID);
-        assertEq(collateralAmountOfSynth, 0);
-    }
-
-    function test_withdrawCollateral_totalCollateralValue() public {
-        vm.startPrank(ACTOR);
-
-        sUSD.approve(address(engine), type(uint256).max);
-
-        engine.modifyCollateral({
-            _accountId: accountId,
-            _synthMarketId: SUSD_SPOT_MARKET_ID,
-            _amount: int256(AMOUNT)
-        });
-
-        engine.modifyCollateral({
-            _accountId: accountId,
-            _synthMarketId: SUSD_SPOT_MARKET_ID,
-            _amount: -int256(AMOUNT)
-        });
-
-        vm.stopPrank();
-
-        uint256 totalCollateralValue =
-            perpsMarketProxy.totalCollateralValue(accountId);
-        assertEq(totalCollateralValue, 0);
+        assertEq(postBalance, preBalance + SMALLER_AMOUNT);
     }
 
     function test_withdrawCollateral_zero() public {

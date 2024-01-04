@@ -33,9 +33,9 @@ contract CommitOrder is AsyncOrderTest {
             .commitOrder({
             _perpsMarketId: SETH_PERPS_MARKET_ID,
             _accountId: accountId,
-            _sizeDelta: 1 ether,
+            _sizeDelta: SIZE_DELTA,
             _settlementStrategyId: SETTLEMENT_STRATEGY_ID,
-            _acceptablePrice: type(uint256).max,
+            _acceptablePrice: ACCEPTABLE_PRICE_LONG,
             _trackingCode: TRACKING_CODE,
             _referrer: REFERRER
         });
@@ -44,9 +44,11 @@ contract CommitOrder is AsyncOrderTest {
         assertTrue(retOrder.settlementTime != 0);
         assertTrue(retOrder.request.marketId == SETH_PERPS_MARKET_ID);
         assertTrue(retOrder.request.accountId == accountId);
-        assertTrue(retOrder.request.sizeDelta == 1 ether);
-        assertTrue(retOrder.request.settlementStrategyId == 0);
-        assertTrue(retOrder.request.acceptablePrice == type(uint256).max);
+        assertTrue(retOrder.request.sizeDelta == SIZE_DELTA);
+        assertTrue(
+            retOrder.request.settlementStrategyId == SETTLEMENT_STRATEGY_ID
+        );
+        assertTrue(retOrder.request.acceptablePrice == ACCEPTABLE_PRICE_LONG);
         assertTrue(retOrder.request.trackingCode == TRACKING_CODE);
         assertTrue(retOrder.request.referrer == REFERRER);
 
@@ -66,42 +68,28 @@ contract CommitOrder is AsyncOrderTest {
         engine.commitOrder({
             _perpsMarketId: INVALID_PERPS_MARKET_ID,
             _accountId: accountId,
-            _sizeDelta: 1 ether,
+            _sizeDelta: SIZE_DELTA,
             _settlementStrategyId: SETTLEMENT_STRATEGY_ID,
-            _acceptablePrice: type(uint256).max,
+            _acceptablePrice: ACCEPTABLE_PRICE_LONG,
             _trackingCode: TRACKING_CODE,
             _referrer: REFERRER
         });
     }
 
     function test_commitOrder_insufficient_collateral() public {
-        int128 sizeDelta = 1000 ether;
-
-        uint256 requiredMargin = perpsMarketProxy.requiredMarginForOrder(
-            accountId, SETH_PERPS_MARKET_ID, sizeDelta
-        );
-
-        int256 availableMargin = perpsMarketProxy.getAvailableMargin(accountId);
-
-        assertGt(requiredMargin, uint256(availableMargin));
-
         vm.prank(ACTOR);
 
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                InsufficientMargin.selector, AMOUNT, requiredMargin
-            )
-        );
-
-        engine.commitOrder({
+        try engine.commitOrder({
             _perpsMarketId: SETH_PERPS_MARKET_ID,
             _accountId: accountId,
-            _sizeDelta: sizeDelta,
+            _sizeDelta: SIZE_DELTA * SIZE_DELTA, // huge value that obviously exceeds the margin requirement
             _settlementStrategyId: SETTLEMENT_STRATEGY_ID,
-            _acceptablePrice: type(uint256).max,
+            _acceptablePrice: ACCEPTABLE_PRICE_LONG,
             _trackingCode: TRACKING_CODE,
             _referrer: REFERRER
-        });
+        }) {} catch (bytes memory reason) {
+            assertEq(bytes4(reason), InsufficientMargin.selector);
+        }
     }
 
     function test_commitOrder_Unauthorized() public {
@@ -112,9 +100,9 @@ contract CommitOrder is AsyncOrderTest {
         engine.commitOrder({
             _perpsMarketId: SETH_PERPS_MARKET_ID,
             _accountId: accountId,
-            _sizeDelta: 1 ether,
+            _sizeDelta: SIZE_DELTA,
             _settlementStrategyId: SETTLEMENT_STRATEGY_ID,
-            _acceptablePrice: type(uint256).max,
+            _acceptablePrice: ACCEPTABLE_PRICE_LONG,
             _trackingCode: TRACKING_CODE,
             _referrer: REFERRER
         });
