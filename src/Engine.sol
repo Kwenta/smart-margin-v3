@@ -18,9 +18,12 @@ import {UUPSUpgradeable} from
     "lib/openzeppelin-contracts/contracts/proxy/utils/UUPSUpgradeable.sol";
 
 /// @title Kwenta Smart Margin v3: Engine contract
-/// @notice Responsible for interacting with Synthetix v3 perps markets
-/// @custom:caution Engine should never hold an ETH balance so long as it is MulticallablePayable
-/// @custom:caution Add payable functions to the Engine with extreme caution
+/// @notice Responsible for interacting with
+/// Synthetix v3 perps markets
+/// @custom:caution Engine should never hold an
+/// ETH balance so long as it is MulticallablePayable
+/// @custom:caution Add payable functions to the Engine
+/// with extreme caution
 /// @author JaredBorders (jaredborders@pm.me)
 contract Engine is
     IEngine,
@@ -40,23 +43,28 @@ contract Engine is
     //////////////////////////////////////////////////////////////*/
 
     /// @notice the permission required to commit an async order
-    /// @dev this permission does not allow the permission holder to modify collateral
+    /// @dev this permission does not allow the permission
+    /// holder to modify collateral
     bytes32 internal constant PERPS_COMMIT_ASYNC_ORDER_PERMISSION =
         "PERPS_COMMIT_ASYNC_ORDER";
 
-    /// @notice "0" synthMarketId represents sUSD in Synthetix v3
+    /// @notice "0" synthMarketId represents $sUSD in Synthetix v3
     uint128 internal constant USD_SYNTH_ID = 0;
 
-    /// @notice max number of conditions that can be defined for a conditional order
+    /// @notice max number of conditions that can be defined
+    /// for a conditional order
     uint256 internal constant MAX_CONDITIONS = 8;
 
     /*//////////////////////////////////////////////////////////////
                                IMMUTABLES
     //////////////////////////////////////////////////////////////*/
 
-    /// @notice Kwenta owned/operated multisig address that can authorize upgrades
-    /// @dev if this address is the zero address, then the Engine will no longer be upgradeable
-    /// @dev making immutable because the pDAO address will *never* change
+    /// @notice Kwenta owned/operated multisig address that
+    /// can authorize upgrades
+    /// @dev if this address is the zero address, then the
+    /// Engine will no longer be upgradeable
+    /// @dev making immutable because the pDAO address
+    /// will *never* change
     address internal immutable pDAO;
 
     /// @notice Synthetix v3 perps market proxy contract
@@ -65,20 +73,23 @@ contract Engine is
     /// @notice Synthetix v3 spot market proxy contract
     ISpotMarketProxy internal immutable SPOT_MARKET_PROXY;
 
-    /// @notice Synthetix v3 sUSD contract
+    /// @notice Synthetix v3 $sUSD contract
     IERC20 internal immutable SUSD;
 
     /*//////////////////////////////////////////////////////////////
                                  STATE
     //////////////////////////////////////////////////////////////*/
 
-    /// @notice bit mapping that stores whether a conditional order nonce has been executed
-    /// @dev nonce is specific to the account id associated with the conditional order
+    /// @notice bit mapping that stores whether a conditional
+    /// order nonce has been executed
+    /// @dev nonce is specific to the account id associated
+    /// with the conditional order
     mapping(uint128 accountId => mapping(uint256 index => uint256 bitmap))
         public nonceBitmap;
 
-    /// @notice mapping of account id to sUSD balance (i.e. credit available to pay for fee(s))
-    /// @dev sUSD can be credited to the Engine to pay for fee(s)
+    /// @notice mapping of account id to $sUSD balance
+    /// (i.e. credit available to pay for fee(s))
+    /// @dev $sUSD can be credited to the Engine to pay for fee(s)
     mapping(uint128 accountId => uint256) public credit;
 
     /*//////////////////////////////////////////////////////////////
@@ -86,11 +97,15 @@ contract Engine is
     //////////////////////////////////////////////////////////////*/
 
     /// @notice Constructs the Engine contract
-    /// @dev Zap constructor will revert if any of the addresses are zero
-    /// @param _perpsMarketProxy Synthetix v3 perps market proxy contract
-    /// @param _spotMarketProxy Synthetix v3 spot market proxy contract
+    /// @dev Zap constructor will revert if any of the
+    /// addresses are zero
+    /// @param _perpsMarketProxy Synthetix v3 perps
+    /// market proxy contract
+    /// @param _spotMarketProxy Synthetix v3 spot
+    /// market proxy contract
     /// @param _sUSDProxy Synthetix v3 $sUSD contract
-    /// @param _pDAO Kwenta owned/operated multisig address that can authorize upgrades
+    /// @param _pDAO Kwenta owned/operated multisig address
+    /// that can authorize upgrades
     /// @param _usdc $USDC token contract address
     /// @param _sUSDCId Synthetix v3 Spot Market ID for $sUSDC
     /// @custom:oz-upgrades-unsafe-allow constructor
@@ -108,7 +123,8 @@ contract Engine is
         SPOT_MARKET_PROXY = ISpotMarketProxy(_spotMarketProxy);
         SUSD = IERC20(_sUSDProxy);
 
-        /// @dev pDAO address can be the zero address to make the Engine non-upgradeable
+        /// @dev pDAO address can be the zero address to
+        /// make the Engine non-upgradeable
         pDAO = _pDAO;
     }
 
@@ -202,13 +218,16 @@ contract Engine is
         uint256 bit = 1 << bitPos;
 
         /// @dev given wordPos == 0 and *assume* some bits at
-        /// other bit positions were already set (but not the bit at the bit position)
+        /// other bit positions were already set
+        /// (but not the bit at the bit position)
         /// bit             = .......00100
         /// bitmap          = .......10001
         /// bitmap & bit    = .......00000
-        /// thus in this case, bitmap & bit == 0 (nonce has not been used)
+        /// thus in this case, bitmap & bit == 0
+        /// (nonce has not been used)
         ///
-        /// @dev if the bit at the bit position was already set, then the nonce has been used before
+        /// @dev if the bit at the bit position was already set,
+        /// then the nonce has been used before
         /// bit             = .......00100
         /// bitmap          = .......10101 (notice the bit at the bit position is already set)
         /// bitmap & bit    = .......00100
@@ -216,20 +235,27 @@ contract Engine is
         return nonceBitmap[_accountId][wordPos] & bit != 0;
     }
 
-    /// @notice fetch the index of the bitmap and the bit position within
+    /// @notice fetch the index of the bitmap and
+    /// the bit position within
     /// the bitmap. used for *unordered* nonces
-    /// @param _nonce the nonce to get the associated word and bit positions
-    /// @return wordPos the word position **or index** into the nonceBitmap
+    /// @param _nonce the nonce to get the associated
+    /// word and bit positions
+    /// @return wordPos the word position **or index**
+    /// into the nonceBitmap
     /// @return bitPos the bit position
-    /// @dev The first 248 bits of the nonce value is the index of the desired bitmap
-    /// @dev The last 8 bits of the nonce value is the position of the bit in the bitmap
+    /// @dev The first 248 bits of the nonce value is
+    /// the index of the desired bitmap
+    /// @dev The last 8 bits of the nonce value is the
+    /// position of the bit in the bitmap
     function _bitmapPositions(uint256 _nonce)
         internal
         pure
         returns (uint256 wordPos, uint256 bitPos)
     {
-        // shift _nonce to the right by 8 bits and cast to uint248
-        /// @dev wordPos == 0 if 0 <= _nonce <= 255, 1 if 256 <= _nonce <= 511, etc.
+        // shift _nonce to the right by 8 bits and
+        /// cast to uint248
+        /// @dev wordPos == 0 if 0 <= _nonce <= 255,
+        /// 1 if 256 <= _nonce <= 511, etc.
         wordPos = _nonce >> 8;
 
         // cast the last 8 bits of _nonce to uint8
@@ -237,7 +263,9 @@ contract Engine is
         bitPos = uint8(_nonce);
     }
 
-    /// @notice checks whether a nonce is taken and sets the bit at the bit position in the bitmap at the word position
+    /// @notice checks whether a nonce is taken and
+    /// sets the bit at the bit position in the bitmap
+    /// at the word position
     /// @param _accountId the account id to use the nonce at
     /// @param _nonce The nonce to spend
     function _useUnorderedNonce(uint128 _accountId, uint256 _nonce) internal {
@@ -248,14 +276,17 @@ contract Engine is
         uint256 bit = 1 << bitPos;
 
         /// @dev given wordPos == 0 and *assume* some bits at
-        /// other bit positions were already set (but not the bit at the bit position)
+        /// other bit positions were already set
+        /// (but not the bit at the bit position)
         /// bit             = .......00100
         /// bitmap          = .......10001
         /// flipped         = .......10101
         uint256 flipped = nonceBitmap[_accountId][wordPos] ^= bit;
 
-        /// @dev is the bit at the bit position was already set, then the nonce has been used before
-        /// (refer to the example above, but this time assume the bit at the bit position was already set)
+        /// @dev is the bit at the bit position was already
+        /// set, then the nonce has been used before
+        /// (refer to the example above, but this time
+        /// assume the bit at the bit position was already set)
         /// bit             = .......00100
         /// bitmap          = .......10101 (notice the bit at the bit position is already set)
         /// flipped         = .......10001
@@ -264,7 +295,8 @@ contract Engine is
         /// bit             = .......00100
         /// flipped & bit   = .......00000
         ///
-        /// @dev if the bit at the bit position was not already set, then the nonce has not been used before
+        /// @dev if the bit at the bit position was not already
+        /// set, then the nonce has not been used before
         /// bit             = .......00100
         /// bitmap          = .......10001 (notice the bit at the bit position is (not set)
         /// flipped         = .......10101
@@ -308,22 +340,14 @@ contract Engine is
     ) external override {
         if (_amount > 0) {
             // zap $USDC -> $sUSD
-            /// @dev given the amount is positive, simply casting (int -> uint) is safe
-            _zapIn(uint256(_amount), _referrer);
+            /// @dev given the amount is positive,
+            /// simply casting (int -> uint) is safe
+            uint256 susdAmount = _zapIn(uint256(_amount), _referrer);
 
-            /// @notice $USDC may use non-standard decimals
-            /// @dev adjustedAmount is the amount of $sUSD
-            /// expected to receive from zap
-            /// @dev Synthetix synths use 18 decimals
-            /// @custom:example if $USDC has 6 decimals,
-            /// and $sUSD has 18 decimals,
-            /// then, 1e12 $sUSD= 1 $USDC
-            int256 adjustedAmount = _amount * int256(_DECIMALS_FACTOR);
-
-            SUSD.approve(address(PERPS_MARKET_PROXY), uint256(adjustedAmount));
+            SUSD.approve(address(PERPS_MARKET_PROXY), susdAmount);
 
             PERPS_MARKET_PROXY.modifyCollateral(
-                _accountId, USD_SYNTH_ID, adjustedAmount
+                _accountId, USD_SYNTH_ID, susdAmount.toInt256()
             );
         } else {
             if (!isAccountOwner(_accountId, msg.sender)) revert Unauthorized();
@@ -333,23 +357,11 @@ contract Engine is
             );
 
             // zap $sUSD -> $USDC
-            /// @dev given the amount is negative, simply casting (int -> uint) is unsafe, thus we use .abs()
-            uint256 amount = _amount.abs256();
-            _zapOut(amount, _referrer);
+            /// @dev given the amount is negative,
+            /// simply casting (int -> uint) is unsafe, thus we use .abs()
+            uint256 usdcAmount = _zapOut(_amount.abs256(), _referrer);
 
-            /// @notice $USDC might use non-standard decimals
-            /// @dev adjustedAmount is the amount of $USDC
-            /// expected to receive from unwrapping
-            /// @custom:example if $USDC has 6 decimals,
-            /// and $sUSD has 18 decimals,
-            /// then, 1e12 $sUSD = 1 $USDC
-            /// @dev division is safe; the same operation is checked prior to the division
-            /// in the Zap._zapOut() function
-            uint256 adjustedAmount = amount / _DECIMALS_FACTOR;
-
-            // $sUSD and $USDC are 1:1, however, the $sUSD contract has 18 decimals
-            // thus the precision change must be accounted for; simply use contract balance
-            _USDC.transfer(msg.sender, adjustedAmount);
+            _USDC.transfer(msg.sender, usdcAmount);
         }
     }
 
@@ -360,7 +372,8 @@ contract Engine is
         uint128 _synthMarketId,
         int256 _amount
     ) internal {
-        /// @dev given the amount is positive, simply casting (int -> uint) is safe
+        /// @dev given the amount is positive,
+        /// simply casting (int -> uint) is safe
         _synth.transferFrom(_from, address(this), uint256(_amount));
 
         _synth.approve(address(PERPS_MARKET_PROXY), uint256(_amount));
@@ -377,13 +390,16 @@ contract Engine is
     ) internal {
         PERPS_MARKET_PROXY.modifyCollateral(_accountId, _synthMarketId, _amount);
 
-        /// @dev given the amount is negative, simply casting (int -> uint) is unsafe, thus we use .abs()
+        /// @dev given the amount is negative,
+        /// simply casting (int -> uint) is unsafe, thus we use .abs()
         _synth.transfer(_to, _amount.abs256());
     }
 
-    /// @notice query and return the address of the synth contract
+    /// @notice query and return the address of
+    /// the synth contract
     /// @param _synthMarketId the id of the synth market
-    /// @return  synthAddress address of the synth based on the synth market id
+    /// @return  synthAddress address of the synth based
+    /// on the synth market id
     function _getSynthAddress(uint128 _synthMarketId)
         internal
         view
@@ -412,7 +428,8 @@ contract Engine is
         override
         returns (IPerpsMarketProxy.Data memory retOrder, uint256 fees)
     {
-        /// @dev the account owner or the delegate may commit async orders
+        /// @dev the account owner or the delegate
+        /// may commit async orders
         if (_isAccountOwnerOrDelegate(_accountId, msg.sender)) {
             (retOrder, fees) = _commitOrder({
                 _perpsMarketId: _perpsMarketId,
@@ -459,15 +476,17 @@ contract Engine is
         external
         override
     {
-        // ensure account exists (i.e. owner is not the zero address)
-        /// @notice this does not check if the caller is the account owner
+        // ensure account exists
+        // (i.e. owner is not the zero address)
+        /// @notice this does not check if the
+        /// caller is the account owner
         if (PERPS_MARKET_PROXY.getAccountOwner(_accountId) == address(0)) {
             revert AccountDoesNotExist();
         }
 
         credit[_accountId] += _amount;
 
-        /// @dev sUSD transfers that fail will revert
+        /// @dev $sUSD transfers that fail will revert
         SUSD.transferFrom(msg.sender, address(this), _amount);
 
         emit Credited(_accountId, _amount);
@@ -485,19 +504,23 @@ contract Engine is
         emit Debited(_accountId, _amount);
     }
 
-    /// @notice debit sUSD from the account and transfer it to the caller
-    /// @dev UNSAFE to call directly; use `debit` instead
+    /// @notice debit $sUSD from the account
+    /// and transfer it to the caller
+    /// @dev UNSAFE to call directly;
+    /// use `debit` instead
     /// @param _caller the caller of the function
-    /// @param _accountId the account id to debit sUSD from
+    /// @param _accountId the account id to
+    /// debit $sUSD from
     function _debit(address _caller, uint128 _accountId, uint256 _amount)
         internal
     {
         if (_amount > credit[_accountId]) revert InsufficientCredit();
 
-        // decrement the sUSD balance of the account prior to transferring sUSD to the caller
+        // decrement the $sUSD balance of the account prior
+        // to transferring $sUSD to the caller
         credit[_accountId] -= _amount;
 
-        /// @dev sUSD transfers that fail will revert
+        /// @dev $sUSD transfers that fail will revert
         SUSD.transfer(_caller, _amount);
     }
 
@@ -527,8 +550,10 @@ contract Engine is
         _useUnorderedNonce(_co.orderDetails.accountId, _co.nonce);
 
         /// @dev impose a fee for executing the conditional order
-        /// @dev the fee is denoted in sUSD and is paid to the caller (conditional order executor)
-        /// @dev the fee does not exceed the max fee set by the conditional order and
+        /// @dev the fee is denoted in $sUSD and is
+        /// paid to the caller (conditional order executor)
+        /// @dev the fee does not exceed the max fee set by
+        /// the conditional order and
         /// this is enforced by the `canExecute` function
         if (_fee > 0) _debit(msg.sender, _co.orderDetails.accountId, _fee);
 
@@ -541,29 +566,40 @@ contract Engine is
                 _co.orderDetails.accountId, _co.orderDetails.marketId
             );
 
-            // ensure position exists; reduce only orders cannot increase position size
+            // ensure position exists; reduce only orders
+            // cannot increase position size
             if (positionSize == 0) {
                 revert CannotExecuteOrder();
             }
 
-            // ensure incoming size delta is non-zero and NOT the same sign;
+            // ensure incoming size delta is non-zero and
+            // NOT the same sign;
             // i.e. reduce only orders cannot increase position size
             if (sizeDelta == 0 || positionSize.isSameSign(sizeDelta)) {
                 revert CannotExecuteOrder();
             }
 
-            // ensure incoming size delta is not larger than current position size
-            /// @dev reduce only orders can only reduce position size (i.e. approach size of zero) and
-            /// cannot cross that boundary (i.e. short -> long or long -> short)
+            // ensure incoming size delta is not larger
+            // than current position size
+            /// @dev reduce only orders can only reduce
+            /// position size (i.e. approach size of zero) and
+            /// cannot cross that boundary
+            /// (i.e. short -> long or long -> short)
             if (sizeDelta.abs128() > positionSize.abs128()) {
-                /// @dev if the value of sizeDelta was used to verify `isOrderFeeBelow`
-                /// condition prior to it being truncated *here*, the actual order fee
-                /// (see below) will always be less than the order fee estimated during
-                /// that condition check.
-                /// @custom:integrator This is important to understand because if a reduce-only order
-                /// sets size delta to type(int128).min/max (to basically close a position),
-                /// the order fee will appear to be extremely large during the condition check, but will be
-                /// much smaller when the order is actually executed due to the size delta being
+                /// @dev if the value of sizeDelta was
+                /// used to verify `isOrderFeeBelow`
+                /// condition prior to it being truncated *here*,
+                /// the actual order fee
+                /// (see below) will always be less than the
+                /// order fee estimated during that condition check.
+                /// @custom:integrator This is important to understand
+                /// because if a reduce-only order
+                /// sets size delta to type(int128).min/max
+                /// (to basically close a position),
+                /// the order fee will appear to be extremely large
+                /// during the condition check, but will be
+                /// much smaller when the order is actually executed
+                /// due to the size delta being
                 /// truncated to the current position size *here*.
                 sizeDelta = -positionSize;
             }
@@ -593,7 +629,8 @@ contract Engine is
         bytes calldata _signature,
         uint256 _fee
     ) public view override returns (bool) {
-        // verify fee does not exceed the max fee set by the conditional order
+        // verify fee does not exceed the max fee
+        // set by the conditional order
         if (_fee > _co.maxExecutorFee) return false;
 
         // verify account has enough credit to pay the fee
@@ -604,7 +641,8 @@ contract Engine is
             return false;
         }
 
-        // verify signer is authorized to interact with the account
+        // verify signer is authorized to interact
+        // with the account
         if (!verifySigner(_co)) return false;
 
         // verify signature is valid for signer and order
@@ -669,7 +707,8 @@ contract Engine is
             // define condition selector intended to be called
             bytes4 selector = bytes4(_co.conditions[i]);
 
-            /// @dev checking if the selector is valid prevents the possibility of
+            /// @dev checking if the selector is
+            /// valid prevents the possibility of
             /// a malicious condition from griefing the executor
             if (
                 selector == this.isPriceAbove.selector
@@ -681,7 +720,8 @@ contract Engine is
                     || selector == this.isPositionSizeBelow.selector
                     || selector == this.isOrderFeeBelow.selector
             ) {
-                // @dev staticcall to prevent state changes in the case a condition is malicious
+                /// @dev staticcall to prevent state changes
+                /// in the case a condition is malicious
                 (success, response) =
                     address(this).staticcall(_co.conditions[i]);
 
