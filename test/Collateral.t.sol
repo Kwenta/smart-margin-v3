@@ -103,6 +103,25 @@ contract DepositCollateral is CollateralTest {
 
         vm.stopPrank();
     }
+
+    function test_depositCollateral_zap() public {
+        deal(address(USDC), ACTOR, SMALLER_AMOUNT);
+
+        vm.startPrank(ACTOR);
+
+        USDC.approve(address(engine), type(uint256).max);
+
+        engine.modifyCollateralZap({
+            _accountId: accountId,
+            _amount: int256(SMALLER_AMOUNT),
+            _referrer: REFERRER
+        });
+
+        vm.stopPrank();
+
+        int256 availableMargin = perpsMarketProxy.getAvailableMargin(accountId);
+        assertEq(availableMargin, int256(SMALLER_AMOUNT));
+    }
 }
 
 contract WithdrawCollateral is CollateralTest {
@@ -186,5 +205,28 @@ contract WithdrawCollateral is CollateralTest {
         });
 
         vm.stopPrank();
+    }
+
+    function test_withdrawCollateral_zap() public {
+        vm.startPrank(ACTOR);
+
+        sUSD.approve(address(engine), type(uint256).max);
+
+        engine.modifyCollateral({
+            _accountId: accountId,
+            _synthMarketId: SUSD_SPOT_MARKET_ID,
+            _amount: int256(AMOUNT)
+        });
+
+        engine.modifyCollateralZap({
+            _accountId: accountId,
+            _amount: -int256(SMALLER_AMOUNT),
+            _referrer: REFERRER
+        });
+
+        vm.stopPrank();
+
+        uint256 postBalance = USDC.balanceOf(ACTOR);
+        assertEq(postBalance, SMALLER_AMOUNT);
     }
 }
