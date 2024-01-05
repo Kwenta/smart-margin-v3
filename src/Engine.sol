@@ -311,10 +311,19 @@ contract Engine is
             /// @dev given the amount is positive, simply casting (int -> uint) is safe
             _zapIn(uint256(_amount), _referrer);
 
-            SUSD.approve(address(PERPS_MARKET_PROXY), uint256(_amount));
+            /// @notice $USDC may use non-standard decimals
+            /// @dev adjustedAmount is the amount of $sUSD
+            /// expected to receive from zap
+            /// @dev Synthetix synths use 18 decimals
+            /// @custom:example if $USDC has 6 decimals,
+            /// and $sUSD has 18 decimals,
+            /// then, 1e12 $sUSD= 1 $USDC
+            int256 adjustedAmount = _amount * int256(_DECIMALS_FACTOR);
+
+            SUSD.approve(address(PERPS_MARKET_PROXY), uint256(adjustedAmount));
 
             PERPS_MARKET_PROXY.modifyCollateral(
-                _accountId, USD_SYNTH_ID, _amount
+                _accountId, USD_SYNTH_ID, adjustedAmount
             );
         } else {
             if (!isAccountOwner(_accountId, msg.sender)) revert Unauthorized();
@@ -328,7 +337,19 @@ contract Engine is
             uint256 amount = _amount.abs256();
             _zapOut(amount, _referrer);
 
-            _USDC.transfer(msg.sender, amount);
+            /// @notice $USDC might use non-standard decimals
+            /// @dev adjustedAmount is the amount of $USDC
+            /// expected to receive from unwrapping
+            /// @custom:example if $USDC has 6 decimals,
+            /// and $sUSD has 18 decimals,
+            /// then, 1e12 $sUSD = 1 $USDC
+            /// @dev division is safe; the same operation is checked prior to the division
+            /// in the Zap._zapOut() function
+            uint256 adjustedAmount = amount / _DECIMALS_FACTOR;
+
+            // $sUSD and $USDC are 1:1, however, the $sUSD contract has 18 decimals
+            // thus the precision change must be accounted for; simply use contract balance
+            _USDC.transfer(msg.sender, adjustedAmount);
         }
     }
 
