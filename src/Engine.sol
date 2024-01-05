@@ -300,6 +300,38 @@ contract Engine is
         }
     }
 
+    /// @inheritdoc IEngine
+    function modifyCollateralZap(
+        uint128 _accountId,
+        int256 _amount,
+        address _referrer
+    ) external override {
+        if (_amount > 0) {
+            // zap $USDC -> $sUSD
+            /// @dev given the amount is positive, simply casting (int -> uint) is safe
+            _zapIn(uint256(_amount), _referrer);
+
+            SUSD.approve(address(PERPS_MARKET_PROXY), uint256(_amount));
+
+            PERPS_MARKET_PROXY.modifyCollateral(
+                _accountId, USD_SYNTH_ID, _amount
+            );
+        } else {
+            if (!isAccountOwner(_accountId, msg.sender)) revert Unauthorized();
+
+            PERPS_MARKET_PROXY.modifyCollateral(
+                _accountId, USD_SYNTH_ID, _amount
+            );
+
+            // zap $sUSD -> $USDC
+            /// @dev given the amount is negative, simply casting (int -> uint) is unsafe, thus we use .abs()
+            uint256 amount = _amount.abs256();
+            _zapOut(amount, _referrer);
+
+            _USDC.transfer(msg.sender, amount);
+        }
+    }
+
     function _depositCollateral(
         address _from,
         IERC20 _synth,
@@ -307,7 +339,7 @@ contract Engine is
         uint128 _synthMarketId,
         int256 _amount
     ) internal {
-        // @dev given the amount is positive, simply casting (int -> uint) is safe
+        /// @dev given the amount is positive, simply casting (int -> uint) is safe
         _synth.transferFrom(_from, address(this), uint256(_amount));
 
         _synth.approve(address(PERPS_MARKET_PROXY), uint256(_amount));

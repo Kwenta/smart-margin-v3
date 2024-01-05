@@ -179,6 +179,26 @@ interface IEngine {
         int256 _amount
     ) external;
 
+    /// @notice modify the collateral of an account identified by the accountId
+    /// via a zap of $USDC into/out of $sUSD
+    /// @dev when _amount is positive ->
+    ///     (1) transfers $USDC into the contract
+    ///     (2) zaps $USDC into $sUSD
+    ///     (3) adds the $sUSD to the account's collateral
+    /// @dev when _amount is negative ->
+    ///     (1) removes the $sUSD from the account's collateral
+    ///     (2) zaps $sUSD into $USDC
+    ///     (3) transfers $USDC to the caller
+    /// @param _accountId the account to modify
+    /// @param _amount the amount of collateral to add or remove (negative to remove)
+    /// @param _referrer optional address of the referrer,
+    /// for Synthetix fee share
+    function modifyCollateralZap(
+        uint128 _accountId,
+        int256 _amount,
+        address _referrer
+    ) external;
+
     /*//////////////////////////////////////////////////////////////
                          ASYNC ORDER MANAGEMENT
     //////////////////////////////////////////////////////////////*/
