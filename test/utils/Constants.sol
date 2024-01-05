@@ -57,6 +57,8 @@ contract Constants {
 
     uint256 internal constant SMALLER_AMOUNT = 100 ether;
 
+    uint256 internal constant SMALLEST_AMOUNT = 100 wei;
+
     address internal constant MARKET_CONFIGURATION_MODULE = address(0xC0FE);
 
     uint256 internal constant ZERO_CO_FEE = 0;
