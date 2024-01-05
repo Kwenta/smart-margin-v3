@@ -112,4 +112,7 @@ contract SynthetixV3Errors {
     );
     error InsufficientAllowance(uint256 required, uint256 existing);
     error InvalidParameter(string parameter, string reason);
+    error WrapperExceedsMaxAmount(
+        uint256 maxWrappableAmount, uint256 currentSupply, uint256 amountToWrap
+    );
 }
