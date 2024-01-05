@@ -105,7 +105,9 @@ contract DepositCollateral is CollateralTest {
     }
 
     function test_depositCollateral_zap() public {
-        deal(address(USDC), ACTOR, SMALLER_AMOUNT);
+        uint256 decimalsFactor = 10 ** (18 - USDC.decimals());
+
+        deal(address(USDC), ACTOR, SMALLEST_AMOUNT);
 
         vm.startPrank(ACTOR);
 
@@ -113,14 +115,14 @@ contract DepositCollateral is CollateralTest {
 
         engine.modifyCollateralZap({
             _accountId: accountId,
-            _amount: int256(SMALLER_AMOUNT),
+            _amount: int256(SMALLEST_AMOUNT),
             _referrer: REFERRER
         });
 
         vm.stopPrank();
 
         int256 availableMargin = perpsMarketProxy.getAvailableMargin(accountId);
-        assertEq(availableMargin, int256(SMALLER_AMOUNT));
+        assertEq(availableMargin, int256(SMALLEST_AMOUNT * decimalsFactor));
     }
 }
 
@@ -208,6 +210,8 @@ contract WithdrawCollateral is CollateralTest {
     }
 
     function test_withdrawCollateral_zap() public {
+        uint256 decimalsFactor = 10 ** (18 - USDC.decimals());
+
         vm.startPrank(ACTOR);
 
         sUSD.approve(address(engine), type(uint256).max);
@@ -220,13 +224,13 @@ contract WithdrawCollateral is CollateralTest {
 
         engine.modifyCollateralZap({
             _accountId: accountId,
-            _amount: -int256(SMALLER_AMOUNT),
+            _amount: -int256(SMALLEST_AMOUNT * decimalsFactor),
             _referrer: REFERRER
         });
 
         vm.stopPrank();
 
         uint256 postBalance = USDC.balanceOf(ACTOR);
-        assertEq(postBalance, SMALLER_AMOUNT);
+        assertEq(postBalance, SMALLEST_AMOUNT);
     }
 }
