@@ -11,21 +11,21 @@ interface IEngine {
                                  TYPES
     //////////////////////////////////////////////////////////////*/
 
-    /// @notice order details used to create an 
+    /// @notice order details used to create an
     /// order on a perps market within a co
     struct OrderDetails {
         // order market id
         uint128 marketId;
         // order account id
         uint128 accountId;
-        // order size delta (of asset units expressed in 
+        // order size delta (of asset units expressed in
         // decimal 18 digits). It can be positive or negative
         int128 sizeDelta;
         // settlement strategy used for the order
         uint128 settlementStrategyId;
         // acceptable price set at submission
         uint256 acceptablePrice;
-        // bool to indicate if the order is reduce only; 
+        // bool to indicate if the order is reduce only;
         // i.e. it can only reduce the position size
         bool isReduceOnly;
         // tracking code to identify the integrator
@@ -40,19 +40,19 @@ interface IEngine {
         OrderDetails orderDetails;
         // address of the signer of the order
         address signer;
-        // a means to prevent replay attacks and 
+        // a means to prevent replay attacks and
         // identify the order
         uint256 nonce;
-        // option to require all extra conditions 
+        // option to require all extra conditions
         // to be verified on-chain
         bool requireVerified;
-        // address that can execute the order 
+        // address that can execute the order
         // *if* requireVerified is false
         address trustedExecutor;
-        // max fee denominated in $sUSD that 
+        // max fee denominated in $sUSD that
         // can be paid to the executor
         uint256 maxExecutorFee;
-        // array of extra conditions to be met 
+        // array of extra conditions to be met
         // on-chain *if* requireVerified is true
         bytes[] conditions;
     }
@@ -61,14 +61,14 @@ interface IEngine {
                                  ERRORS
     //////////////////////////////////////////////////////////////*/
 
-    /// @notice thrown when msg.sender is not 
+    /// @notice thrown when msg.sender is not
     /// authorized to interact with an account
     error Unauthorized();
 
     /// @notice thrown when an order cannot be executed
     error CannotExecuteOrder();
 
-    /// @notice thrown when number of conditions 
+    /// @notice thrown when number of conditions
     /// exceeds max allowed
     /// @dev used to prevent griefing attacks
     error MaxConditionSizeExceeded();
@@ -79,26 +79,26 @@ interface IEngine {
     /// @notice thrown when attempting to re-use a nonce
     error InvalidNonce();
 
-    /// @notice thrown when attempting to verify a 
+    /// @notice thrown when attempting to verify a
     /// condition identified by an invalid selector
     error InvalidConditionSelector(bytes4 selector);
 
-    /// @notice thrown when attempting to deposit 
+    /// @notice thrown when attempting to deposit
     /// $sUSD into an account that does not exist
     error AccountDoesNotExist();
 
-    /// @notice thrown when attempting to debit 
-    /// more $sUSD from the Engine than the account 
+    /// @notice thrown when attempting to debit
+    /// more $sUSD from the Engine than the account
     /// has been credited
     error InsufficientCredit();
 
-    /// @notice thrown when attempting to update 
+    /// @notice thrown when attempting to update
     /// the Engine when caller is not the Kwenta pDAO
     error OnlyPDAO();
 
-    /// @notice thrown when attempting to upgrade 
+    /// @notice thrown when attempting to upgrade
     /// the Engine when the Engine is not upgradeable
-    /// @dev the Engine is not upgradeable when 
+    /// @dev the Engine is not upgradeable when
     /// the pDAO has been set to the zero address
     error NonUpgradeable();
 
@@ -106,24 +106,24 @@ interface IEngine {
                                  EVENTS
     //////////////////////////////////////////////////////////////*/
 
-    /// @notice emitted when the account owner or 
+    /// @notice emitted when the account owner or
     /// delegate successfully invalidates an unordered nonce
-    /// @param accountId the id of the account 
+    /// @param accountId the id of the account
     /// that was invalidated
-    /// @param word the word position of the 
+    /// @param word the word position of the
     /// bitmap that was invalidated
     /// @param mask the mask used to invalidate the bitmap
     event UnorderedNonceInvalidation(
         uint128 indexed accountId, uint256 word, uint256 mask
     );
 
-    /// @notice emitted when $sUSD is deposited 
+    /// @notice emitted when $sUSD is deposited
     /// into the engine and credited to an account
     /// @param accountId the id of the account that was credited
     /// @param amount the amount of $sUSD deposited
     event Credited(uint128 indexed accountId, uint256 amount);
 
-    /// @notice emitted when $sUSD is withdrawn 
+    /// @notice emitted when $sUSD is withdrawn
     /// from the engine and debited from an account
     /// @param accountId the id of the account that was debited
     /// @param amount the amount of $sUSD withdrawn
@@ -132,7 +132,7 @@ interface IEngine {
     /// @notice emitted when a co is executed
     /// @param order the order commited to the perps market
     /// that was defined in the co
-    /// @param executorFee the fee paid to the 
+    /// @param executorFee the fee paid to the
     /// executor for executing the co
     event ConditionalOrderExecuted(
         IPerpsMarketProxy.Data order, uint256 synthetixFees, uint256 executorFee
@@ -142,28 +142,28 @@ interface IEngine {
                              AUTHENTICATION
     //////////////////////////////////////////////////////////////*/
 
-    /// @notice check if the msg.sender is the 
+    /// @notice check if the msg.sender is the
     /// owner of the account
     /// identified by the accountId
-    /// @param _accountId the id of the account 
+    /// @param _accountId the id of the account
     /// to check
     /// @param _caller the address to check
-    /// @return true if the msg.sender is the 
+    /// @return true if the msg.sender is the
     /// owner of the account
     function isAccountOwner(uint128 _accountId, address _caller)
         external
         view
         returns (bool);
 
-    /// @notice check if the msg.sender is a 
-    /// delegate of the account identified by 
+    /// @notice check if the msg.sender is a
+    /// delegate of the account identified by
     /// the accountId
-    /// @dev a delegate is an address that 
+    /// @dev a delegate is an address that
     /// has been given
     /// PERPS_COMMIT_ASYNC_ORDER_PERMISSION permission
     /// @param _accountId the id of the account to check
     /// @param _caller the address to check
-    /// @return true if the msg.sender is a 
+    /// @return true if the msg.sender is a
     /// delegate of the account
     function isAccountDelegate(uint128 _accountId, address _caller)
         external
@@ -174,13 +174,13 @@ interface IEngine {
                             NONCE MANAGEMENT
     //////////////////////////////////////////////////////////////*/
 
-    /// @notice invalidates the bits specified in 
+    /// @notice invalidates the bits specified in
     /// mask for the bitmap at the word position
     /// @dev the wordPos is maxed at type(uint248).max
-    /// @param _accountId the id of the account to 
+    /// @param _accountId the id of the account to
     /// invalidate the nonces for
     /// @param _wordPos a number to index the nonceBitmap at
-    /// @param _mask a bitmap masked against msg.sender's 
+    /// @param _mask a bitmap masked against msg.sender's
     /// current bitmap at the word position
     function invalidateUnorderedNonces(
         uint128 _accountId,
@@ -191,7 +191,7 @@ interface IEngine {
     /// @notice check if the given nonce has been used
     /// @param _accountId the id of the account to check
     /// @param _nonce the nonce to check
-    /// @return true if the nonce has been used, 
+    /// @return true if the nonce has been used,
     /// false otherwise
     function hasUnorderedNonceBeenUsed(uint128 _accountId, uint256 _nonce)
         external
@@ -202,12 +202,12 @@ interface IEngine {
                          COLLATERAL MANAGEMENT
     //////////////////////////////////////////////////////////////*/
 
-    /// @notice modify the collateral of an account 
+    /// @notice modify the collateral of an account
     /// identified by the accountId
     /// @param _accountId the account to modify
-    /// @param _synthMarketId the id of the synth 
+    /// @param _synthMarketId the id of the synth
     /// being used as collateral
-    /// @param _amount the amount of collateral 
+    /// @param _amount the amount of collateral
     /// to add or remove (negative to remove)
     function modifyCollateral(
         uint128 _accountId,
@@ -215,7 +215,7 @@ interface IEngine {
         int256 _amount
     ) external;
 
-    /// @notice modify the collateral of an 
+    /// @notice modify the collateral of an
     /// account identified by the accountId
     /// via a zap of $USDC into/out of $sUSD
     /// @dev when _amount is positive ->
@@ -226,10 +226,10 @@ interface IEngine {
     ///     (1) removes the $sUSD from the account's collateral
     ///     (2) zaps $sUSD into $USDC
     ///     (3) transfers $USDC to the caller
-    /// @dev if _amount is zero, Synthetix v3 wrapper 
+    /// @dev if _amount is zero, Synthetix v3 wrapper
     /// will throw an error
     /// @param _accountId the account to modify
-    /// @param _amount the amount of collateral 
+    /// @param _amount the amount of collateral
     /// to add or remove (negative to remove)
     /// @param _referrer optional address of the referrer,
     /// for Synthetix fee share
@@ -243,18 +243,18 @@ interface IEngine {
                          ASYNC ORDER MANAGEMENT
     //////////////////////////////////////////////////////////////*/
 
-    /// @notice commit an order for an account 
-    /// identified by the accountId to be executed 
+    /// @notice commit an order for an account
+    /// identified by the accountId to be executed
     /// asynchronously
-    /// @param _perpsMarketId the id of the 
+    /// @param _perpsMarketId the id of the
     /// perps market to trade
-    /// @param _accountId the id of the account 
+    /// @param _accountId the id of the account
     /// to trade with
-    /// @param _sizeDelta the amount of the order 
+    /// @param _sizeDelta the amount of the order
     /// to trade (short if negative, long if positive)
-    /// @param _settlementStrategyId the id of the 
+    /// @param _settlementStrategyId the id of the
     /// settlement strategy to use
-    /// @param _acceptablePrice acceptable price 
+    /// @param _acceptablePrice acceptable price
     /// set at submission. Compared against the fill price
     /// @param _trackingCode tracking code to identify the integrator
     /// @param _referrer the address of the referrer
@@ -274,12 +274,12 @@ interface IEngine {
                            CREDIT MANAGEMENT
     //////////////////////////////////////////////////////////////*/
 
-    /// @notice tranfer $sUSD into the engine and 
+    /// @notice tranfer $sUSD into the engine and
     /// credit the account identified by the accountId
     /// @param _accountId the id of the account to credit
     function creditAccount(uint128 _accountId, uint256 _amount) external;
 
-    /// @notice withdraw $sUSD from the engine and 
+    /// @notice withdraw $sUSD from the engine and
     /// debit the account identified by the accountId
     /// @param _accountId the id of the account to debit
     /// @param _amount the amount of $sUSD to withdraw
@@ -334,63 +334,63 @@ interface IEngine {
     ///    (ex: isTimestampBeforeSelector, isPriceAboveSelector, etc.)
     ///
     ///
-    /// co's are not creaed on-chain. They are composed 
+    /// co's are not creaed on-chain. They are composed
     /// and signed off-chain. The signature
-    /// is then passed to the Engine contract along with the co. 
+    /// is then passed to the Engine contract along with the co.
     /// The Engine contract then
-    /// verifies the signature along with many other "things" 
+    /// verifies the signature along with many other "things"
     /// to determine if the co can be executed.
     ///
     /// Checklist:
     /// In *every* case of co execution, the logic of validating the co is:
     ///
-    /// 1. Check if the fee specified by the executor is 
+    /// 1. Check if the fee specified by the executor is
     ///    less than or equal to the maxExecutorFee
     /// 2. Check if the account has sufficient $sUSD credit to pay the fee
     ///    (see CREDIT MANAGEMENT for how that can be accomplished)
-    /// 3. Check if the nonce has been used 
+    /// 3. Check if the nonce has been used
     ///    (see NONCE MANAGEMENT for how that can be accomplished)
     /// 4. Check if the signer is the owner or delegate of the account
     /// 5. Check if the signature is valid for the given co and signer
     /// 6. IF requireVerified is true, check if all conditions are met
-    ///    ELSE IF requireVerified is false, check if the 
+    ///    ELSE IF requireVerified is false, check if the
     ///    msg.sender is the trustedExecutor
     ///
-    /// All of these checks are carried out via a call to 
+    /// All of these checks are carried out via a call to
     /// the Engine's canExecute function
-    /// that returns true or false. If canExecute returns true, 
+    /// that returns true or false. If canExecute returns true,
     /// the co can be executed assuming the context of
     /// the check(s) is/are reliable.
     /// If canExecute returns false, the co cannot be executed.
-    /// This function is expected to be used off-chain to determine 
+    /// This function is expected to be used off-chain to determine
     /// if the co can be executed.
-    /// It will be called within the Engine's execute function 
+    /// It will be called within the Engine's execute function
     /// to determine if the co can be executed
-    /// and if it returns true, the co will be executed. 
+    /// and if it returns true, the co will be executed.
     /// If it returns false, the co will not be executed
     /// and the transaction will revert with CannotExecuteOrder().
     ///
-    /// note: It is recommended to attempt simulating the 
-    /// co execution prior to submission or employ some other 
+    /// note: It is recommended to attempt simulating the
+    /// co execution prior to submission or employ some other
     /// sophisticated strategy to mitigate the risk of submitting a co that
-    /// cannot be executed due to internal Synthetix v3 
+    /// cannot be executed due to internal Synthetix v3
     /// scenarios/contexts that are *unpredictable*.
     ///
-    /// The Engine contract does not store co's. It only stores 
+    /// The Engine contract does not store co's. It only stores
     /// the nonceBitmaps for each account.
-    /// The Engine does hold and account for $sUSD credit and 
+    /// The Engine does hold and account for $sUSD credit and
     /// can modify the $sUSD credit of an account.
     ///
     /// Credit Management:
-    /// With the introduction of co's, the Engine contract 
+    /// With the introduction of co's, the Engine contract
     /// now holds $sUSD credit for accounts.
-    /// Using collateral to pay for fees is not ideal due to 
+    /// Using collateral to pay for fees is not ideal due to
     /// accounting risks associated with
-    /// orders that are close to max leverage. To mitigate this 
-    /// risk, the Engine contract holds $sUSD credit for accounts. 
+    /// orders that are close to max leverage. To mitigate this
+    /// risk, the Engine contract holds $sUSD credit for accounts.
     /// This $sUSD credit is used to pay for fees.
-    /// Furthermore, given the multi-colateral nature of the protocol, 
-    /// the Engine contract does not need to handle scenarios 
+    /// Furthermore, given the multi-colateral nature of the protocol,
+    /// the Engine contract does not need to handle scenarios
     /// where an account does not have sufficient
     /// collateral to pay the fee.
 
@@ -413,19 +413,19 @@ interface IEngine {
         returns (IPerpsMarketProxy.Data memory retOrder, uint256 synthetixFees);
 
     /// @notice checks if the co can be executed
-    /// @param _co the co which details the order to 
+    /// @param _co the co which details the order to
     /// be executed and the conditions to be met
     /// @param _signature the signature of the co
-    /// @param _fee the executor specified fee for 
+    /// @param _fee the executor specified fee for
     /// the executing the co
-    /// @dev if the fee is greater than the maxExecutorFee 
+    /// @dev if the fee is greater than the maxExecutorFee
     /// defined in the co,
     /// or if the account lacks sufficient $sUSD credit to
     /// pay the fee, canExecute will return false
-    /// @custom:warning this function may return 
-    /// false-positive results in the case the 
+    /// @custom:warning this function may return
+    /// false-positive results in the case the
     /// underlying Synthetix Perps v3
-    /// market is in a state that is not predictable 
+    /// market is in a state that is not predictable
     /// (ex: unpredictable updates to the market's simulated fill price)
     /// @return true if the order can be executed, false otherwise
     function canExecute(
@@ -455,9 +455,9 @@ interface IEngine {
     /// @dev
     ///     1. all conditions are defined by the co creator
     ///     2. conditions are encoded function selectors and parameters
-    ///     3. each function defined in the condition 
+    ///     3. each function defined in the condition
     ///        contract must return a truthy value
-    ///     4. internally, staticcall is used to protect 
+    ///     4. internally, staticcall is used to protect
     ///        against malicious conditions
     /// @param _co the co
     /// @return true if all conditions are met
@@ -471,95 +471,95 @@ interface IEngine {
     //////////////////////////////////////////////////////////////*/
 
     /// DISCLAIMER:
-    /// Take note that if a trusted party is authorized to 
+    /// Take note that if a trusted party is authorized to
     /// execute a co, then the trader
-    /// does not actually need to specify any conditions. 
+    /// does not actually need to specify any conditions.
     /// In a contrived example, the trader
-    /// could simply "tell" the trusted party to execute 
+    /// could simply "tell" the trusted party to execute
     /// the co if the price of $BTC is above/below some number.
-    /// The trusted party would then check the price of 
+    /// The trusted party would then check the price of
     /// $BTC (via whatever method deemed necessary)
     /// and execute the co.
-    /// This is a very simple example, but it illustrates 
-    /// the flexibility of the co along with the degree of 
+    /// This is a very simple example, but it illustrates
+    /// the flexibility of the co along with the degree of
     /// trust that will be placed in the trusted party.
-    /// Finally, it is expected that despite the conditions 
+    /// Finally, it is expected that despite the conditions
     /// array being unnecessary in *this* context,
-    /// it will likely still be used to provide 
+    /// it will likely still be used to provide
     /// additional context to the trusted party.
     /// However, *again*, it is not required.
 
-    /// @notice determine if current timestamp 
+    /// @notice determine if current timestamp
     /// is after the given timestamp
     /// @param _timestamp the timestamp to compare against
-    /// @return true if current timestamp is after 
+    /// @return true if current timestamp is after
     /// the given `_timestamp`, false otherwise
     function isTimestampAfter(uint256 _timestamp)
         external
         view
         returns (bool);
 
-    /// @notice determine if current timestamp is 
+    /// @notice determine if current timestamp is
     /// before the given timestamp
     /// @param _timestamp the timestamp to compare against
-    /// @return true if current timestamp is 
+    /// @return true if current timestamp is
     /// before the given `_timestamp`, false otherwise
     function isTimestampBefore(uint256 _timestamp)
         external
         view
         returns (bool);
 
-    /// @notice determine if the simulated fill 
+    /// @notice determine if the simulated fill
     /// price is above a given price
-    /// @dev relies on Synthetix Perps v3 market's 
+    /// @dev relies on Synthetix Perps v3 market's
     /// simulated fill price
-    /// @param _marketId id a market used to check 
+    /// @param _marketId id a market used to check
     /// the price of the
-    /// underlying asset of that market 
+    /// underlying asset of that market
     /// (i.e. $BTC Perp Market -> $BTC)
     /// @param _price the price to compare against
-    /// @param _size the order size to use for 
+    /// @param _size the order size to use for
     /// the simulated fill price
-    /// @return true if the simulated fill price 
+    /// @return true if the simulated fill price
     /// is above the given `_price`, false otherwise
     function isPriceAbove(uint128 _marketId, uint256 _price, int128 _size)
         external
         view
         returns (bool);
 
-    /// @notice determine if the simulated fill 
+    /// @notice determine if the simulated fill
     /// price is below a given price
-    /// @dev relies on Synthetix Perps v3 market's 
+    /// @dev relies on Synthetix Perps v3 market's
     /// simulated fill price
-    /// @param _marketId id a market used to check 
+    /// @param _marketId id a market used to check
     /// the price of the
-    /// underlying asset of that market 
+    /// underlying asset of that market
     /// (i.e. $BTC Perp Market -> $BTC)
     /// @param _price the price to compare against
-    /// @param _size the order size to use for 
+    /// @param _size the order size to use for
     /// the simulated fill price
-    /// @return true if the simulated fill price 
+    /// @return true if the simulated fill price
     /// is below the given `_price`, false otherwise
     function isPriceBelow(uint128 _marketId, uint256 _price, int128 _size)
         external
         view
         returns (bool);
 
-    /// @notice can market accept non close-only 
+    /// @notice can market accept non close-only
     /// orders (i.e. is the market open)
-    /// @dev if maxMarketSize to 0, the market 
+    /// @dev if maxMarketSize to 0, the market
     /// will be in a close-only state
     /// @param _marketId the id of the market to check
     /// @return true if the market is open, false otherwise
     function isMarketOpen(uint128 _marketId) external view returns (bool);
 
-    /// @notice determine if the account's 
+    /// @notice determine if the account's
     /// (identified by the given accountId)
     /// position size in the given market is above a given size
     /// @param _accountId the id of the account to check
     /// @param _marketId the id of the market to check
     /// @param _size the size to compare against
-    /// @return true if the account's position size 
+    /// @return true if the account's position size
     /// in the given market is above the given '_size`, false otherwise
     function isPositionSizeAbove(
         uint128 _accountId,
@@ -567,13 +567,13 @@ interface IEngine {
         int128 _size
     ) external view returns (bool);
 
-    /// @notice determine if the account's 
+    /// @notice determine if the account's
     /// (identified by the given accountId)
     /// position size in the given market is below a given size
     /// @param _accountId the id of the account to check
     /// @param _marketId the id of the market to check
     /// @param _size the size to compare against
-    /// @return true if the account's position size 
+    /// @return true if the account's position size
     /// in the given market is below the given '_size`, false otherwise
     function isPositionSizeBelow(
         uint128 _accountId,
@@ -581,12 +581,12 @@ interface IEngine {
         int128 _size
     ) external view returns (bool);
 
-    /// @notice determine if the order fee for the 
+    /// @notice determine if the order fee for the
     /// given market and size delta is above a given fee
     /// @param _marketId the id of the market to check
     /// @param _sizeDelta the size delta to check
     /// @param _fee the fee to compare against
-    /// @return true if the order fee for the given market 
+    /// @return true if the order fee for the given market
     /// and size delta is below the given `_fee`, false otherwise
     function isOrderFeeBelow(uint128 _marketId, int128 _sizeDelta, uint256 _fee)
         external
