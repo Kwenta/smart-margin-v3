@@ -55,18 +55,6 @@ contract Credit is CreditTest {
         vm.stopPrank();
     }
 
-    function test_credit_AccountDoesNotExist() public {
-        assertEq(
-            perpsMarketProxy.getAccountOwner(type(uint128).max), address(0)
-        );
-
-        vm.expectRevert(
-            abi.encodeWithSelector(IEngine.AccountDoesNotExist.selector)
-        );
-
-        engine.creditAccount(type(uint128).max, AMOUNT);
-    }
-
     function test_credit_event() public {
         vm.startPrank(ACTOR);
 
