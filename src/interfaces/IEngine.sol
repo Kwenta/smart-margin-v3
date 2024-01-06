@@ -83,10 +83,6 @@ interface IEngine {
     /// condition identified by an invalid selector
     error InvalidConditionSelector(bytes4 selector);
 
-    /// @notice thrown when attempting to deposit
-    /// $sUSD into an account that does not exist
-    error AccountDoesNotExist();
-
     /// @notice thrown when attempting to debit
     /// more $sUSD from the Engine than the account
     /// has been credited
@@ -101,6 +97,10 @@ interface IEngine {
     /// @dev the Engine is not upgradeable when
     /// the pDAO has been set to the zero address
     error NonUpgradeable();
+
+    /// @notice thrown when attempting to call
+    // an unsupported function
+    error NotSupported();
 
     /*//////////////////////////////////////////////////////////////
                                  EVENTS
@@ -277,13 +277,48 @@ interface IEngine {
     /// @notice tranfer $sUSD into the engine and
     /// credit the account identified by the accountId
     /// @param _accountId the id of the account to credit
+    /// @param _amount the amount of $sUSD to transfer/credit
     function creditAccount(uint128 _accountId, uint256 _amount) external;
+
+    /// @notice transfer $USDC into the engine,
+    /// zap it into $sUSD, and then credit the account
+    /// identified by the accountId
+    /// @dev _amount of $USDC transferred into the
+    /// engine may differ from the amount credited
+    /// to the account due to precision differences
+    /// (i.e. ERC-20 decimal discrepancies)
+    /// @param _accountId the id of the account to credit
+    /// @param _amount the amount of $USDC to transfer and zap
+    /// @param _referrer optional address of the referrer,
+    /// for Synthetix fee share
+    function creditAccountZap(
+        uint128 _accountId,
+        uint256 _amount,
+        address _referrer
+    ) external;
 
     /// @notice withdraw $sUSD from the engine and
     /// debit the account identified by the accountId
     /// @param _accountId the id of the account to debit
     /// @param _amount the amount of $sUSD to withdraw
     function debitAccount(uint128 _accountId, uint256 _amount) external;
+
+    /// @notice debit the account identified by the accountId
+    /// by the amount specified. The amount is then zapped
+    /// into $USDC and transferred to the caller
+    /// @dev _amount of $USDC transferred out of the
+    /// engine may differ from the amount debited
+    /// from the account due to precision differences
+    /// (i.e. ERC-20 decimal discrepancies)
+    /// @param _accountId the id of the account to debit
+    /// @param _amount the amount of $sUSD to debit
+    /// @param _referrer optional address of the referrer,
+    /// for Synthetix fee share
+    function debitAccountZap(
+        uint128 _accountId,
+        uint256 _amount,
+        address _referrer
+    ) external;
 
     /*//////////////////////////////////////////////////////////////
                       CONDITIONAL ORDER MANAGEMENT

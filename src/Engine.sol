@@ -129,6 +129,19 @@ contract Engine is
     }
 
     /*//////////////////////////////////////////////////////////////
+                                  ZAP
+    //////////////////////////////////////////////////////////////*/
+
+    /// @notice prevent the use of the default Zap.zap()
+    /// and instead rely on internal _zapIn()/_zapOut()
+    /// @dev in current implementation, the default Zap.zap()
+    /// would result in tokens lost to the Engine contract
+    /// with no way to recover them (excluding upgrades)
+    function zap(int256 _amount, address _referrer) external override {
+        revert NotSupported();
+    }
+
+    /*//////////////////////////////////////////////////////////////
                            UPGRADE MANAGEMENT
     //////////////////////////////////////////////////////////////*/
 
@@ -361,6 +374,7 @@ contract Engine is
             /// simply casting (int -> uint) is unsafe, thus we use .abs()
             uint256 usdcAmount = _zapOut(_amount.abs256(), _referrer);
 
+            /// @dev transfer return value can be safely ignored
             _USDC.transfer(msg.sender, usdcAmount);
         }
     }
@@ -476,20 +490,26 @@ contract Engine is
         external
         override
     {
-        // ensure account exists
-        // (i.e. owner is not the zero address)
-        /// @notice this does not check if the
-        /// caller is the account owner
-        if (PERPS_MARKET_PROXY.getAccountOwner(_accountId) == address(0)) {
-            revert AccountDoesNotExist();
-        }
-
         credit[_accountId] += _amount;
 
         /// @dev $sUSD transfers that fail will revert
         SUSD.transferFrom(msg.sender, address(this), _amount);
 
         emit Credited(_accountId, _amount);
+    }
+
+    /// @inheritdoc IEngine
+    function creditAccountZap(
+        uint128 _accountId,
+        uint256 _amount,
+        address _referrer
+    ) external override {
+        // zap $USDC -> $sUSD
+        uint256 usdcAmount = _zapIn(_amount, _referrer);
+
+        credit[_accountId] += usdcAmount;
+
+        emit Credited(_accountId, usdcAmount);
     }
 
     /// @inheritdoc IEngine
@@ -504,20 +524,32 @@ contract Engine is
         emit Debited(_accountId, _amount);
     }
 
-    /// @notice debit $sUSD from the account
-    /// and transfer it to the caller
-    /// @dev UNSAFE to call directly;
-    /// use `debit` instead
-    /// @param _caller the caller of the function
-    /// @param _accountId the account id to
-    /// debit $sUSD from
+    /// @inheritdoc IEngine
+    function debitAccountZap(
+        uint128 _accountId,
+        uint256 _amount,
+        address _referrer
+    ) external override {
+        if (!isAccountOwner(_accountId, msg.sender)) revert Unauthorized();
+
+        // decrement account credit prior to transfer
+        credit[_accountId] -= _amount;
+
+        // zap $sUSD -> $USDC
+        uint256 usdcAmount = _zapOut(_amount, _referrer);
+
+        /// @dev transfer return value can be safely ignored
+        _USDC.transfer(msg.sender, usdcAmount);
+
+        emit Debited(_accountId, _amount);
+    }
+
     function _debit(address _caller, uint128 _accountId, uint256 _amount)
         internal
     {
         if (_amount > credit[_accountId]) revert InsufficientCredit();
 
-        // decrement the $sUSD balance of the account prior
-        // to transferring $sUSD to the caller
+        // decrement account credit prior to transfer
         credit[_accountId] -= _amount;
 
         /// @dev $sUSD transfers that fail will revert
