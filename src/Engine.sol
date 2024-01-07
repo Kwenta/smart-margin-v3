@@ -137,7 +137,11 @@ contract Engine is
     /// @dev in current implementation, the default Zap.zap()
     /// would result in tokens lost to the Engine contract
     /// with no way to recover them (excluding upgrades)
-    function zap(int256 _amount, address _referrer) external override {
+    function zap(int256, /* _amount */ address /* _referrer */ )
+        external
+        pure
+        override
+    {
         revert NotSupported();
     }
 
