@@ -50,9 +50,41 @@ contract Credit is CreditTest {
 
             assert(postEngineBalance == preEngineBalance + amount);
             assert(postActorBalance == preActorBalance - amount);
+            assert(engine.credit(accountId) == amount);
         }
 
         vm.stopPrank();
+    }
+
+    function test_credit_zap() public {
+        uint256 decimalsFactor = 10 ** (18 - USDC.decimals());
+
+        deal(address(USDC), ACTOR, SMALLEST_AMOUNT);
+
+        vm.startPrank(ACTOR);
+
+        USDC.approve(address(engine), type(uint256).max);
+
+        uint256 preActorUSDCBalance = USDC.balanceOf(ACTOR);
+        uint256 preEngineSUSDBalance = sUSD.balanceOf(address(engine));
+
+        engine.creditAccountZap({
+            _accountId: accountId,
+            _amount: SMALLEST_AMOUNT,
+            _referrer: REFERRER
+        });
+
+        uint256 postActorUSDCBalance = USDC.balanceOf(ACTOR);
+        uint256 postEngineSUSDBalance = sUSD.balanceOf(address(engine));
+
+        vm.stopPrank();
+
+        assert(postActorUSDCBalance == preActorUSDCBalance - SMALLEST_AMOUNT);
+        assert(
+            postEngineSUSDBalance
+                == preEngineSUSDBalance + SMALLEST_AMOUNT * decimalsFactor
+        );
+        assert(engine.credit(accountId) == SMALLEST_AMOUNT * decimalsFactor);
     }
 
     function test_credit_event() public {
@@ -105,9 +137,67 @@ contract Debit is CreditTest {
 
             assert(postEngineBalance == preEngineBalance - amount);
             assert(postActorBalance == preActorBalance + amount);
+            assert(engine.credit(accountId) == AMOUNT - amount);
         }
 
         vm.stopPrank();
+    }
+
+    function test_debit_zap() public {
+        uint256 decimalsFactor = 10 ** (18 - USDC.decimals());
+
+        deal(address(USDC), ACTOR, SMALLEST_AMOUNT);
+
+        vm.startPrank(ACTOR);
+
+        USDC.approve(address(engine), type(uint256).max);
+
+        engine.creditAccountZap({
+            _accountId: accountId,
+            _amount: SMALLEST_AMOUNT,
+            _referrer: REFERRER
+        });
+
+        uint256 preActorUSDCBalance = USDC.balanceOf(ACTOR);
+        uint256 preEngineSUSDBalance = sUSD.balanceOf(address(engine));
+
+        engine.debitAccountZap({
+            _accountId: accountId,
+            _amount: SMALLEST_AMOUNT * decimalsFactor,
+            _referrer: REFERRER
+        });
+
+        uint256 postActorUSDCBalance = USDC.balanceOf(ACTOR);
+        uint256 postEngineSUSDBalance = sUSD.balanceOf(address(engine));
+
+        vm.stopPrank();
+
+        assert(postActorUSDCBalance == preActorUSDCBalance + SMALLEST_AMOUNT);
+        assert(
+            postEngineSUSDBalance
+                == preEngineSUSDBalance - SMALLEST_AMOUNT * decimalsFactor
+        );
+        assert(engine.credit(accountId) == 0);
+    }
+
+    function test_debit_zap_Unauthorized() public {
+        vm.startPrank(ACTOR);
+
+        sUSD.approve(address(engine), type(uint256).max);
+
+        engine.creditAccount(accountId, AMOUNT);
+
+        vm.stopPrank();
+
+        vm.expectRevert(abi.encodeWithSelector(IEngine.Unauthorized.selector));
+
+        vm.prank(BAD_ACTOR);
+
+        engine.debitAccountZap({
+            _accountId: accountId,
+            _amount: AMOUNT,
+            _referrer: REFERRER
+        });
     }
 
     function test_debit_Unauthorized() public {
