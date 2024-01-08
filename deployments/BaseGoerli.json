@@ -4,8 +4,8 @@
         "EngineProxy": ""
     },
     "Andromeda": {
-        "EngineImplementation": "0x3eF73cD1B3B708ab1F2ccB4AcDA036Ac3FDc3615",
-        "EngineProxy": "0xA2dF816B2C5D8d799069d6a8a9f8464D402b5D25"
+        "EngineImplementation": "0x7219cECaA0923dDfE7cDB3b782Aff7a69A2Ae478",
+        "EngineProxy": "0x7dF905e163d54B4FE9a14aE01cF985BDc82c1A0F"
     },
     "Kwenta": {
         "EngineImplementation": "",
