@@ -4,11 +4,11 @@ pragma solidity 0.8.20;
 /// @title Kwenta Smart Margin v3: Math Library for int128 and int256
 /// @author JaredBorders (jaredborders@pm.me)
 library MathLib {
-    error OverflowU128();
+    error Overflow();
 
     /// @notice get absolute value of the input, returned as an unsigned number.
-    /// @param x signed number
-    /// @return z uint128 absolute value of x
+    /// @param x signed 128-bit number
+    /// @return z unsigned 128-bit absolute value of x
     function abs128(int128 x) internal pure returns (uint128 z) {
         assembly {
             /// shr(127, x):
@@ -25,8 +25,8 @@ library MathLib {
     }
 
     /// @notice get absolute value of the input, returned as an unsigned number.
-    /// @param x signed number
-    /// @return z uint256 absolute value of x
+    /// @param x signed 256-bit number
+    /// @return z unsigned 256-bit absolute value of x
     function abs256(int256 x) internal pure returns (uint256 z) {
         assembly {
             /// shr(255, x):
@@ -47,11 +47,28 @@ library MathLib {
 
     /// @notice determines if input numbers have the same sign
     /// @dev asserts that both numbers are not zero
-    /// @param x signed number
-    /// @param y signed number
+    /// @param x signed 128-bit number
+    /// @param y signed 128-bit number
     /// @return true if same sign, false otherwise
     function isSameSign(int128 x, int128 y) internal pure returns (bool) {
         assert(x != 0 && y != 0);
         return (x ^ y) >= 0;
+    }
+
+    /// @notice safely cast uint256 to int256
+    /// @dev reverts if the input is greater than or equal to 2^255
+    /// @param x unsigned 256-bit number
+    /// @return z signed 256-bit number
+    function toInt256(uint256 x) internal pure returns (int256) {
+        if (x >= 1 << 255) {
+            /// @solidity memory-safe-assembly
+            assembly {
+                // Store the function selector of `Overflow()`.
+                mstore(0x00, 0x35278d12)
+                // Revert with (offset, size).
+                revert(0x1c, 0x04)
+            }
+        }
+        return int256(x);
     }
 }

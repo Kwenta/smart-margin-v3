@@ -95,4 +95,40 @@ contract MathLibTest is Test {
         y = 1;
         assertFalse(x.isSameSign(y));
     }
+
+    function test_toInt256() public {
+        uint256 x = 1 ether;
+        int256 z = x.toInt256();
+        assertEq(z, 1 ether);
+
+        x = type(uint256).min;
+        z = x.toInt256();
+        assertEq(z, 0);
+
+        x = type(uint256).max;
+        vm.expectRevert(MathLib.Overflow.selector);
+        z = x.toInt256();
+    }
+
+    function test_toInt256_overflow() public {
+        uint256 x = (2 ** 255) - 1;
+        int256 z = x.toInt256();
+        assertEq(z, (2 ** 255) - 1);
+
+        x = 2 ** 255;
+        vm.expectRevert(MathLib.Overflow.selector);
+        z = x.toInt256();
+    }
+
+    function test_fuzz_toInt256(uint256 x) public {
+        int256 z;
+
+        if (x >= 2 ** 255) {
+            vm.expectRevert(MathLib.Overflow.selector);
+            z = x.toInt256();
+        } else {
+            z = x.toInt256();
+            assertEq(z, int256(x));
+        }
+    }
 }

@@ -13,4 +13,9 @@ contract OptimismGoerliParameters {
 
     address public constant USD_PROXY =
         0xe487Ad4291019b33e2230F8E2FB1fb6490325260;
+
+    // https://developers.circle.com/stablecoins/docs/usdc-on-test-networks#usdc-on-op-goerli
+    address public constant USDC = 0xe05606174bac4A6364B31bd0eCA4bf4dD368f8C6;
+
+    uint128 public constant SUSDC_SPOT_MARKET_ID = type(uint128).max;
 }

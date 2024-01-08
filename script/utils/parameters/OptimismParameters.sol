@@ -11,4 +11,9 @@ contract OptimismParameters {
 
     address public constant USD_PROXY =
         0xb2F30A7C980f052f02563fb518dcc39e6bf38175;
+
+    // https://optimistic.etherscan.io/token/0x0b2c639c533813f4aa9d7837caf62653d097ff85
+    address public constant USDC = 0x0b2C639c533813f4Aa9D7837CAf62653d097Ff85;
+
+    uint128 public constant SUSDC_SPOT_MARKET_ID = type(uint128).max;
 }

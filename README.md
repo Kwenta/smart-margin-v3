@@ -62,10 +62,9 @@ npm run test
 ```
 
 5. Run specific forge test
-    > `OPTIMISM_GOERLI_RPC_URL` can be replaced with `OPTIMISM_RPC_URL` if a mainnet fork is desired
 
 ```
-forge test --fork-url $(grep OPTIMISM_GOERLI_RPC_URL .env | cut -d '=' -f2) --match-test TEST_NAME -vvv
+forge test --fork-url $(grep BASE_RPC_URL .env | cut -d '=' -f2) --match-test TEST_NAME -vvv
 ```
 
 6. Decode a custom error defined by Synthetix v3

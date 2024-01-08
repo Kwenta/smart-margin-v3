@@ -25,4 +25,10 @@ contract BaseGoerliParameters {
     // https://usecannon.com/packages/synthetix/3.3.5/84531-andromeda
     address public constant USD_PROXY_ANDROMEDA =
         0xa89163A087fe38022690C313b5D4BBF12574637f;
+
+    // https://goerli.basescan.org/address/0x4967d1987930b2cd183dab4b6c40b8745dd2eba1
+    address public constant USDC = 0x4967d1987930b2CD183dAB4B6C40B8745DD2eba1;
+
+    // https://usecannon.com/packages/synthetix-spot-market/3.3.5/84531-andromeda
+    uint128 public constant SUSDC_SPOT_MARKET_ID = 1;
 }
