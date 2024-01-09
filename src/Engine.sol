@@ -129,23 +129,6 @@ contract Engine is
     }
 
     /*//////////////////////////////////////////////////////////////
-                                  ZAP
-    //////////////////////////////////////////////////////////////*/
-
-    /// @notice prevent the use of the default Zap.zap()
-    /// and instead rely on internal _zapIn()/_zapOut()
-    /// @dev in current implementation, the default Zap.zap()
-    /// would result in tokens lost to the Engine contract
-    /// with no way to recover them (excluding upgrades)
-    function zap(int256, /* _amount */ address /* _referrer */ )
-        external
-        pure
-        override
-    {
-        revert NotSupported();
-    }
-
-    /*//////////////////////////////////////////////////////////////
                            UPGRADE MANAGEMENT
     //////////////////////////////////////////////////////////////*/
 
