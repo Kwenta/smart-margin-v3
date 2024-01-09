@@ -3,9 +3,9 @@ pragma solidity 0.8.20;
 
 import {Engine, Setup} from "script/Deploy.s.sol";
 import {IEngine} from "src/interfaces/IEngine.sol";
-import {IERC20} from "lib/Zap/src/interfaces/IERC20.sol";
-import {ISpotMarketProxy} from "lib/Zap/src/interfaces/ISpotMarketProxy.sol";
-import {ZapErrors} from "lib/Zap/src/ZapErrors.sol";
+import {IERC20} from "lib/zap/src/interfaces/IERC20.sol";
+import {ISpotMarketProxy} from "lib/zap/src/interfaces/ISpotMarketProxy.sol";
+import {ZapErrors} from "lib/zap/src/ZapErrors.sol";
 import {Test} from "lib/forge-std/src/Test.sol";
 
 contract DeploymentTest is Test, Setup {

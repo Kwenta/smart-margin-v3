@@ -11,7 +11,7 @@ import {ISpotMarketProxy} from "src/interfaces/synthetix/ISpotMarketProxy.sol";
 import {MathLib} from "src/libraries/MathLib.sol";
 import {MulticallablePayable} from "src/utils/MulticallablePayable.sol";
 import {SignatureCheckerLib} from "src/libraries/SignatureCheckerLib.sol";
-import {Zap} from "lib/Zap/src/Zap.sol";
+import {Zap} from "lib/zap/src/Zap.sol";
 
 /// @custom:upgradability
 import {UUPSUpgradeable} from
