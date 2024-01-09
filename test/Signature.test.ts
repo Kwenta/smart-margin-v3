@@ -2,6 +2,67 @@ import { loadFixture } from '@nomicfoundation/hardhat-toolbox/network-helpers';
 import { expect } from 'chai';
 import { ethers } from 'hardhat';
 
+const MOCK_USDC_BYTECODE =
+	'0x608060405234801561001057600080fd5b5060b98061001f6000396000f3fe6080604052348015600f57600080fd5b506004361060285760003560e01c8063313ce56714602d575b600080fd5b60336047565b604051603e9190606a565b60405180910390f35b60006008905090565b600060ff82169050919050565b6064816050565b82525050565b6000602082019050607d6000830184605d565b9291505056fea264697066735822122070561a079f6d67b91cf7443eab290d752ac6b75378d0b77716c1d028b31c85d064736f6c63430008140033';
+const MOCK_USDC_ABI = [
+	{
+		inputs: [],
+		name: 'decimals',
+		outputs: [
+			{
+				internalType: 'uint8',
+				name: '',
+				type: 'uint8',
+			},
+		],
+		stateMutability: 'pure',
+		type: 'function',
+	},
+];
+
+const MOCK_SPOT_MARKET_BYTECODE =
+	'0x608060405234801561001057600080fd5b506102a3806100206000396000f3fe608060405234801561001057600080fd5b50600436106100365760003560e01c806369e0365f1461003b578063c624440a1461006b575b600080fd5b61005560048036038101906100509190610132565b61009b565b60405161006291906101a0565b60405180910390f35b61008560048036038101906100809190610132565b6100a6565b604051610092919061024b565b60405180910390f35b600060069050919050565b60606040518060400160405280601e81526020017f53796e7468657469632055534420436f696e2053706f74204d61726b657400008152509050919050565b600080fd5b60006fffffffffffffffffffffffffffffffff82169050919050565b61010f816100ea565b811461011a57600080fd5b50565b60008135905061012c81610106565b92915050565b600060208284031215610148576101476100e5565b5b60006101568482850161011d565b91505092915050565b600073ffffffffffffffffffffffffffffffffffffffff82169050919050565b600061018a8261015f565b9050919050565b61019a8161017f565b82525050565b60006020820190506101b56000830184610191565b92915050565b600081519050919050565b600082825260208201905092915050565b60005b838110156101f55780820151818401526020810190506101da565b60008484015250505050565b6000601f19601f8301169050919050565b600061021d826101bb565b61022781856101c6565b93506102378185602086016101d7565b61024081610201565b840191505092915050565b600060208201905081810360008301526102658184610212565b90509291505056fea26469706673582212203c499a7561201aac9c11d851aa1980731b3532382af7a59a5794b115e64e02c964736f6c63430008140033';
+const MOCK_SPOT_MARKET_ABI = [
+	{
+		inputs: [
+			{
+				internalType: 'uint128',
+				name: '',
+				type: 'uint128',
+			},
+		],
+		name: 'getSynth',
+		outputs: [
+			{
+				internalType: 'address',
+				name: '',
+				type: 'address',
+			},
+		],
+		stateMutability: 'pure',
+		type: 'function',
+	},
+	{
+		inputs: [
+			{
+				internalType: 'uint128',
+				name: '',
+				type: 'uint128',
+			},
+		],
+		name: 'name',
+		outputs: [
+			{
+				internalType: 'string',
+				name: '',
+				type: 'string',
+			},
+		],
+		stateMutability: 'pure',
+		type: 'function',
+	},
+];
+
 const ONE_ADDRESS = '0x0000000000000000000000000000000000000001';
 const ID = 19;
 
@@ -40,13 +101,27 @@ describe('Signature', function () {
 		// Contracts are deployed using the first signer/account by default
 		const [owner, otherAccount] = await ethers.getSigners();
 
+		const MockUSDC = new ethers.ContractFactory(
+			MOCK_USDC_ABI,
+			MOCK_USDC_BYTECODE,
+			otherAccount
+		);
+		const usdc = await MockUSDC.deploy();
+
+		const MockSpotMarket = new ethers.ContractFactory(
+			MOCK_SPOT_MARKET_ABI,
+			MOCK_SPOT_MARKET_BYTECODE,
+			otherAccount
+		);
+		const spotMarket = await MockSpotMarket.deploy();
+
 		const Engine = await ethers.getContractFactory('Engine');
 		const engine = await Engine.deploy(
 			ONE_ADDRESS, // Perps Market Proxy Address
-			ONE_ADDRESS, // Spot Market Proxy Address
+			spotMarket.getAddress(), // Spot Market Proxy Address
 			ONE_ADDRESS, // sUSD Token Proxy Address
 			ONE_ADDRESS, // pDAO Multisig Address
-			ONE_ADDRESS, // USDC Address
+			usdc.getAddress(), // USDC Address
 			ID // sUSD Id
 		);
 		await engine.waitForDeployment();
