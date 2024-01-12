@@ -80,6 +80,10 @@ contract Engine is
                                  STATE
     //////////////////////////////////////////////////////////////*/
 
+    /// @dev reserved storage space for future contract upgrades
+    /// @custom:caution reduce storage size when adding new storage variables
+    uint256[19] private __gap;
+
     /// @notice bit mapping that stores whether a conditional
     /// order nonce has been executed
     /// @dev nonce is specific to the account id associated
