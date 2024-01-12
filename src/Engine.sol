@@ -484,10 +484,10 @@ contract Engine is
         external
         override
     {
-        credit[_accountId] += usdcAmount;
-
         // zap $USDC -> $sUSD
         uint256 usdcAmount = _zapIn(_amount);
+
+        credit[_accountId] += usdcAmount;
 
         emit Credited(_accountId, usdcAmount);
     }
