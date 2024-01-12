@@ -339,14 +339,13 @@ contract Engine is
     /// @inheritdoc IEngine
     function modifyCollateralZap(
         uint128 _accountId,
-        int256 _amount,
-        address _referrer
+        int256 _amount
     ) external override {
         if (_amount > 0) {
             // zap $USDC -> $sUSD
             /// @dev given the amount is positive,
             /// simply casting (int -> uint) is safe
-            uint256 susdAmount = _zapIn(uint256(_amount), _referrer);
+            uint256 susdAmount = _zapIn(uint256(_amount));
 
             SUSD.approve(address(PERPS_MARKET_PROXY), susdAmount);
 
@@ -363,7 +362,7 @@ contract Engine is
             // zap $sUSD -> $USDC
             /// @dev given the amount is negative,
             /// simply casting (int -> uint) is unsafe, thus we use .abs()
-            uint256 usdcAmount = _zapOut(_amount.abs256(), _referrer);
+            uint256 usdcAmount = _zapOut(_amount.abs256());
 
             /// @dev transfer return value can be safely ignored
             _USDC.transfer(msg.sender, usdcAmount);
@@ -492,11 +491,10 @@ contract Engine is
     /// @inheritdoc IEngine
     function creditAccountZap(
         uint128 _accountId,
-        uint256 _amount,
-        address _referrer
+        uint256 _amount
     ) external override {
         // zap $USDC -> $sUSD
-        uint256 usdcAmount = _zapIn(_amount, _referrer);
+        uint256 usdcAmount = _zapIn(_amount);
 
         credit[_accountId] += usdcAmount;
 
@@ -518,8 +516,7 @@ contract Engine is
     /// @inheritdoc IEngine
     function debitAccountZap(
         uint128 _accountId,
-        uint256 _amount,
-        address _referrer
+        uint256 _amount
     ) external override {
         if (!isAccountOwner(_accountId, msg.sender)) revert Unauthorized();
 
@@ -527,7 +524,7 @@ contract Engine is
         credit[_accountId] -= _amount;
 
         // zap $sUSD -> $USDC
-        uint256 usdcAmount = _zapOut(_amount, _referrer);
+        uint256 usdcAmount = _zapOut(_amount);
 
         /// @dev transfer return value can be safely ignored
         _USDC.transfer(msg.sender, usdcAmount);

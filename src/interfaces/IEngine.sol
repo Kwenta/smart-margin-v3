@@ -231,12 +231,9 @@ interface IEngine {
     /// @param _accountId the account to modify
     /// @param _amount the amount of collateral
     /// to add or remove (negative to remove)
-    /// @param _referrer optional address of the referrer,
-    /// for Synthetix fee share
     function modifyCollateralZap(
         uint128 _accountId,
-        int256 _amount,
-        address _referrer
+        int256 _amount
     ) external;
 
     /*//////////////////////////////////////////////////////////////
@@ -289,12 +286,9 @@ interface IEngine {
     /// (i.e. ERC-20 decimal discrepancies)
     /// @param _accountId the id of the account to credit
     /// @param _amount the amount of $USDC to transfer and zap
-    /// @param _referrer optional address of the referrer,
-    /// for Synthetix fee share
     function creditAccountZap(
         uint128 _accountId,
-        uint256 _amount,
-        address _referrer
+        uint256 _amount
     ) external;
 
     /// @notice withdraw $sUSD from the engine and
@@ -312,12 +306,9 @@ interface IEngine {
     /// (i.e. ERC-20 decimal discrepancies)
     /// @param _accountId the id of the account to debit
     /// @param _amount the amount of $sUSD to debit
-    /// @param _referrer optional address of the referrer,
-    /// for Synthetix fee share
     function debitAccountZap(
         uint128 _accountId,
-        uint256 _amount,
-        address _referrer
+        uint256 _amount
     ) external;
 
     /*//////////////////////////////////////////////////////////////

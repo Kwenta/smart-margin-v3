@@ -115,8 +115,7 @@ contract DepositCollateral is CollateralTest {
 
         engine.modifyCollateralZap({
             _accountId: accountId,
-            _amount: int256(SMALLEST_AMOUNT),
-            _referrer: REFERRER
+            _amount: int256(SMALLEST_AMOUNT)
         });
 
         vm.stopPrank();
@@ -224,8 +223,7 @@ contract WithdrawCollateral is CollateralTest {
 
         engine.modifyCollateralZap({
             _accountId: accountId,
-            _amount: -int256(SMALLEST_AMOUNT * decimalsFactor),
-            _referrer: REFERRER
+            _amount: -int256(SMALLEST_AMOUNT * decimalsFactor)
         });
 
         vm.stopPrank();

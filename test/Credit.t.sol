@@ -70,8 +70,7 @@ contract Credit is CreditTest {
 
         engine.creditAccountZap({
             _accountId: accountId,
-            _amount: SMALLEST_AMOUNT,
-            _referrer: REFERRER
+            _amount: SMALLEST_AMOUNT
         });
 
         uint256 postActorUSDCBalance = USDC.balanceOf(ACTOR);
@@ -154,8 +153,7 @@ contract Debit is CreditTest {
 
         engine.creditAccountZap({
             _accountId: accountId,
-            _amount: SMALLEST_AMOUNT,
-            _referrer: REFERRER
+            _amount: SMALLEST_AMOUNT
         });
 
         uint256 preActorUSDCBalance = USDC.balanceOf(ACTOR);
@@ -163,8 +161,7 @@ contract Debit is CreditTest {
 
         engine.debitAccountZap({
             _accountId: accountId,
-            _amount: SMALLEST_AMOUNT * decimalsFactor,
-            _referrer: REFERRER
+            _amount: SMALLEST_AMOUNT * decimalsFactor
         });
 
         uint256 postActorUSDCBalance = USDC.balanceOf(ACTOR);
@@ -195,8 +192,7 @@ contract Debit is CreditTest {
 
         engine.debitAccountZap({
             _accountId: accountId,
-            _amount: AMOUNT,
-            _referrer: REFERRER
+            _amount: AMOUNT
         });
     }
 
