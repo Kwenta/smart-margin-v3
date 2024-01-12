@@ -190,10 +190,7 @@ contract Debit is CreditTest {
 
         vm.prank(BAD_ACTOR);
 
-        engine.debitAccountZap({
-            _accountId: accountId,
-            _amount: AMOUNT
-        });
+        engine.debitAccountZap({_accountId: accountId, _amount: AMOUNT});
     }
 
     function test_debit_Unauthorized() public {

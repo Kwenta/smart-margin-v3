@@ -231,10 +231,7 @@ interface IEngine {
     /// @param _accountId the account to modify
     /// @param _amount the amount of collateral
     /// to add or remove (negative to remove)
-    function modifyCollateralZap(
-        uint128 _accountId,
-        int256 _amount
-    ) external;
+    function modifyCollateralZap(uint128 _accountId, int256 _amount) external;
 
     /*//////////////////////////////////////////////////////////////
                          ASYNC ORDER MANAGEMENT
@@ -286,10 +283,7 @@ interface IEngine {
     /// (i.e. ERC-20 decimal discrepancies)
     /// @param _accountId the id of the account to credit
     /// @param _amount the amount of $USDC to transfer and zap
-    function creditAccountZap(
-        uint128 _accountId,
-        uint256 _amount
-    ) external;
+    function creditAccountZap(uint128 _accountId, uint256 _amount) external;
 
     /// @notice withdraw $sUSD from the engine and
     /// debit the account identified by the accountId
@@ -306,10 +300,7 @@ interface IEngine {
     /// (i.e. ERC-20 decimal discrepancies)
     /// @param _accountId the id of the account to debit
     /// @param _amount the amount of $sUSD to debit
-    function debitAccountZap(
-        uint128 _accountId,
-        uint256 _amount
-    ) external;
+    function debitAccountZap(uint128 _accountId, uint256 _amount) external;
 
     /*//////////////////////////////////////////////////////////////
                       CONDITIONAL ORDER MANAGEMENT

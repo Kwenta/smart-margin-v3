@@ -337,10 +337,10 @@ contract Engine is
     }
 
     /// @inheritdoc IEngine
-    function modifyCollateralZap(
-        uint128 _accountId,
-        int256 _amount
-    ) external override {
+    function modifyCollateralZap(uint128 _accountId, int256 _amount)
+        external
+        override
+    {
         if (_amount > 0) {
             // zap $USDC -> $sUSD
             /// @dev given the amount is positive,
@@ -489,10 +489,10 @@ contract Engine is
     }
 
     /// @inheritdoc IEngine
-    function creditAccountZap(
-        uint128 _accountId,
-        uint256 _amount
-    ) external override {
+    function creditAccountZap(uint128 _accountId, uint256 _amount)
+        external
+        override
+    {
         // zap $USDC -> $sUSD
         uint256 usdcAmount = _zapIn(_amount);
 
@@ -514,10 +514,10 @@ contract Engine is
     }
 
     /// @inheritdoc IEngine
-    function debitAccountZap(
-        uint128 _accountId,
-        uint256 _amount
-    ) external override {
+    function debitAccountZap(uint128 _accountId, uint256 _amount)
+        external
+        override
+    {
         if (!isAccountOwner(_accountId, msg.sender)) revert Unauthorized();
 
         // decrement account credit prior to transfer
