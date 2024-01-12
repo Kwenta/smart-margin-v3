@@ -12,6 +12,22 @@ contract UpgradeTest is Bootstrap {
     }
 }
 
+contract StorageLayout is UpgradeTest {
+    function test_nonceBitmap_slot() public {
+        uint256 slot = engineExposed.getNonceBitmapSlot();
+
+        // nonceBitmap storage slot should NEVER change
+        assertEq(slot, 19);
+    }
+
+    function test_credit_slot() public {
+        uint256 slot = engineExposed.getCreditSlot();
+
+        // credit storage slot should NEVER change
+        assertEq(slot, 20);
+    }
+}
+
 contract MockUpgrade is UpgradeTest {
     MockEngineUpgrade mockEngineUpgrade;
 

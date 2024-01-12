@@ -31,4 +31,16 @@ contract EngineExposed is Engine {
     {
         return _getSynthAddress(synthMarketId);
     }
+
+    function getNonceBitmapSlot() public pure returns (uint256 slot) {
+        assembly {
+            slot := nonceBitmap.slot
+        }
+    }
+
+    function getCreditSlot() public pure returns (uint256 slot) {
+        assembly {
+            slot := credit.slot
+        }
+    }
 }
