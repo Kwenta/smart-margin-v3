@@ -351,7 +351,7 @@ interface IEngine {
     ///    (ex: isTimestampBeforeSelector, isPriceAboveSelector, etc.)
     ///
     ///
-    /// co's are not creaed on-chain. They are composed
+    /// co's are not created on-chain. They are composed
     /// and signed off-chain. The signature
     /// is then passed to the Engine contract along with the co.
     /// The Engine contract then
