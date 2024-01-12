@@ -70,12 +70,6 @@ contract Engine is
     /// @notice Synthetix v3 perps market proxy contract
     IPerpsMarketProxy internal immutable PERPS_MARKET_PROXY;
 
-    /// @notice Synthetix v3 spot market proxy contract
-    ISpotMarketProxy internal immutable SPOT_MARKET_PROXY;
-
-    /// @notice Synthetix v3 $sUSD contract
-    IERC20 internal immutable SUSD;
-
     /*//////////////////////////////////////////////////////////////
                                  STATE
     //////////////////////////////////////////////////////////////*/
@@ -124,8 +118,6 @@ contract Engine is
         if (_perpsMarketProxy == address(0)) revert ZeroAddress();
 
         PERPS_MARKET_PROXY = IPerpsMarketProxy(_perpsMarketProxy);
-        SPOT_MARKET_PROXY = ISpotMarketProxy(_spotMarketProxy);
-        SUSD = IERC20(_sUSDProxy);
 
         /// @dev pDAO address can be the zero address to
         /// make the Engine non-upgradeable
@@ -347,7 +339,7 @@ contract Engine is
             /// simply casting (int -> uint) is safe
             uint256 susdAmount = _zapIn(uint256(_amount));
 
-            SUSD.approve(address(PERPS_MARKET_PROXY), susdAmount);
+            _SUSD.approve(address(PERPS_MARKET_PROXY), susdAmount);
 
             PERPS_MARKET_PROXY.modifyCollateral(
                 _accountId, USD_SYNTH_ID, susdAmount.toInt256()
@@ -410,8 +402,8 @@ contract Engine is
         returns (address synthAddress)
     {
         synthAddress = _synthMarketId == USD_SYNTH_ID
-            ? address(SUSD)
-            : SPOT_MARKET_PROXY.getSynth(_synthMarketId);
+            ? address(_SUSD)
+            : _SPOT_MARKET_PROXY.getSynth(_synthMarketId);
     }
 
     /*//////////////////////////////////////////////////////////////
@@ -483,7 +475,7 @@ contract Engine is
         credit[_accountId] += _amount;
 
         /// @dev $sUSD transfers that fail will revert
-        SUSD.transferFrom(msg.sender, address(this), _amount);
+        _SUSD.transferFrom(msg.sender, address(this), _amount);
 
         emit Credited(_accountId, _amount);
     }
@@ -541,7 +533,7 @@ contract Engine is
         credit[_accountId] -= _amount;
 
         /// @dev $sUSD transfers that fail will revert
-        SUSD.transfer(_caller, _amount);
+        _SUSD.transfer(_caller, _amount);
     }
 
     /*//////////////////////////////////////////////////////////////
