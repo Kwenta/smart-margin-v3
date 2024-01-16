@@ -186,7 +186,7 @@ interface IEngine {
         uint128 _accountId,
         uint256 _wordPos,
         uint256 _mask
-    ) external;
+    ) external payable;
 
     /// @notice check if the given nonce has been used
     /// @param _accountId the id of the account to check
@@ -213,7 +213,7 @@ interface IEngine {
         uint128 _accountId,
         uint128 _synthMarketId,
         int256 _amount
-    ) external;
+    ) external payable;
 
     /// @notice modify the collateral of an
     /// account identified by the accountId
@@ -231,7 +231,9 @@ interface IEngine {
     /// @param _accountId the account to modify
     /// @param _amount the amount of collateral
     /// to add or remove (negative to remove)
-    function modifyCollateralZap(uint128 _accountId, int256 _amount) external;
+    function modifyCollateralZap(uint128 _accountId, int256 _amount)
+        external
+        payable;
 
     /*//////////////////////////////////////////////////////////////
                          ASYNC ORDER MANAGEMENT
@@ -262,7 +264,10 @@ interface IEngine {
         uint256 _acceptablePrice,
         bytes32 _trackingCode,
         address _referrer
-    ) external returns (IPerpsMarketProxy.Data memory retOrder, uint256 fees);
+    )
+        external
+        payable
+        returns (IPerpsMarketProxy.Data memory retOrder, uint256 fees);
 
     /*//////////////////////////////////////////////////////////////
                            CREDIT MANAGEMENT
@@ -272,7 +277,9 @@ interface IEngine {
     /// credit the account identified by the accountId
     /// @param _accountId the id of the account to credit
     /// @param _amount the amount of $sUSD to transfer/credit
-    function creditAccount(uint128 _accountId, uint256 _amount) external;
+    function creditAccount(uint128 _accountId, uint256 _amount)
+        external
+        payable;
 
     /// @notice transfer $USDC into the engine,
     /// zap it into $sUSD, and then credit the account
@@ -283,13 +290,17 @@ interface IEngine {
     /// (i.e. ERC-20 decimal discrepancies)
     /// @param _accountId the id of the account to credit
     /// @param _amount the amount of $USDC to transfer and zap
-    function creditAccountZap(uint128 _accountId, uint256 _amount) external;
+    function creditAccountZap(uint128 _accountId, uint256 _amount)
+        external
+        payable;
 
     /// @notice withdraw $sUSD from the engine and
     /// debit the account identified by the accountId
     /// @param _accountId the id of the account to debit
     /// @param _amount the amount of $sUSD to withdraw
-    function debitAccount(uint128 _accountId, uint256 _amount) external;
+    function debitAccount(uint128 _accountId, uint256 _amount)
+        external
+        payable;
 
     /// @notice debit the account identified by the accountId
     /// by the amount specified. The amount is then zapped
@@ -300,7 +311,9 @@ interface IEngine {
     /// (i.e. ERC-20 decimal discrepancies)
     /// @param _accountId the id of the account to debit
     /// @param _amount the amount of $sUSD to debit
-    function debitAccountZap(uint128 _accountId, uint256 _amount) external;
+    function debitAccountZap(uint128 _accountId, uint256 _amount)
+        external
+        payable;
 
     /*//////////////////////////////////////////////////////////////
                       CONDITIONAL ORDER MANAGEMENT
@@ -427,6 +440,7 @@ interface IEngine {
         uint256 _fee
     )
         external
+        payable
         returns (IPerpsMarketProxy.Data memory retOrder, uint256 synthetixFees);
 
     /// @notice checks if the co can be executed
