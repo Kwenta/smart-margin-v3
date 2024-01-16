@@ -19,10 +19,6 @@ import {UUPSUpgradeable} from
 /// @title Kwenta Smart Margin v3: Engine contract
 /// @notice Responsible for interacting with
 /// Synthetix v3 perps markets
-/// @custom:caution Engine should never hold an
-/// ETH balance so long as it is MulticallablePayable
-/// @custom:caution Add payable functions to the Engine
-/// with extreme caution
 /// @author JaredBorders (jaredborders@pm.me)
 contract Engine is
     IEngine,
@@ -184,7 +180,7 @@ contract Engine is
         uint128 _accountId,
         uint256 _wordPos,
         uint256 _mask
-    ) external override {
+    ) external payable override {
         if (_isAccountOwnerOrDelegate(_accountId, msg.sender)) {
             /// @dev using bitwise OR to set the bit at the bit position
             /// bitmap          = .......10001
@@ -311,7 +307,7 @@ contract Engine is
         uint128 _accountId,
         uint128 _synthMarketId,
         int256 _amount
-    ) external override {
+    ) external payable override {
         IERC20 synth = IERC20(_getSynthAddress(_synthMarketId));
 
         if (_amount > 0) {
@@ -330,6 +326,7 @@ contract Engine is
     /// @inheritdoc IEngine
     function modifyCollateralZap(uint128 _accountId, int256 _amount)
         external
+        payable
         override
     {
         if (_amount > 0) {
@@ -420,6 +417,7 @@ contract Engine is
         address _referrer
     )
         external
+        payable
         override
         returns (IPerpsMarketProxy.Data memory retOrder, uint256 fees)
     {
@@ -469,6 +467,7 @@ contract Engine is
     /// @inheritdoc IEngine
     function creditAccount(uint128 _accountId, uint256 _amount)
         external
+        payable
         override
     {
         credit[_accountId] += _amount;
@@ -482,6 +481,7 @@ contract Engine is
     /// @inheritdoc IEngine
     function creditAccountZap(uint128 _accountId, uint256 _amount)
         external
+        payable
         override
     {
         // zap $USDC -> $sUSD
@@ -495,6 +495,7 @@ contract Engine is
     /// @inheritdoc IEngine
     function debitAccount(uint128 _accountId, uint256 _amount)
         external
+        payable
         override
     {
         if (!isAccountOwner(_accountId, msg.sender)) revert Unauthorized();
@@ -507,6 +508,7 @@ contract Engine is
     /// @inheritdoc IEngine
     function debitAccountZap(uint128 _accountId, uint256 _amount)
         external
+        payable
         override
     {
         if (!isAccountOwner(_accountId, msg.sender)) revert Unauthorized();
@@ -546,6 +548,7 @@ contract Engine is
         uint256 _fee
     )
         external
+        payable
         override
         returns (IPerpsMarketProxy.Data memory retOrder, uint256 synthetixFees)
     {
