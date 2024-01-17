@@ -117,16 +117,14 @@ interface IEngine {
         uint128 indexed accountId, uint256 word, uint256 mask
     );
 
-    /// @notice emitted when $sUSD is deposited
-    /// into the engine and credited to an account
+    /// @notice emitted when $sUSD is credited to an account
     /// @param accountId the id of the account that was credited
-    /// @param amount the amount of $sUSD deposited
+    /// @param amount the amount of $sUSD credited
     event Credited(uint128 indexed accountId, uint256 amount);
 
-    /// @notice emitted when $sUSD is withdrawn
-    /// from the engine and debited from an account
+    /// @notice emitted when $sUSD is debited from an account
     /// @param accountId the id of the account that was debited
-    /// @param amount the amount of $sUSD withdrawn
+    /// @param amount the amount of $sUSD debited
     event Debited(uint128 indexed accountId, uint256 amount);
 
     /// @notice emitted when a co is executed
