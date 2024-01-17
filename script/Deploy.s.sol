@@ -18,6 +18,8 @@ import {BaseGoerliKwentaForkParameters} from
     "script/utils/parameters/BaseGoerliKwentaForkParameters.sol";
 import {OptimismParameters} from
     "script/utils/parameters/OptimismParameters.sol";
+import {BaseSepoliaParameters} from
+    "script/utils/parameters/BaseSepoliaParameters.sol";
 
 // forge utils
 import {Script} from "lib/forge-std/src/Script.sol";
@@ -117,6 +119,27 @@ contract DeployBaseGoerli_Synthetix is Setup, BaseGoerliParameters {
 /// (1) load the variables in the .env file via `source .env`
 /// (2) run `forge script script/Deploy.s.sol:DeployBaseGoerli_Andromeda --rpc-url $BASE_GOERLI_RPC_URL --etherscan-api-key $BASESCAN_API_KEY --broadcast --verify -vvvv`
 contract DeployBaseGoerli_Andromeda is Setup, BaseGoerliParameters {
+    function run() public {
+        uint256 privateKey = vm.envUint("PRIVATE_KEY");
+        vm.startBroadcast(privateKey);
+
+        Setup.deploySystem({
+            perpsMarketProxy: PERPS_MARKET_PROXY_ANDROMEDA,
+            spotMarketProxy: SPOT_MARKET_PROXY_ANDROMEDA,
+            sUSDProxy: USD_PROXY_ANDROMEDA,
+            pDAO: PDAO,
+            usdc: USDC,
+            sUSDCId: SUSDC_SPOT_MARKET_ID
+        });
+
+        vm.stopBroadcast();
+    }
+}
+
+/// @dev steps to deploy and verify on Base Goerli:
+/// (1) load the variables in the .env file via `source .env`
+/// (2) run `forge script script/Deploy.s.sol:DeployBaseSepolia_Andromeda --rpc-url $BASE_SEPOLIA_RPC_URL --etherscan-api-key $BASESCAN_API_KEY --broadcast --verify -vvvv`
+contract DeployBaseSepolia_Andromeda is Setup, BaseSepoliaParameters {
     function run() public {
         uint256 privateKey = vm.envUint("PRIVATE_KEY");
         vm.startBroadcast(privateKey);
