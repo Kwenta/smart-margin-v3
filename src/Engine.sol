@@ -485,11 +485,11 @@ contract Engine is
         override
     {
         // zap $USDC -> $sUSD
-        uint256 usdcAmount = _zapIn(_amount);
+        uint256 susdAmount = _zapIn(_amount);
 
-        credit[_accountId] += usdcAmount;
+        credit[_accountId] += susdAmount;
 
-        emit Credited(_accountId, usdcAmount);
+        emit Credited(_accountId, susdAmount);
     }
 
     /// @inheritdoc IEngine
