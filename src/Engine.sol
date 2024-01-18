@@ -513,6 +513,8 @@ contract Engine is
     {
         if (!isAccountOwner(_accountId, msg.sender)) revert Unauthorized();
 
+        if (_amount > credit[_accountId]) revert InsufficientCredit();
+
         // decrement account credit prior to transfer
         credit[_accountId] -= _amount;
 
