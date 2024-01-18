@@ -6,7 +6,9 @@ pragma solidity 0.8.20;
 /// and is used for testing purposes
 /// @author JaredBorders (jaredborders@pm.me)
 contract SynthetixV3Errors {
-    enum SettlementStrategyType {PYTH}
+    enum SettlementStrategyType {
+        PYTH
+    }
 
     error OffchainLookup(
         address sender,
@@ -16,7 +18,7 @@ contract SynthetixV3Errors {
         bytes extraData
     );
     error InvalidVerificationResponse();
-    error InvalidSettlementStrategy(uint128 settlementStrategyId);
+    error InvalidSettlementStrategy(uint256 settlementStrategyId);
     error MinimumSettlementAmountNotMet(uint256 minimum, uint256 actual);
     error SettlementStrategyNotFound(SettlementStrategyType strategyType);
     error InvalidFeeCollectorInterface(address invalidFeeCollector);
@@ -110,4 +112,7 @@ contract SynthetixV3Errors {
     );
     error InsufficientAllowance(uint256 required, uint256 existing);
     error InvalidParameter(string parameter, string reason);
+    error WrapperExceedsMaxAmount(
+        uint256 maxWrappableAmount, uint256 currentSupply, uint256 amountToWrap
+    );
 }

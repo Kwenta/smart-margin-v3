@@ -88,4 +88,18 @@ interface IPerpsMarketProxy {
         external
         view
         returns (uint256 maxMarketSize);
+
+    function getWithdrawableMargin(uint128 accountId)
+        external
+        view
+        returns (int256 withdrawableMargin);
+
+    function getRequiredMargins(uint128 accountId)
+        external
+        view
+        returns (
+            uint256 requiredInitialMargin,
+            uint256 requiredMaintenanceMargin,
+            uint256 maxLiquidationReward
+        );
 }

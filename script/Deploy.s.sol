@@ -18,6 +18,8 @@ import {BaseGoerliKwentaForkParameters} from
     "script/utils/parameters/BaseGoerliKwentaForkParameters.sol";
 import {OptimismParameters} from
     "script/utils/parameters/OptimismParameters.sol";
+import {BaseSepoliaParameters} from
+    "script/utils/parameters/BaseSepoliaParameters.sol";
 
 // forge utils
 import {Script} from "lib/forge-std/src/Script.sol";
@@ -29,13 +31,17 @@ contract Setup is Script {
         address perpsMarketProxy,
         address spotMarketProxy,
         address sUSDProxy,
-        address pDAO
+        address pDAO,
+        address usdc,
+        uint128 sUSDCId
     ) public returns (Engine engine) {
         engine = new Engine({
             _perpsMarketProxy: perpsMarketProxy,
             _spotMarketProxy: spotMarketProxy,
             _sUSDProxy: sUSDProxy,
-            _pDAO: pDAO
+            _pDAO: pDAO,
+            _usdc: usdc,
+            _sUSDCId: sUSDCId
         });
 
         // deploy ERC1967 proxy and set implementation to engine
@@ -58,7 +64,30 @@ contract DeployBase_Synthetix is Setup, BaseParameters {
             perpsMarketProxy: PERPS_MARKET_PROXY,
             spotMarketProxy: SPOT_MARKET_PROXY,
             sUSDProxy: USD_PROXY,
-            pDAO: PDAO
+            pDAO: PDAO,
+            usdc: USDC,
+            sUSDCId: SUSDC_SPOT_MARKET_ID
+        });
+
+        vm.stopBroadcast();
+    }
+}
+
+/// @dev steps to deploy and verify on Base:
+/// (1) load the variables in the .env file via `source .env`
+/// (2) run `forge script script/Deploy.s.sol:DeployBase_Andromeda --rpc-url $BASE_RPC_URL --etherscan-api-key $BASESCAN_API_KEY --broadcast --verify -vvvv`
+contract DeployBase_Andromeda is Setup, BaseParameters {
+    function run() public {
+        uint256 privateKey = vm.envUint("PRIVATE_KEY");
+        vm.startBroadcast(privateKey);
+
+        Setup.deploySystem({
+            perpsMarketProxy: PERPS_MARKET_PROXY_ANDROMEDA,
+            spotMarketProxy: SPOT_MARKET_PROXY_ANDROMEDA,
+            sUSDProxy: USD_PROXY_ANDROMEDA,
+            pDAO: PDAO,
+            usdc: USDC,
+            sUSDCId: SUSDC_SPOT_MARKET_ID
         });
 
         vm.stopBroadcast();
@@ -77,7 +106,51 @@ contract DeployBaseGoerli_Synthetix is Setup, BaseGoerliParameters {
             perpsMarketProxy: PERPS_MARKET_PROXY,
             spotMarketProxy: SPOT_MARKET_PROXY,
             sUSDProxy: USD_PROXY,
-            pDAO: PDAO
+            pDAO: PDAO,
+            usdc: USDC,
+            sUSDCId: SUSDC_SPOT_MARKET_ID
+        });
+
+        vm.stopBroadcast();
+    }
+}
+
+/// @dev steps to deploy and verify on Base Goerli:
+/// (1) load the variables in the .env file via `source .env`
+/// (2) run `forge script script/Deploy.s.sol:DeployBaseGoerli_Andromeda --rpc-url $BASE_GOERLI_RPC_URL --etherscan-api-key $BASESCAN_API_KEY --broadcast --verify -vvvv`
+contract DeployBaseGoerli_Andromeda is Setup, BaseGoerliParameters {
+    function run() public {
+        uint256 privateKey = vm.envUint("PRIVATE_KEY");
+        vm.startBroadcast(privateKey);
+
+        Setup.deploySystem({
+            perpsMarketProxy: PERPS_MARKET_PROXY_ANDROMEDA,
+            spotMarketProxy: SPOT_MARKET_PROXY_ANDROMEDA,
+            sUSDProxy: USD_PROXY_ANDROMEDA,
+            pDAO: PDAO,
+            usdc: USDC,
+            sUSDCId: SUSDC_SPOT_MARKET_ID
+        });
+
+        vm.stopBroadcast();
+    }
+}
+
+/// @dev steps to deploy and verify on Base Goerli:
+/// (1) load the variables in the .env file via `source .env`
+/// (2) run `forge script script/Deploy.s.sol:DeployBaseSepolia_Andromeda --rpc-url $BASE_SEPOLIA_RPC_URL --etherscan-api-key $BASESCAN_API_KEY --broadcast --verify -vvvv`
+contract DeployBaseSepolia_Andromeda is Setup, BaseSepoliaParameters {
+    function run() public {
+        uint256 privateKey = vm.envUint("PRIVATE_KEY");
+        vm.startBroadcast(privateKey);
+
+        Setup.deploySystem({
+            perpsMarketProxy: PERPS_MARKET_PROXY_ANDROMEDA,
+            spotMarketProxy: SPOT_MARKET_PROXY_ANDROMEDA,
+            sUSDProxy: USD_PROXY_ANDROMEDA,
+            pDAO: PDAO,
+            usdc: USDC,
+            sUSDCId: SUSDC_SPOT_MARKET_ID
         });
 
         vm.stopBroadcast();
@@ -99,26 +172,9 @@ contract DeployBaseGoerli_KwentaFork is
             perpsMarketProxy: PERPS_MARKET_PROXY,
             spotMarketProxy: SPOT_MARKET_PROXY,
             sUSDProxy: USD_PROXY,
-            pDAO: PDAO
-        });
-
-        vm.stopBroadcast();
-    }
-}
-
-/// @dev steps to deploy and verify on Base Goerli:
-/// (1) load the variables in the .env file via `source .env`
-/// (2) run `forge script script/Deploy.s.sol:DeployBaseGoerli_Andromeda --rpc-url $BASE_GOERLI_RPC_URL --etherscan-api-key $BASESCAN_API_KEY --broadcast --verify -vvvv`
-contract DeployBaseGoerli_Andromeda is Setup, BaseGoerliParameters {
-    function run() public {
-        uint256 privateKey = vm.envUint("PRIVATE_KEY");
-        vm.startBroadcast(privateKey);
-
-        Setup.deploySystem({
-            perpsMarketProxy: PERPS_MARKET_PROXY_ANDROMEDA,
-            spotMarketProxy: SPOT_MARKET_PROXY_ANDROMEDA,
-            sUSDProxy: USD_PROXY_ANDROMEDA,
-            pDAO: PDAO
+            pDAO: PDAO,
+            usdc: USDC,
+            sUSDCId: SUSDC_SPOT_MARKET_ID
         });
 
         vm.stopBroadcast();
@@ -137,7 +193,9 @@ contract DeployOptimism_Synthetix is Setup, OptimismParameters {
             perpsMarketProxy: PERPS_MARKET_PROXY,
             spotMarketProxy: SPOT_MARKET_PROXY,
             sUSDProxy: USD_PROXY,
-            pDAO: PDAO
+            pDAO: PDAO,
+            usdc: USDC,
+            sUSDCId: SUSDC_SPOT_MARKET_ID
         });
 
         vm.stopBroadcast();
@@ -156,7 +214,9 @@ contract DeployOptimismGoerli_Synthetix is Setup, OptimismGoerliParameters {
             perpsMarketProxy: PERPS_MARKET_PROXY,
             spotMarketProxy: SPOT_MARKET_PROXY,
             sUSDProxy: USD_PROXY,
-            pDAO: PDAO
+            pDAO: PDAO,
+            usdc: USDC,
+            sUSDCId: SUSDC_SPOT_MARKET_ID
         });
 
         vm.stopBroadcast();
