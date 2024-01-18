@@ -239,4 +239,30 @@ contract Debit is CreditTest {
 
         vm.stopPrank();
     }
+
+    function test_debit_zap_InsufficientBalance() public {
+        uint256 decimalsFactor = 10 ** (18 - USDC.decimals());
+
+        deal(address(USDC), ACTOR, SMALLEST_AMOUNT);
+
+        vm.startPrank(ACTOR);
+
+        USDC.approve(address(engine), type(uint256).max);
+
+        engine.creditAccountZap({
+            _accountId: accountId,
+            _amount: SMALLEST_AMOUNT
+        });
+
+        vm.expectRevert(
+            abi.encodeWithSelector(IEngine.InsufficientCredit.selector)
+        );
+
+        engine.debitAccountZap({
+            _accountId: accountId,
+            _amount: (SMALLEST_AMOUNT * decimalsFactor) + 1
+        });
+
+        vm.stopPrank();
+    }
 }
