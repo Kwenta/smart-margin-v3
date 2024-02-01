@@ -7,8 +7,24 @@ import {MockEngineUpgrade} from "test/utils/mocks/MockEngineUpgrade.sol";
 
 contract UpgradeTest is Bootstrap {
     function setUp() public {
-        vm.rollFork(GOERLI_BLOCK_NUMBER);
-        initializeOptimismGoerli();
+        vm.rollFork(BASE_BLOCK_NUMBER);
+        initializeBase();
+    }
+}
+
+contract StorageLayout is UpgradeTest {
+    function test_nonceBitmap_slot() public {
+        uint256 slot = engineExposed.getNonceBitmapSlot();
+
+        // nonceBitmap storage slot should NEVER change
+        assertEq(slot, 19);
+    }
+
+    function test_credit_slot() public {
+        uint256 slot = engineExposed.getCreditSlot();
+
+        // credit storage slot should NEVER change
+        assertEq(slot, 20);
     }
 }
 
@@ -20,7 +36,9 @@ contract MockUpgrade is UpgradeTest {
             address(perpsMarketProxy),
             address(spotMarketProxy),
             address(sUSD),
-            address(pDAO)
+            address(pDAO),
+            address(USDC),
+            sUSDCId
         );
     }
 
@@ -134,10 +152,12 @@ contract UpgradeEngineV2 is UpgradeTest {}
 contract RemoveUpgradability is UpgradeTest {
     function test_removeUpgradability() public {
         MockEngineUpgrade mockEngineUpgrade = new MockEngineUpgrade(
-            address(0x1),
-            address(0x2),
-            address(0x3),
-            address(0) // setting pDAO to address(0) will remove upgradability
+            address(perpsMarketProxy),
+            address(spotMarketProxy),
+            address(sUSD),
+            address(0), // set pDAO to zero address to effectively remove upgradability
+            address(USDC),
+            sUSDCId
         );
 
         vm.prank(pDAO);

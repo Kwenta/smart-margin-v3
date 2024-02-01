@@ -1,18 +1,28 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 pragma solidity 0.8.20;
 
-import {Test} from "lib/forge-std/src/Test.sol";
+import {Bootstrap} from "test/utils/Bootstrap.sol";
 import {MockMulticallablePayable as MP} from
     "./utils/mocks/MockMulticallablePayable.sol";
+import {EIP7412Mock} from "test/utils/mocks/EIP7412Mock.sol";
+import {IEngine} from "src/interfaces/IEngine.sol";
+import {EIP7412} from "src/utils/EIP7412.sol";
 
 /// @author Solady
-contract MulticallablePayableTest is Test {
+contract MulticallablePayableTest is Bootstrap {
     MP mp;
+    EIP7412Mock eip7412Mock;
 
     function setUp() public {
-        mp = new MP();
-    }
+        vm.rollFork(BASE_BLOCK_NUMBER);
+        initializeBase();
 
+        mp = new MP();
+        eip7412Mock = new EIP7412Mock();
+    }
+}
+
+contract Multicall is MulticallablePayableTest {
     function testMulticallableRevertWithMessage(string memory revertMessage)
         public
     {
@@ -121,5 +131,36 @@ contract MulticallablePayableTest is Test {
         vm.prank(caller);
         address returnedAddress = abi.decode(mp.multicall(data)[0], (address));
         assertEq(caller, returnedAddress);
+    }
+}
+
+contract MulticallableEngine is MulticallablePayableTest {
+    function test_multicall_engine_fulfillOracleQuery_modifyCollateral()
+        public
+    {
+        bytes[] memory data = new bytes[](2);
+
+        vm.startPrank(ACTOR);
+
+        sUSD.approve(address(engine), type(uint256).max);
+
+        // call mock oracle to simulate payable function call
+        data[0] = abi.encodeWithSelector(
+            EIP7412.fulfillOracleQuery.selector,
+            address(eip7412Mock),
+            abi.encodePacked("")
+        );
+
+        // call engine to modify collateral
+        data[1] = abi.encodeWithSelector(
+            IEngine.modifyCollateral.selector,
+            accountId,
+            SUSD_SPOT_MARKET_ID,
+            int256(AMOUNT)
+        );
+
+        engine.multicall{value: 1 wei}(data);
+
+        vm.stopPrank();
     }
 }
