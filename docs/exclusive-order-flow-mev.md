@@ -17,7 +17,7 @@ Let's say Kwenta opens a long trade on asset A (same logic can be applied for sh
 
 ## Exploiting Funding Rates
 
-Let's say that Kwenta opens a short trade on asset B, then proceeds to only accept long orders on this asset (up until maximum OI which does not trigger asymmetric funding rate [sip-354](https://sips.synthetix.io/sips/sip-354/), making skew long. In this setup, funding goes up, then if every order on asset B is excluded, Kwenta could exploit the funding rate by maintaining their short position.
+Let's say that Kwenta opens a short trade on asset B, then proceeds to only accept long orders on this asset (up until maximum OI which does not trigger asymmetric funding rate [sip-354](https://sips.synthetix.io/sips/sip-354/)), making skew long. In this setup, funding goes up, then if every order on asset B is excluded, Kwenta could exploit the funding rate by maintaining their short position.
 
 ## Priority fee reordering
 
