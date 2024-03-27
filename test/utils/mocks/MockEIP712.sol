@@ -6,7 +6,6 @@ import "../../../src/utils/EIP712.sol";
 /// @dev WARNING! This mock is strictly intended for testing purposes only.
 /// Do NOT copy anything here into production code unless you really know what you are doing.
 contract MockEIP712 is EIP712 {
-
     uint256 public immutable _cachedThis;
     uint256 public immutable _cachedChainId;
     bytes32 public immutable _cachedNameHash;
@@ -37,7 +36,11 @@ contract MockEIP712 is EIP712 {
         _cachedDomainSeparator = separator;
     }
 
-    function hashTypedData(bytes32 structHash) external view returns (bytes32) {
+    function hashTypedData(bytes32 structHash)
+        external
+        view
+        returns (bytes32)
+    {
         return _hashTypedData(structHash);
     }
 
