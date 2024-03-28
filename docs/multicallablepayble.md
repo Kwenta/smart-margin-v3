@@ -20,7 +20,7 @@ Inside a delegatecall, `msg.sender` and `msg.value` are persisted (see: https://
 ## Synthetix TrustedMulticallForwarder
 
 A TrustedMulticallForwarder is required because sometimes it is necessary to send multiple commands at the same time from an Externally Owned Account, but EOAs dont support calling more than one function in a transaction.The TrustedMulticallForwarder aggregates results from multiple function calls.
-It can be used for Synthetix v3 Account Creation/Permission Granting, or for any adress to send multiple orders at the same time. All transactions should be prepared as a multicall and sent to the `TrustedMulticallForwarder` contracts using `aggregate3Value`.
+It can be used for Synthetix v3 Account Creation/Permission Granting, or for any address to send multiple orders at the same time. All transactions should be prepared as a multicall and sent to the `TrustedMulticallForwarder` contracts using `aggregate3Value`.
 
 Unlike Kwenta's `MulticallablePayable`, Synthetix `TrustedMulticallForwarder` includes [ERC-2771](https://eips.ethereum.org/EIPS/eip-2771) trusted forwarder functionality. 
 
