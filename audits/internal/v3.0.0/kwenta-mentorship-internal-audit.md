@@ -118,7 +118,7 @@ As of right now, `isSameSign` is only used in the Engine.execute function for re
 
 1. If this is the desired behaviour, consider changing to `(x ^ y) > -1` for gas optimisation.
 2. Otherwise, change the function to `return (x == 0) || (y == 0) || (x > 0) == (y > 0);` so that it has the same result for both positive/negative comparisons with zero.
-3. Additionaly, `assert(x != 0 && y != 0);` can be removed as it is currently checked that both parameters are not zero before using `isSameSign`, and it is not a check that might be pertinent for other uses of `isSameSign`.
+3. Additionally, `assert(x != 0 && y != 0);` can be removed as it is currently checked that both parameters are not zero before using `isSameSign`, and it is not a check that might be pertinent for other uses of `isSameSign`.
 
 My recommendation is that `isSameSign` should return true when either x or y is zero, and that we should get rid of the assert.
 
