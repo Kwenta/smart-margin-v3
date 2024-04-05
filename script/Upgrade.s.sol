@@ -10,6 +10,8 @@ import {BaseGoerliParameters} from
 import {BaseParameters} from "script/utils/parameters/BaseParameters.sol";
 import {OptimismGoerliParameters} from
     "script/utils/parameters/OptimismGoerliParameters.sol";
+import {BaseSepoliaParameters} from
+    "script/utils/parameters/BaseSepoliaParameters.sol";
 import {BaseGoerliKwentaForkParameters} from
     "script/utils/parameters/BaseGoerliKwentaForkParameters.sol";
 import {OptimismParameters} from
@@ -61,6 +63,28 @@ contract DeployBase_Synthetix is Setup, BaseParameters {
         vm.stopBroadcast();
     }
 }
+
+/// @dev steps to deploy and verify on Base Goerli:
+/// (1) load the variables in the .env file via `source .env`
+/// (2) run `forge script script/Upgrade.s.sol:DeployBaseSepolia_Andromeda --rpc-url $BASE_SEPOLIA_RPC_URL --etherscan-api-key $BASESCAN_API_KEY --broadcast --verify -vvvv`
+contract DeployBaseSepolia_Andromeda is Setup, BaseSepoliaParameters {
+    function run() public {
+        uint256 privateKey = vm.envUint("PRIVATE_KEY");
+        vm.startBroadcast(privateKey);
+
+        Setup.deployImplementation({
+            perpsMarketProxy: PERPS_MARKET_PROXY_ANDROMEDA,
+            spotMarketProxy: SPOT_MARKET_PROXY_ANDROMEDA,
+            sUSDProxy: USD_PROXY_ANDROMEDA,
+            pDAO: PDAO,
+            usdc: USDC,
+            sUSDCId: SUSDC_SPOT_MARKET_ID
+        });
+
+        vm.stopBroadcast();
+    }
+}
+
 
 /// @dev steps to deploy and verify on Base Goerli:
 /// (1) load the variables in the .env file via `source .env`
