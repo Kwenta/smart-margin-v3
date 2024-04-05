@@ -85,7 +85,6 @@ contract DeployBaseSepolia_Andromeda is Setup, BaseSepoliaParameters {
     }
 }
 
-
 /// @dev steps to deploy and verify on Base Goerli:
 /// (1) load the variables in the .env file via `source .env`
 /// (2) run `forge script script/Upgrade.s.sol:DeployBaseGoerli_Synthetix --rpc-url $BASE_GOERLI_RPC_URL --etherscan-api-key $BASESCAN_API_KEY --broadcast --verify -vvvv`
