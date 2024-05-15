@@ -57,6 +57,20 @@ interface IEngine {
         bytes[] conditions;
     }
 
+    /// @notice canExecute error codes
+    enum CanExecuteError{
+        None,
+        FeeExceedsMaxExecutorFee,
+        InsufficientCredit,
+        NonceAlreadyUsed,
+        UnauthorizedSigner,
+        InvalidSignature,
+        ConditionsNotVerified,
+        CallerNotTrustedExecutor,
+        ReduceOnlyCannotIncreasePositionSize,
+        ReduceOnlyPositionDoesNotExist
+    }
+
     /*//////////////////////////////////////////////////////////////
                                  ERRORS
     //////////////////////////////////////////////////////////////*/
@@ -66,7 +80,7 @@ interface IEngine {
     error Unauthorized();
 
     /// @notice thrown when an order cannot be executed
-    error CannotExecuteOrder(string reason);
+    error CannotExecuteOrder(CanExecuteError reason);
 
     /// @notice thrown when number of conditions
     /// exceeds max allowed
@@ -461,7 +475,7 @@ interface IEngine {
         ConditionalOrder calldata _co,
         bytes calldata _signature,
         uint256 _fee
-    ) external view returns (bool, string memory);
+    ) external view returns (bool, CanExecuteError);
 
     /// @notice verify the co signer is the owner or delegate of the account
     /// @param _co the co
