@@ -560,7 +560,9 @@ contract Engine is
         /// @dev check: (4) signer is authorized to interact with the account
         /// @dev check: (5) signature for the order was signed by the signer
         /// @dev check: (6) conditions are met || trusted executor is msg sender
-        if (!canExecute(_co, _signature, _fee)) revert CannotExecuteOrder();
+        (bool canExecuteOrder, string memory reason) =
+            canExecute(_co, _signature, _fee);
+        if (!canExecuteOrder) revert CannotExecuteOrder(reason);
 
         /// @dev spend the nonce associated with the order; this prevents replay
         _useUnorderedNonce(_co.orderDetails.accountId, _co.nonce);
@@ -585,14 +587,16 @@ contract Engine is
             // ensure position exists; reduce only orders
             // cannot increase position size
             if (positionSize == 0) {
-                revert CannotExecuteOrder();
+                revert CannotExecuteOrder("position does not exist");
             }
 
             // ensure incoming size delta is non-zero and
             // NOT the same sign;
             // i.e. reduce only orders cannot increase position size
             if (sizeDelta == 0 || positionSize.isSameSign(sizeDelta)) {
-                revert CannotExecuteOrder();
+                revert CannotExecuteOrder(
+                    "reduce only orders cannot increase position size"
+                );
             }
 
             // ensure incoming size delta is not larger
@@ -644,38 +648,48 @@ contract Engine is
         ConditionalOrder calldata _co,
         bytes calldata _signature,
         uint256 _fee
-    ) public view override returns (bool) {
+    ) public view override returns (bool, string memory) {
         // verify fee does not exceed the max fee
         // set by the conditional order
-        if (_fee > _co.maxExecutorFee) return false;
+        if (_fee > _co.maxExecutorFee) {
+            return (false, "Fee exceeds the maxExecutorFee");
+        }
 
         // verify account has enough credit to pay the fee
-        if (_fee > credit[_co.orderDetails.accountId]) return false;
+        if (_fee > credit[_co.orderDetails.accountId]) {
+            return (false, "Insufficient credit to pay the fee");
+        }
 
         // verify nonce has not been executed before
         if (hasUnorderedNonceBeenUsed(_co.orderDetails.accountId, _co.nonce)) {
-            return false;
+            return (false, "Nonce has already been used");
         }
 
         // verify signer is authorized to interact
         // with the account
-        if (!verifySigner(_co)) return false;
+        if (!verifySigner(_co)) return (false, "Unauthorized signer");
 
         // verify signature is valid for signer and order
-        if (!verifySignature(_co, _signature)) return false;
+        if (!verifySignature(_co, _signature)) {
+            return (false, "Invalid signature");
+        }
 
         // verify conditions are met
         if (_co.requireVerified) {
             // if the order requires verification, then all conditions
             // defined by "conditions" for the order must be met
-            if (!verifyConditions(_co)) return false;
+            if (!verifyConditions(_co)) {
+                return (false, "Conditions not verified");
+            }
         } else {
             // if the order does not require verification, then the caller
             // must be the trusted executor defined by "trustedExecutor"
-            if (msg.sender != _co.trustedExecutor) return false;
+            if (msg.sender != _co.trustedExecutor) {
+                return (false, "Caller is not the trusted executor");
+            }
         }
 
-        return true;
+        return (true, "Order can be executed");
     }
 
     /*//////////////////////////////////////////////////////////////

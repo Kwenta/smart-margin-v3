@@ -66,7 +66,7 @@ interface IEngine {
     error Unauthorized();
 
     /// @notice thrown when an order cannot be executed
-    error CannotExecuteOrder();
+    error CannotExecuteOrder(string reason);
 
     /// @notice thrown when number of conditions
     /// exceeds max allowed
@@ -461,7 +461,7 @@ interface IEngine {
         ConditionalOrder calldata _co,
         bytes calldata _signature,
         uint256 _fee
-    ) external view returns (bool);
+    ) external view returns (bool, string memory);
 
     /// @notice verify the co signer is the owner or delegate of the account
     /// @param _co the co
