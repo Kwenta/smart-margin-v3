@@ -58,7 +58,7 @@ interface IEngine {
     }
 
     /// @notice canExecute error codes
-    enum CanExecuteError{
+    enum CanExecuteError {
         None,
         FeeExceedsMaxExecutorFee,
         InsufficientCredit,

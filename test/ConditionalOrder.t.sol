@@ -902,7 +902,8 @@ contract ReduceOnly is ConditionalOrderTest {
 
         vm.expectRevert(
             abi.encodeWithSelector(
-                IEngine.CannotExecuteOrder.selector, IEngine.CanExecuteError.ReduceOnlyPositionDoesNotExist
+                IEngine.CannotExecuteOrder.selector,
+                IEngine.CanExecuteError.ReduceOnlyPositionDoesNotExist
             )
         );
 

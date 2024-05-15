@@ -587,7 +587,9 @@ contract Engine is
             // ensure position exists; reduce only orders
             // cannot increase position size
             if (positionSize == 0) {
-                revert CannotExecuteOrder(CanExecuteError.ReduceOnlyPositionDoesNotExist);
+                revert CannotExecuteOrder(
+                    CanExecuteError.ReduceOnlyPositionDoesNotExist
+                );
             }
 
             // ensure incoming size delta is non-zero and
@@ -667,7 +669,9 @@ contract Engine is
 
         // verify signer is authorized to interact
         // with the account
-        if (!verifySigner(_co)) return (false, CanExecuteError.UnauthorizedSigner);
+        if (!verifySigner(_co)) {
+            return (false, CanExecuteError.UnauthorizedSigner);
+        }
 
         // verify signature is valid for signer and order
         if (!verifySignature(_co, _signature)) {
