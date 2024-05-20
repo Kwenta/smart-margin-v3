@@ -739,7 +739,7 @@ contract Fee is ConditionalOrderTest {
         vm.expectRevert(
             abi.encodeWithSelector(
                 IEngine.CannotExecuteOrder.selector,
-                IEngine.CanExecuteError.InsufficientCredit
+                IEngine.CanExecuteResponse.InsufficientCredit
             )
         );
 
@@ -779,7 +779,7 @@ contract Fee is ConditionalOrderTest {
         vm.expectRevert(
             abi.encodeWithSelector(
                 IEngine.CannotExecuteOrder.selector,
-                IEngine.CanExecuteError.FeeExceedsMaxExecutorFee
+                IEngine.CanExecuteResponse.FeeExceedsMaxExecutorFee
             )
         );
 
@@ -861,7 +861,7 @@ contract ReduceOnly is ConditionalOrderTest {
         vm.expectRevert(
             abi.encodeWithSelector(
                 IEngine.CannotExecuteOrder.selector,
-                IEngine.CanExecuteError.ReduceOnlyPositionDoesNotExist
+                IEngine.CanExecuteResponse.ReduceOnlyPositionDoesNotExist
             )
         );
 
@@ -903,7 +903,7 @@ contract ReduceOnly is ConditionalOrderTest {
         vm.expectRevert(
             abi.encodeWithSelector(
                 IEngine.CannotExecuteOrder.selector,
-                IEngine.CanExecuteError.ReduceOnlyPositionDoesNotExist
+                IEngine.CanExecuteResponse.ReduceOnlyPositionDoesNotExist
             )
         );
 
@@ -949,7 +949,7 @@ contract ReduceOnly is ConditionalOrderTest {
         vm.expectRevert(
             abi.encodeWithSelector(
                 IEngine.CannotExecuteOrder.selector,
-                IEngine.CanExecuteError.ReduceOnlyCannotIncreasePositionSize
+                IEngine.CanExecuteResponse.ReduceOnlyCannotIncreasePositionSize
             )
         );
 
