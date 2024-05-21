@@ -20,6 +20,7 @@ import {UUPSUpgradeable} from
 /// @notice Responsible for interacting with
 /// Synthetix v3 perps markets
 /// @author JaredBorders (jaredborders@pm.me)
+/// @author Flocqst (florian@kwenta.io)
 contract Engine is
     IEngine,
     EIP712,

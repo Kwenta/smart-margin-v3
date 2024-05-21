@@ -6,6 +6,7 @@ import {IPerpsMarketProxy} from "src/interfaces/synthetix/IPerpsMarketProxy.sol"
 /// @title Kwenta Smart Margin v3: Engine Interface
 /// @notice Conditional Order -> "co"
 /// @author JaredBorders (jaredborders@pm.me)
+/// @author Flocqst (florian@kwenta.io)
 interface IEngine {
     /*//////////////////////////////////////////////////////////////
                                  TYPES
