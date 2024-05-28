@@ -13,8 +13,8 @@ contract UpgradeTest is Bootstrap {
 }
 
 contract StorageLayout is UpgradeTest {
-    uint constant NONCE_BITMAP_SLOT = 19;
-    uint constant CREDIT_SLOT = 20;
+    uint256 constant NONCE_BITMAP_SLOT = 19;
+    uint256 constant CREDIT_SLOT = 20;
 
     function test_nonceBitmap_slot() public {
         uint256 slot = engineExposed.getNonceBitmapSlot();
