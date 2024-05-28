@@ -89,7 +89,7 @@ contract CanExecute is ConditionalOrderTest {
     function test_canExecute_true() public {
         _defineConditionalOrder();
 
-        bool canExec = engine.canExecute(co, signature, ZERO_CO_FEE);
+        (bool canExec,) = engine.canExecute(co, signature, ZERO_CO_FEE);
 
         assertTrue(canExec);
     }
@@ -106,7 +106,7 @@ contract CanExecute is ConditionalOrderTest {
         });
 
         // CO_FEE is non-zero, so it exceeds the maxExecutorFee
-        bool canExec = engine.canExecute(co, signature, CO_FEE);
+        (bool canExec,) = engine.canExecute(co, signature, CO_FEE);
 
         assertFalse(canExec);
     }
@@ -118,7 +118,7 @@ contract CanExecute is ConditionalOrderTest {
         assertEq(engine.credit(accountId), 0);
 
         // CO_FEE is non-zero, and the account has no credit
-        bool canExec = engine.canExecute(co, signature, CO_FEE);
+        (bool canExec,) = engine.canExecute(co, signature, CO_FEE);
 
         assertFalse(canExec);
     }
@@ -129,7 +129,7 @@ contract CanExecute is ConditionalOrderTest {
         engine.execute(co, signature, ZERO_CO_FEE);
 
         // nonce is now used; cannot execute again
-        bool canExec = engine.canExecute(co, signature, ZERO_CO_FEE);
+        (bool canExec,) = engine.canExecute(co, signature, ZERO_CO_FEE);
 
         assertFalse(canExec);
     }
@@ -145,7 +145,7 @@ contract CanExecute is ConditionalOrderTest {
             domainSeparator: engine.DOMAIN_SEPARATOR()
         });
 
-        bool canExec = engine.canExecute(co, signature, ZERO_CO_FEE);
+        (bool canExec,) = engine.canExecute(co, signature, ZERO_CO_FEE);
 
         assertFalse(canExec);
     }
@@ -159,7 +159,7 @@ contract CanExecute is ConditionalOrderTest {
             domainSeparator: engine.DOMAIN_SEPARATOR()
         });
 
-        bool canExec = engine.canExecute(co, signature, ZERO_CO_FEE);
+        (bool canExec,) = engine.canExecute(co, signature, ZERO_CO_FEE);
 
         assertFalse(canExec);
     }
@@ -169,7 +169,7 @@ contract CanExecute is ConditionalOrderTest {
 
         vm.prank(BAD_ACTOR);
 
-        bool canExec = engine.canExecute(co, signature, ZERO_CO_FEE);
+        (bool canExec,) = engine.canExecute(co, signature, ZERO_CO_FEE);
 
         assertFalse(canExec);
     }
@@ -205,7 +205,7 @@ contract CanExecute is ConditionalOrderTest {
             domainSeparator: engine.DOMAIN_SEPARATOR()
         });
 
-        bool canExec = engine.canExecute(co, signature, ZERO_CO_FEE);
+        (bool canExec,) = engine.canExecute(co, signature, ZERO_CO_FEE);
 
         assertFalse(canExec);
     }
@@ -736,7 +736,12 @@ contract Fee is ConditionalOrderTest {
             domainSeparator: engine.DOMAIN_SEPARATOR()
         });
 
-        vm.expectRevert(IEngine.CannotExecuteOrder.selector);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IEngine.CannotExecuteOrder.selector,
+                IEngine.CanExecuteResponse.InsufficientCredit
+            )
+        );
 
         engine.execute(co, signature, CO_FEE + 1);
     }
@@ -771,7 +776,12 @@ contract Fee is ConditionalOrderTest {
             domainSeparator: engine.DOMAIN_SEPARATOR()
         });
 
-        vm.expectRevert(IEngine.CannotExecuteOrder.selector);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IEngine.CannotExecuteOrder.selector,
+                IEngine.CanExecuteResponse.FeeExceedsMaxExecutorFee
+            )
+        );
 
         engine.execute(co, signature, CO_FEE);
     }
@@ -848,7 +858,12 @@ contract ReduceOnly is ConditionalOrderTest {
             domainSeparator: engine.DOMAIN_SEPARATOR()
         });
 
-        vm.expectRevert(IEngine.CannotExecuteOrder.selector);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IEngine.CannotExecuteOrder.selector,
+                IEngine.CanExecuteResponse.ReduceOnlyPositionDoesNotExist
+            )
+        );
 
         engine.execute(co, signature, ZERO_CO_FEE);
     }
@@ -885,7 +900,12 @@ contract ReduceOnly is ConditionalOrderTest {
             domainSeparator: engine.DOMAIN_SEPARATOR()
         });
 
-        vm.expectRevert(IEngine.CannotExecuteOrder.selector);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IEngine.CannotExecuteOrder.selector,
+                IEngine.CanExecuteResponse.ReduceOnlyPositionDoesNotExist
+            )
+        );
 
         engine.execute(co, signature, ZERO_CO_FEE);
     }
@@ -926,7 +946,12 @@ contract ReduceOnly is ConditionalOrderTest {
             domainSeparator: engine.DOMAIN_SEPARATOR()
         });
 
-        vm.expectRevert(IEngine.CannotExecuteOrder.selector);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IEngine.CannotExecuteOrder.selector,
+                IEngine.CanExecuteResponse.ReduceOnlyCannotIncreasePositionSize
+            )
+        );
 
         engine.execute(co, signature, ZERO_CO_FEE);
     }

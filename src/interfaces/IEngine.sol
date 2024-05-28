@@ -6,6 +6,7 @@ import {IPerpsMarketProxy} from "src/interfaces/synthetix/IPerpsMarketProxy.sol"
 /// @title Kwenta Smart Margin v3: Engine Interface
 /// @notice Conditional Order -> "co"
 /// @author JaredBorders (jaredborders@pm.me)
+/// @author Flocqst (florian@kwenta.io)
 interface IEngine {
     /*//////////////////////////////////////////////////////////////
                                  TYPES
@@ -57,6 +58,20 @@ interface IEngine {
         bytes[] conditions;
     }
 
+    /// @notice canExecute response codes
+    enum CanExecuteResponse {
+        None,
+        FeeExceedsMaxExecutorFee,
+        InsufficientCredit,
+        NonceAlreadyUsed,
+        UnauthorizedSigner,
+        InvalidSignature,
+        ConditionsNotVerified,
+        CallerNotTrustedExecutor,
+        ReduceOnlyCannotIncreasePositionSize,
+        ReduceOnlyPositionDoesNotExist
+    }
+
     /*//////////////////////////////////////////////////////////////
                                  ERRORS
     //////////////////////////////////////////////////////////////*/
@@ -66,7 +81,7 @@ interface IEngine {
     error Unauthorized();
 
     /// @notice thrown when an order cannot be executed
-    error CannotExecuteOrder();
+    error CannotExecuteOrder(CanExecuteResponse reason);
 
     /// @notice thrown when number of conditions
     /// exceeds max allowed
@@ -457,11 +472,12 @@ interface IEngine {
     /// market is in a state that is not predictable
     /// (ex: unpredictable updates to the market's simulated fill price)
     /// @return true if the order can be executed, false otherwise
+    /// along with CanExecuteResponse response code.
     function canExecute(
         ConditionalOrder calldata _co,
         bytes calldata _signature,
         uint256 _fee
-    ) external view returns (bool);
+    ) external view returns (bool, CanExecuteResponse);
 
     /// @notice verify the co signer is the owner or delegate of the account
     /// @param _co the co
