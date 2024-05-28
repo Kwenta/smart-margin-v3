@@ -17,8 +17,7 @@ import {UUPSUpgradeable} from
     "lib/openzeppelin-contracts/contracts/proxy/utils/UUPSUpgradeable.sol";
 
 /// @title Kwenta Smart Margin v3: Engine contract
-/// @notice Responsible for interacting with
-/// Synthetix v3 perps markets
+/// @notice Responsible for interacting with Synthetix v3 perps markets
 /// @author JaredBorders (jaredborders@pm.me)
 /// @author Flocqst (florian@kwenta.io)
 contract Engine is
