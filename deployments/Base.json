@@ -1,14 +1,10 @@
 {
-    "Synthetix": {
-        "EngineImplementation": "",
-        "EngineProxy": ""
-    },
     "Andromeda": {
         "EngineImplementation": "0xD1F129e0cDd3Cc5c65ea00041623841C3d709F83",
         "EngineProxy": "0xe331a7eeC851Ba702aA8BF43070a178451d6D28E"
     },
-    "Kwenta": {
-        "EngineImplementation": "",
-        "EngineProxy": ""
+    "test": {
+        "EngineImplementation": "0x3eF73cD1B3B708ab1F2ccB4AcDA036Ac3FDc3615",
+        "EngineProxy": "0xA2dF816B2C5D8d799069d6a8a9f8464D402b5D25"
     }
 }
