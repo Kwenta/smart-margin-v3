@@ -13,18 +13,21 @@ contract UpgradeTest is Bootstrap {
 }
 
 contract StorageLayout is UpgradeTest {
+    uint256 constant NONCE_BITMAP_SLOT = 19;
+    uint256 constant CREDIT_SLOT = 20;
+
     function test_nonceBitmap_slot() public {
         uint256 slot = engineExposed.getNonceBitmapSlot();
 
         // nonceBitmap storage slot should NEVER change
-        assertEq(slot, 19);
+        assertEq(slot, NONCE_BITMAP_SLOT);
     }
 
     function test_credit_slot() public {
         uint256 slot = engineExposed.getCreditSlot();
 
         // credit storage slot should NEVER change
-        assertEq(slot, 20);
+        assertEq(slot, CREDIT_SLOT);
     }
 }
 
@@ -145,9 +148,6 @@ contract MockUpgrade is UpgradeTest {
         engine.upgradeToAndCall(address(mockEngineUpgrade), "");
     }
 }
-
-/// @custom:write-future-engine-upgrade-tests-here
-contract UpgradeEngineV2 is UpgradeTest {}
 
 contract RemoveUpgradability is UpgradeTest {
     function test_removeUpgradability() public {

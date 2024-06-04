@@ -3,7 +3,7 @@ pragma solidity 0.8.20;
 
 contract BaseSepoliaParameters {
     /// @dev this is an EOA used on testnet only
-    address public constant PDAO = 0x1b4fCFE451A15218aEeC811B508B4aa3f2A35904;
+    address public constant PDAO = 0x12d970154Ac171293323f20757130d5731850deB;
 
     address public constant PERPS_MARKET_PROXY = address(0);
 
@@ -13,15 +13,15 @@ contract BaseSepoliaParameters {
 
     // https://usecannon.com/packages/synthetix-perps-market/3.3.5/84532-andromeda/
     address public constant PERPS_MARKET_PROXY_ANDROMEDA =
-        0xE6C5f05C415126E6b81FCc3619f65Db2fCAd58D0;
+        0xf53Ca60F031FAf0E347D44FbaA4870da68250c8d;
 
     // https://usecannon.com/packages/synthetix-perps-market/3.3.5/84532-andromeda/
     address public constant SPOT_MARKET_PROXY_ANDROMEDA =
-        0xA4fE63F8ea9657990eA8E05Ebfa5C19a7D4d7337;
+        0xaD2fE7cd224c58871f541DAE01202F93928FEF72;
 
     // https://usecannon.com/packages/synthetix-perps-market/3.3.5/84532-andromeda/
     address public constant USD_PROXY_ANDROMEDA =
-        0xa89163A087fe38022690C313b5D4BBF12574637f;
+        0x682f0d17feDC62b2a0B91f8992243Bf44cAfeaaE;
 
     // https://base-sepolia.blockscout.com/address/0x69980C3296416820623b3e3b30703A74e2320bC8
     address public constant USDC = 0x69980C3296416820623b3e3b30703A74e2320bC8;
