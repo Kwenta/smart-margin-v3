@@ -15,7 +15,7 @@ import {SynthMinter} from "test/utils/SynthMinter.sol";
 import {ArbitrumParameters} from
     "script/utils/parameters/ArbitrumParameters.sol";
 import {ArbitrumSepoliaParameters} from
-    "script/utils/parameters/ArbitrumParameters.sol";
+    "script/utils/parameters/ArbitrumSepoliaParameters.sol";
 
 /// @title Contract for bootstrapping the SMv3 system for testing purposes
 /// @dev it deploys the SMv3 Engine and EngineExposed, and defines
