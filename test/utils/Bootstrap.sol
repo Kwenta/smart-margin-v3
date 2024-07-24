@@ -12,6 +12,10 @@ import {IERC20} from "src/interfaces/tokens/IERC20.sol";
 import {IPerpsMarketProxy} from "test/utils/interfaces/IPerpsMarketProxy.sol";
 import {ISpotMarketProxy} from "src/interfaces/synthetix/ISpotMarketProxy.sol";
 import {SynthMinter} from "test/utils/SynthMinter.sol";
+import {ArbitrumParameters} from
+    "script/utils/parameters/ArbitrumParameters.sol";
+import {ArbitrumSepoliaParameters} from
+    "script/utils/parameters/ArbitrumParameters.sol";
 
 /// @title Contract for bootstrapping the SMv3 system for testing purposes
 /// @dev it deploys the SMv3 Engine and EngineExposed, and defines
