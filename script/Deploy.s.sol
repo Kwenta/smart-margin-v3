@@ -1,17 +1,16 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 pragma solidity 0.8.20;
 
-// proxy
 import {ERC1967Proxy as Proxy} from
     "lib/openzeppelin-contracts/contracts/proxy/ERC1967/ERC1967Proxy.sol";
-
-// contracts
 import {Engine} from "src/Engine.sol";
-
-// parameters
 import {BaseParameters} from "script/utils/parameters/BaseParameters.sol";
 import {BaseSepoliaParameters} from
     "script/utils/parameters/BaseSepoliaParameters.sol";
+import {ArbitrumParameters} from
+    "script/utils/parameters/ArbitrumParameters.sol";
+import {ArbitrumSepoliaParameters} from
+    "script/utils/parameters/ArbitrumSepoliaParameters.sol";
 
 // forge utils
 import {Script} from "lib/forge-std/src/Script.sol";
@@ -77,6 +76,48 @@ contract DeployBaseSepolia_Andromeda is Setup, BaseSepoliaParameters {
             perpsMarketProxy: PERPS_MARKET_PROXY_ANDROMEDA,
             spotMarketProxy: SPOT_MARKET_PROXY_ANDROMEDA,
             sUSDProxy: USD_PROXY_ANDROMEDA,
+            pDAO: PDAO,
+            usdc: USDC,
+            sUSDCId: SUSDC_SPOT_MARKET_ID
+        });
+
+        vm.stopBroadcast();
+    }
+}
+
+/// @dev steps to deploy and verify on Arbitrum:
+/// (1) load the variables in the .env file via `source .env`
+/// (2) run `forge script script/Deploy.s.sol:DeployArbitrum --rpc-url $ARBITRUM_RPC_URL --etherscan-api-key $ARBISCAN_API_KEY --broadcast --verify -vvvv`
+contract DeployArbitrum is Setup, ArbitrumParameters {
+    function run() public {
+        uint256 privateKey = vm.envUint("PRIVATE_KEY");
+        vm.startBroadcast(privateKey);
+
+        Setup.deploySystem({
+            perpsMarketProxy: PERPS_MARKET_PROXY,
+            spotMarketProxy: SPOT_MARKET_PROXY,
+            sUSDProxy: USD_PROXY,
+            pDAO: PDAO,
+            usdc: USDC,
+            sUSDCId: SUSDC_SPOT_MARKET_ID
+        });
+
+        vm.stopBroadcast();
+    }
+}
+
+/// @dev steps to deploy and verify on Arbitrum Sepolia:
+/// (1) load the variables in the .env file via `source .env`
+/// (2) run `forge script script/Deploy.s.sol:DeployArbitrumSepolia --rpc-url $ARBITRUM_SEPOLIA_RPL_URL --etherscan-api-key $ARBISCAN_API_KEY --broadcast --verify -vvvv`
+contract DeployArbitrumSepolia is Setup, ArbitrumSepoliaParameters {
+    function run() public {
+        uint256 privateKey = vm.envUint("PRIVATE_KEY");
+        vm.startBroadcast(privateKey);
+
+        Setup.deploySystem({
+            perpsMarketProxy: PERPS_MARKET_PROXY,
+            spotMarketProxy: SPOT_MARKET_PROXY,
+            sUSDProxy: USD_PROXY,
             pDAO: PDAO,
             usdc: USDC,
             sUSDCId: SUSDC_SPOT_MARKET_ID
