@@ -69,17 +69,38 @@ abstract contract Zap is ZapErrors, ZapEvents {
         _SUSD = IERC20(_susd);
         _SPOT_MARKET_PROXY = ISpotMarketProxy(_spotMarketProxy);
 
-        _DECIMALS_FACTOR = 10 ** (18 - IERC20(_usdc).decimals());
+        /// @custom:unsafe NOT MEANT FOR PRODUCTION
+        uint8 decimals;
+        try IERC20(_usdc).decimals() returns (uint8 res) {
+            decimals = res;
+        } catch {
+            decimals = 18;
+        }
 
-        if (
-            keccak256(abi.encodePacked(_SPOT_MARKET_PROXY.name(_sUSDCId)))
-                != _HASHED_SUSDC_NAME
-        ) revert InvalidIdSUSDC(_sUSDCId);
+        _DECIMALS_FACTOR = 10 ** (18 - decimals);
 
-        // id of $sUSDC is verified to be correct via the above
-        // name comparison check
+        /// @custom:unsafe NOT MEANT FOR PRODUCTION
+        bytes32 sUSDCName;
+        try _SPOT_MARKET_PROXY.name(_sUSDCId) returns (string memory res) {
+            sUSDCName = keccak256(abi.encodePacked(res));
+            if (sUSDCName != _HASHED_SUSDC_NAME) {
+                revert InvalidIdSUSDC(_sUSDCId);
+            }
+        } catch {
+            sUSDCName = keccak256(abi.encodePacked("NOT_FOUND"));
+        }
+
+        // id of $sUSDC is verified to be correct via name comparison
         _SUSDC_SPOT_MARKET_ID = _sUSDCId;
-        _SUSDC = IERC20(_SPOT_MARKET_PROXY.getSynth(_sUSDCId));
+
+        /// @custom:unsafe NOT MEANT FOR PRODUCTION
+        IERC20 sUSDC;
+        try _SPOT_MARKET_PROXY.getSynth(_sUSDCId) returns (address res) {
+            sUSDC = IERC20(res);
+        } catch {
+            sUSDC = IERC20(address(0));
+        }
+        _SUSDC = sUSDC;
     }
 
     /*//////////////////////////////////////////////////////////////
