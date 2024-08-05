@@ -5,15 +5,15 @@ contract ArbitrumSepoliaParameters {
     address public constant PDAO = 0x12d970154Ac171293323f20757130d5731850deB;
 
     address public constant PERPS_MARKET_PROXY =
-        0x6B82faC132da7abbEc81A6097eA9431DCEB49C15;
+        0xA73A7B754Ec870b3738D0654cA75b7d0eEbdb460;
 
     address public constant SPOT_MARKET_PROXY =
-        0x686Fc8a0A6E24F3A38AD16B65EdEa1815558023a;
+        0x93d645c42A0CA3e08E9552367B8c454765fff041;
 
     address public constant USD_PROXY =
-        0xEa0313e9D6F785e1Ad14aa55fc380f342296ac9D;
+        0xe487Ad4291019b33e2230F8E2FB1fb6490325260;
 
     address public constant USDC = 0x75faf114eafb1BDbe2F0316DF893fd58CE46AA4d;
 
-    uint128 public constant SUSDC_SPOT_MARKET_ID = 3;
+    uint128 public constant SUSDC_SPOT_MARKET_ID = 2;
 }
