@@ -10,7 +10,7 @@ import {IERC20} from "src/interfaces/tokens/IERC20.sol";
 import {MathLib} from "src/libraries/MathLib.sol";
 import {MulticallablePayable} from "src/utils/MulticallablePayable.sol";
 import {SignatureCheckerLib} from "src/libraries/SignatureCheckerLib.sol";
-import {Zap} from "lib/zap/src/Zap.sol";
+import {Zap} from "src/utils/zap/Zap.sol";
 
 /// @custom:upgradability
 import {UUPSUpgradeable} from
