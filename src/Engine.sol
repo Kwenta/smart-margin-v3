@@ -390,6 +390,52 @@ contract Engine is
         }
     }
 
+    /// @inheritdoc IEngine
+    function wrapModifyCollateralZap(
+        uint128 _accountId,
+        uint256 _amount,
+        IERC20 _collateral,
+        uint128 _synthMarketId,
+        Zap.Direction _direction
+    ) external payable override {
+        Zap.ZapData memory zapData = Zap.ZapData({
+            spotMarket: SPOT_MARKET_PROXY,
+            collateral: _collateral,
+            marketId: _synthMarketId,
+            amount: _amount,
+            tolerance: Zap.Tolerance({
+                tolerableWrapAmount: _amount,
+                tolerableSwapAmount: 0
+            }),
+            direction: _direction,
+            receiver: _direction == Zap.Direction.In ? address(this) : msg.sender,
+            referrer: address(0)
+        });
+
+        if (_direction == Zap.Direction.In) {
+            zap.wrap(zapData);
+
+            IERC20 synth = IERC20(SPOT_MARKET_PROXY.getSynth(_synthMarketId));
+            uint256 synthAmount = synth.balanceOf(address(this));
+
+            synth.approve(address(PERPS_MARKET_PROXY), synthAmount);
+
+            PERPS_MARKET_PROXY.modifyCollateral(
+                _accountId, _synthMarketId, int256(_amount)
+            );
+        } else if (_direction == Zap.Direction.Out) {
+            if (!isAccountOwner(_accountId, msg.sender)) revert Unauthorized();
+
+            PERPS_MARKET_PROXY.modifyCollateral(
+                _accountId, _synthMarketId, -int256(_amount)
+            );
+
+            zap.unwrap(zapData);
+        } else {
+            revert InvalidDirection();
+        }
+    }
+
     function _depositCollateral(
         address _from,
         IERC20 _synth,

@@ -268,6 +268,26 @@ interface IEngine {
         Zap.Direction _direction
     ) external payable;
 
+    /// @notice modify the collateral of an
+    /// account identified by the accountId
+    /// via a zap of $collateral into/out of its synth
+    /// @dev This function handles both wrapping and unwrapping of collateral,
+    /// as well as modifying it in the perps market
+    /// @param _accountId the account to modify collateral for
+    /// @param _amount The amount of collateral to wrap/unwrap and modify
+    /// @param _collateral the collateral to zap
+    /// @param _synthMarketId Id of the synth market
+    /// @param _direction The direction of the operation (In for wrapping, Out for unwrapping)
+    /// @custom:throws Unauthorized If the caller is not the account owner when unwrapping
+    /// @custom:throws InvalidDirection If an invalid direction is provided
+    function wrapModifyCollateralZap(
+        uint128 _accountId,
+        uint256 _amount,
+        IERC20 _collateral,
+        uint128 _synthMarketId,
+        Zap.Direction _direction
+    ) external payable;
+
     /*//////////////////////////////////////////////////////////////
                          ASYNC ORDER MANAGEMENT
     //////////////////////////////////////////////////////////////*/
