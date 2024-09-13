@@ -2,6 +2,9 @@
 pragma solidity 0.8.20;
 
 import {IPerpsMarketProxy} from "src/interfaces/synthetix/IPerpsMarketProxy.sol";
+import {ISpotMarketProxy} from "src/interfaces/synthetix/ISpotMarketProxy.sol";
+import {IERC20} from "src/interfaces/tokens/IERC20.sol";
+import {Zap} from "src/utils/zap/Zap.sol";
 
 /// @title Kwenta Smart Margin v3: Engine Interface
 /// @notice Conditional Order -> "co"
@@ -117,6 +120,10 @@ interface IEngine {
     // an unsupported function
     error NotSupported();
 
+    /// @notice thrown when attempting to call
+    // a zap operation with an Invalid Direction
+    error InvalidDirection();
+
     /*//////////////////////////////////////////////////////////////
                                  EVENTS
     //////////////////////////////////////////////////////////////*/
@@ -230,23 +237,36 @@ interface IEngine {
 
     /// @notice modify the collateral of an
     /// account identified by the accountId
-    /// via a zap of $USDC into/out of $sUSD
-    /// @dev when _amount is positive ->
-    ///     (1) transfers $USDC into the contract
-    ///     (2) zaps $USDC into $sUSD
+    /// via a zap of $collateral into/out of $sUSD
+    /// @dev when direction is In ->
+    ///     (1) transfers $collateral into the contract
+    ///     (2) zaps $collateral into $sUSD
     ///     (3) adds the $sUSD to the account's collateral
-    /// @dev when _amount is negative ->
+    /// @dev when direction is Out ->
     ///     (1) removes the $sUSD from the account's collateral
-    ///     (2) zaps $sUSD into $USDC
-    ///     (3) transfers $USDC to the caller
+    ///     (2) zaps $sUSD into $collateral
+    ///     (3) transfers $collateral to the caller
     /// @dev if _amount is zero, Synthetix v3 wrapper
     /// will throw an error
     /// @param _accountId the account to modify
     /// @param _amount the amount of collateral
-    /// to add or remove (negative to remove)
-    function modifyCollateralZap(uint128 _accountId, int256 _amount)
-        external
-        payable;
+    /// to add or remove
+    /// @param _collateral the collateral to zap
+    /// @param _marketId Id of the market used for the trade
+    /// @param _tolerableWrapAmount The minimum amount of synths the wrap is
+    /// expected to receive, otherwise the transaction will revert.
+    /// @param _tolerableSwapAmount The minimum amount of synths the trader is
+    /// expected to receive, otherwise the transaction will revert.
+    /// @param _direction the direction of the zap
+    function modifyCollateralZap(
+        uint128 _accountId,
+        uint256 _amount,
+        IERC20 _collateral,
+        uint128 _marketId,
+        uint256 _tolerableWrapAmount,
+        uint256 _tolerableSwapAmount,
+        Zap.Direction _direction
+    ) external payable;
 
     /*//////////////////////////////////////////////////////////////
                          ASYNC ORDER MANAGEMENT
@@ -294,18 +314,29 @@ interface IEngine {
         external
         payable;
 
-    /// @notice transfer $USDC into the engine,
+    /// @notice transfer $collateral into the engine,
     /// zap it into $sUSD, and then credit the account
     /// identified by the accountId
-    /// @dev _amount of $USDC transferred into the
+    /// @dev _amount of $collateral transferred into the
     /// engine may differ from the amount credited
     /// to the account due to precision differences
     /// (i.e. ERC-20 decimal discrepancies)
     /// @param _accountId the id of the account to credit
-    /// @param _amount the amount of $USDC to transfer and zap
-    function creditAccountZap(uint128 _accountId, uint256 _amount)
-        external
-        payable;
+    /// @param _amount the amount of $collateral to transfer and zap
+    /// @param _collateral the collateral to zap
+    /// @param _marketId Id of the market used for the trade
+    /// @param _tolerableWrapAmount The minimum amount of synths the wrap is
+    /// expected to receive, otherwise the transaction will revert.
+    /// @param _tolerableSwapAmount The minimum amount of synths the trader is
+    /// expected to receive, otherwise the transaction will revert.
+    function creditAccountZap(
+        uint128 _accountId,
+        uint256 _amount,
+        IERC20 _collateral,
+        uint128 _marketId,
+        uint256 _tolerableWrapAmount,
+        uint256 _tolerableSwapAmount
+    ) external payable;
 
     /// @notice withdraw $sUSD from the engine and
     /// debit the account identified by the accountId
@@ -317,16 +348,27 @@ interface IEngine {
 
     /// @notice debit the account identified by the accountId
     /// by the amount specified. The amount is then zapped
-    /// into $USDC and transferred to the caller
-    /// @dev _amount of $USDC transferred out of the
+    /// into $collateral and transferred to the caller
+    /// @dev _amount of $collateral transferred out of the
     /// engine may differ from the amount debited
     /// from the account due to precision differences
     /// (i.e. ERC-20 decimal discrepancies)
     /// @param _accountId the id of the account to debit
     /// @param _amount the amount of $sUSD to debit
-    function debitAccountZap(uint128 _accountId, uint256 _amount)
-        external
-        payable;
+    /// @param _collateral the collateral to zap
+    /// @param _marketId Id of the market used for the trade
+    /// @param _tolerableWrapAmount The minimum amount of synths the wrap is
+    /// expected to receive, otherwise the transaction will revert.
+    /// @param _tolerableSwapAmount The minimum amount of synths the trader is
+    /// expected to receive, otherwise the transaction will revert.
+    function debitAccountZap(
+        uint128 _accountId,
+        uint256 _amount,
+        IERC20 _collateral,
+        uint128 _marketId,
+        uint256 _tolerableWrapAmount,
+        uint256 _tolerableSwapAmount
+    ) external payable;
 
     /*//////////////////////////////////////////////////////////////
                       CONDITIONAL ORDER MANAGEMENT
