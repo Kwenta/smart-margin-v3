@@ -52,6 +52,7 @@ contract Bootstrap is Test, Constants, Conditions, SynthetixV3Errors {
     ISpotMarketProxy public spotMarketProxy;
     IERC20 public sUSD;
     IERC20 public USDC;
+    address public zap;
 
     // Synthetix v3 Andromeda Spot Market ID for $sUSDC
     uint128 public sUSDCId;
@@ -68,8 +69,7 @@ contract Bootstrap is Test, Constants, Conditions, SynthetixV3Errors {
             address _spotMarketProxyAddress,
             address _sUSDAddress,
             address _pDAOAddress,
-            address _usdc,
-            uint128 _sUSDCId
+            address _zapAddress
         ) = bootstrap.init();
 
         engine = Engine(_engineAddress);
@@ -79,8 +79,7 @@ contract Bootstrap is Test, Constants, Conditions, SynthetixV3Errors {
         sUSD = IERC20(_sUSDAddress);
         synthMinter = new SynthMinter(_sUSDAddress, _spotMarketProxyAddress);
         pDAO = _pDAOAddress;
-        USDC = IERC20(_usdc);
-        sUSDCId = _sUSDCId;
+        zap = _zapAddress;
 
         vm.startPrank(ACTOR);
         accountId = perpsMarketProxy.createAccount();
@@ -95,47 +94,35 @@ contract Bootstrap is Test, Constants, Conditions, SynthetixV3Errors {
     }
 }
 
-contract BootstrapBase is Setup, BaseParameters {
+contract BootstrapBase is Setup, ArbitrumParameters {
     function init()
         public
-        returns (
-            address,
-            address,
-            address,
-            address,
-            address,
-            address,
-            address,
-            uint128
-        )
+        returns (address, address, address, address, address, address, address)
     {
         (Engine engine) = Setup.deploySystem({
-            perpsMarketProxy: PERPS_MARKET_PROXY_ANDROMEDA,
-            spotMarketProxy: SPOT_MARKET_PROXY_ANDROMEDA,
-            sUSDProxy: USD_PROXY_ANDROMEDA,
+            perpsMarketProxy: PERPS_MARKET_PROXY,
+            spotMarketProxy: SPOT_MARKET_PROXY,
+            sUSDProxy: USD_PROXY,
             pDAO: PDAO,
-            usdc: USDC,
-            sUSDCId: SUSDC_SPOT_MARKET_ID
+            zap: ZAP
         });
 
         EngineExposed engineExposed = new EngineExposed({
-            _perpsMarketProxy: PERPS_MARKET_PROXY_ANDROMEDA,
-            _spotMarketProxy: SPOT_MARKET_PROXY_ANDROMEDA,
-            _sUSDProxy: USD_PROXY_ANDROMEDA,
+            _perpsMarketProxy: PERPS_MARKET_PROXY,
+            _spotMarketProxy: SPOT_MARKET_PROXY,
+            _sUSDProxy: USD_PROXY,
             _pDAO: PDAO,
-            _usdc: USDC,
-            _sUSDCId: SUSDC_SPOT_MARKET_ID
+            _zap: ZAP
         });
 
         return (
             address(engine),
             address(engineExposed),
-            PERPS_MARKET_PROXY_ANDROMEDA,
-            SPOT_MARKET_PROXY_ANDROMEDA,
-            USD_PROXY_ANDROMEDA,
+            PERPS_MARKET_PROXY,
+            SPOT_MARKET_PROXY,
+            USD_PROXY,
             PDAO,
-            USDC,
-            SUSDC_SPOT_MARKET_ID
+            ZAP
         );
     }
 }

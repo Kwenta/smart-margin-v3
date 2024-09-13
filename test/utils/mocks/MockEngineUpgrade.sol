@@ -11,18 +11,8 @@ contract MockEngineUpgrade is Engine {
         address _spotMarketProxy,
         address _sUSDProxy,
         address _pDAO,
-        address _usdc,
-        uint128 _sUSDCId
-    )
-        Engine(
-            _perpsMarketProxy,
-            _spotMarketProxy,
-            _sUSDProxy,
-            _pDAO,
-            _usdc,
-            _sUSDCId
-        )
-    {}
+        address _zap
+    ) Engine(_perpsMarketProxy, _spotMarketProxy, _sUSDProxy, _pDAO, _zap) {}
 
     function echo(string memory message) public pure returns (string memory) {
         return message;

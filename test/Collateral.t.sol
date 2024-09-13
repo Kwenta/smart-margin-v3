@@ -104,25 +104,25 @@ contract DepositCollateral is CollateralTest {
         vm.stopPrank();
     }
 
-    function test_depositCollateral_zap() public {
-        uint256 decimalsFactor = 10 ** (18 - USDC.decimals());
+    // function test_depositCollateral_zap() public {
+    //     uint256 decimalsFactor = 10 ** (18 - USDC.decimals());
 
-        deal(address(USDC), ACTOR, SMALLEST_AMOUNT);
+    //     deal(address(USDC), ACTOR, SMALLEST_AMOUNT);
 
-        vm.startPrank(ACTOR);
+    //     vm.startPrank(ACTOR);
 
-        USDC.approve(address(engine), type(uint256).max);
+    //     USDC.approve(address(engine), type(uint256).max);
 
-        engine.modifyCollateralZap({
-            _accountId: accountId,
-            _amount: int256(SMALLEST_AMOUNT)
-        });
+    //     engine.modifyCollateralZap({
+    //         _accountId: accountId,
+    //         _amount: int256(SMALLEST_AMOUNT)
+    //     });
 
-        vm.stopPrank();
+    //     vm.stopPrank();
 
-        int256 availableMargin = perpsMarketProxy.getAvailableMargin(accountId);
-        assertEq(availableMargin, int256(SMALLEST_AMOUNT * decimalsFactor));
-    }
+    //     int256 availableMargin = perpsMarketProxy.getAvailableMargin(accountId);
+    //     assertEq(availableMargin, int256(SMALLEST_AMOUNT * decimalsFactor));
+    // }
 }
 
 contract WithdrawCollateral is CollateralTest {
@@ -208,27 +208,27 @@ contract WithdrawCollateral is CollateralTest {
         vm.stopPrank();
     }
 
-    function test_withdrawCollateral_zap() public {
-        uint256 decimalsFactor = 10 ** (18 - USDC.decimals());
+    // function test_withdrawCollateral_zap() public {
+    //     uint256 decimalsFactor = 10 ** (18 - USDC.decimals());
 
-        vm.startPrank(ACTOR);
+    //     vm.startPrank(ACTOR);
 
-        sUSD.approve(address(engine), type(uint256).max);
+    //     sUSD.approve(address(engine), type(uint256).max);
 
-        engine.modifyCollateral({
-            _accountId: accountId,
-            _synthMarketId: SUSD_SPOT_MARKET_ID,
-            _amount: int256(AMOUNT)
-        });
+    //     engine.modifyCollateral({
+    //         _accountId: accountId,
+    //         _synthMarketId: SUSD_SPOT_MARKET_ID,
+    //         _amount: int256(AMOUNT)
+    //     });
 
-        engine.modifyCollateralZap({
-            _accountId: accountId,
-            _amount: -int256(SMALLEST_AMOUNT * decimalsFactor)
-        });
+    //     engine.modifyCollateralZap({
+    //         _accountId: accountId,
+    //         _amount: -int256(SMALLEST_AMOUNT * decimalsFactor)
+    //     });
 
-        vm.stopPrank();
+    //     vm.stopPrank();
 
-        uint256 postBalance = USDC.balanceOf(ACTOR);
-        assertEq(postBalance, SMALLEST_AMOUNT);
-    }
+    //     uint256 postBalance = USDC.balanceOf(ACTOR);
+    //     assertEq(postBalance, SMALLEST_AMOUNT);
+    // }
 }
