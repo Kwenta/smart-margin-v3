@@ -19,7 +19,8 @@ interface IERC20 {
     /// Emits a {Transfer} event
     function transfer(address to, uint256 amount) external returns (bool);
 
-    /// @dev Sets `amount` as the allowance of `spender` over the caller's tokens
+    /// @dev Sets `amount` as the allowance of `spender` over the caller's
+    /// tokens
     /// @param spender The address of the account to grant the allowance
     /// @param amount The amount of tokens to allow
     /// @return a boolean value indicating whether the operation succeeded
