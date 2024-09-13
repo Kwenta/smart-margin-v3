@@ -23,16 +23,14 @@ contract Setup is Script {
         address spotMarketProxy,
         address sUSDProxy,
         address pDAO,
-        address usdc,
-        uint128 sUSDCId
+        address zap
     ) public returns (Engine engine) {
         engine = new Engine({
             _perpsMarketProxy: perpsMarketProxy,
             _spotMarketProxy: spotMarketProxy,
             _sUSDProxy: sUSDProxy,
             _pDAO: pDAO,
-            _usdc: usdc,
-            _sUSDCId: sUSDCId
+            _zap: zap
         });
 
         // deploy ERC1967 proxy and set implementation to engine
@@ -40,48 +38,6 @@ contract Setup is Script {
 
         // "wrap" proxy in IEngine interface
         engine = Engine(address(proxy));
-    }
-}
-
-/// @dev steps to deploy and verify on Base:
-/// (1) load the variables in the .env file via `source .env`
-/// (2) run `forge script script/Deploy.s.sol:DeployBase_Andromeda --rpc-url $BASE_RPC_URL --etherscan-api-key $BASESCAN_API_KEY --broadcast --verify -vvvv`
-contract DeployBase_Andromeda is Setup, BaseParameters {
-    function run() public {
-        uint256 privateKey = vm.envUint("PRIVATE_KEY");
-        vm.startBroadcast(privateKey);
-
-        Setup.deploySystem({
-            perpsMarketProxy: PERPS_MARKET_PROXY_ANDROMEDA,
-            spotMarketProxy: SPOT_MARKET_PROXY_ANDROMEDA,
-            sUSDProxy: USD_PROXY_ANDROMEDA,
-            pDAO: PDAO,
-            usdc: USDC,
-            sUSDCId: SUSDC_SPOT_MARKET_ID
-        });
-
-        vm.stopBroadcast();
-    }
-}
-
-/// @dev steps to deploy and verify on Base Goerli:
-/// (1) load the variables in the .env file via `source .env`
-/// (2) run `forge script script/Deploy.s.sol:DeployBaseSepolia_Andromeda --rpc-url $BASE_SEPOLIA_RPC_URL --etherscan-api-key $BASESCAN_API_KEY --broadcast --verify -vvvv`
-contract DeployBaseSepolia_Andromeda is Setup, BaseSepoliaParameters {
-    function run() public {
-        uint256 privateKey = vm.envUint("PRIVATE_KEY");
-        vm.startBroadcast(privateKey);
-
-        Setup.deploySystem({
-            perpsMarketProxy: PERPS_MARKET_PROXY_ANDROMEDA,
-            spotMarketProxy: SPOT_MARKET_PROXY_ANDROMEDA,
-            sUSDProxy: USD_PROXY_ANDROMEDA,
-            pDAO: PDAO,
-            usdc: USDC,
-            sUSDCId: SUSDC_SPOT_MARKET_ID
-        });
-
-        vm.stopBroadcast();
     }
 }
 
@@ -98,8 +54,7 @@ contract DeployArbitrum is Setup, ArbitrumParameters {
             spotMarketProxy: SPOT_MARKET_PROXY,
             sUSDProxy: USD_PROXY,
             pDAO: PDAO,
-            usdc: USDC,
-            sUSDCId: SUSDC_SPOT_MARKET_ID
+            zap: ZAP
         });
 
         vm.stopBroadcast();
@@ -108,7 +63,7 @@ contract DeployArbitrum is Setup, ArbitrumParameters {
 
 /// @dev steps to deploy and verify on Arbitrum Sepolia:
 /// (1) load the variables in the .env file via `source .env`
-/// (2) run `forge script script/Deploy.s.sol:DeployArbitrumSepolia --rpc-url $ARBITRUM_SEPOLIA_RPL_URL --etherscan-api-key $ARBISCAN_API_KEY --broadcast --verify -vvvv`
+/// (2) run `forge script script/Deploy.s.sol:DeployArbitrumSepolia --rpc-url $ARBITRUM_SEPOLIA_RPC_URL --etherscan-api-key $ARBISCAN_API_KEY --broadcast --verify -vvvv`
 contract DeployArbitrumSepolia is Setup, ArbitrumSepoliaParameters {
     function run() public {
         uint256 privateKey = vm.envUint("PRIVATE_KEY");
@@ -119,8 +74,7 @@ contract DeployArbitrumSepolia is Setup, ArbitrumSepoliaParameters {
             spotMarketProxy: SPOT_MARKET_PROXY,
             sUSDProxy: USD_PROXY,
             pDAO: PDAO,
-            usdc: USDC,
-            sUSDCId: SUSDC_SPOT_MARKET_ID
+            zap: ZAP
         });
 
         vm.stopBroadcast();
