@@ -29,7 +29,6 @@ contract Engine is
     EIP712,
     EIP7412,
     MulticallablePayable,
-    Zap,
     UUPSUpgradeable
 {
     using MathLib for int128;
@@ -366,6 +365,7 @@ contract Engine is
         });
 
         if (_direction == Zap.Direction.In) {
+            _collateral.transferFrom(msg.sender, address(this), _amount);
             _collateral.approve(address(zap), _amount);
 
             // zap $Collateral -> $sUSD
@@ -422,6 +422,7 @@ contract Engine is
         });
 
         if (_direction == Zap.Direction.In) {
+            _collateral.transferFrom(msg.sender, address(this), _amount);
             _collateral.approve(address(zap), _amount);
 
             zap.wrap(zapData);
@@ -591,6 +592,7 @@ contract Engine is
             referrer: address(0)
         });
 
+        _collateral.transferFrom(msg.sender, address(this), _amount);
         _collateral.approve(address(zap), _amount);
 
         // zap $Collateral -> $sUSD
