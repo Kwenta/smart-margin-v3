@@ -366,6 +366,8 @@ contract Engine is
         });
 
         if (_direction == Zap.Direction.In) {
+            _collateral.approve(address(zap), _amount);
+
             // zap $Collateral -> $sUSD
             zap.zap(zapData);
 
@@ -391,6 +393,13 @@ contract Engine is
     }
 
     /// @inheritdoc IEngine
+
+    ///
+    /// @param _accountId 170141183460469231731687303715884105729
+    /// @param _amount 10000000000000000000
+    /// @param _collateral 0xcf45784084ca3fd91c215a87265014c3dc67182d (fUSDe)
+    /// @param _synthMarketId 7 (sUSDe)
+    /// @param _direction 0 (In)
     function wrapModifyCollateralZap(
         uint128 _accountId,
         uint256 _amount,
@@ -413,6 +422,8 @@ contract Engine is
         });
 
         if (_direction == Zap.Direction.In) {
+            _collateral.approve(address(zap), _amount);
+
             zap.wrap(zapData);
 
             IERC20 synth = IERC20(SPOT_MARKET_PROXY.getSynth(_synthMarketId));
@@ -579,6 +590,9 @@ contract Engine is
             receiver: address(this),
             referrer: address(0)
         });
+
+        _collateral.approve(address(zap), _amount);
+
         // zap $Collateral -> $sUSD
         zap.zap(zapData);
 
