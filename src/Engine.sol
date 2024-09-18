@@ -393,14 +393,7 @@ contract Engine is
     }
 
     /// @inheritdoc IEngine
-
-    ///
-    /// @param _accountId 170141183460469231731687303715884105729
-    /// @param _amount 10000000000000000000
-    /// @param _collateral 0xcf45784084ca3fd91c215a87265014c3dc67182d (fUSDe)
-    /// @param _synthMarketId 7 (sUSDe)
-    /// @param _direction 0 (In)
-    function wrapModifyCollateralZap(
+    function modifyCollateralWrap(
         uint128 _accountId,
         uint256 _amount,
         IERC20 _collateral,

@@ -280,7 +280,7 @@ interface IEngine {
     /// @param _direction The direction of the operation (In for wrapping, Out for unwrapping)
     /// @custom:throws Unauthorized If the caller is not the account owner when unwrapping
     /// @custom:throws InvalidDirection If an invalid direction is provided
-    function wrapModifyCollateralZap(
+    function modifyCollateralWrap(
         uint128 _accountId,
         uint256 _amount,
         IERC20 _collateral,
