@@ -1,6 +1,6 @@
 {
     "EngineImplementation": "0x149042fE4fBb741582125e709378F07b55D3eDF0",
     "EngineProxy": "0x2712DeDE1d4Aac904b91D4a2426281A274971b7c",
-    "TestEngineImplementation": "0xD02ef4e74b9326706690Fed17d0F2ba21F2a0864",
-    "TestEngineProxy": "0xe145CE2883eAE47627cE5499eff130E1206bB24D"
+    "TestEngineImplementation": "0xE458669dc233Af1A6Eb32d46993a6ee6382aa33a",
+    "TestEngineProxy": "0x823Bd8955aEA045843DC171B819fD4a6E3Da47aD"
 }
