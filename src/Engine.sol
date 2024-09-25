@@ -11,6 +11,7 @@ import {
     ISpotMarketProxy
 } from "src/interfaces/IEngine.sol";
 import {IERC20} from "src/interfaces/tokens/IERC20.sol";
+import {IWETH} from "src/interfaces/tokens/IWETH.sol";
 import {MathLib} from "src/libraries/MathLib.sol";
 import {MulticallablePayable} from "src/utils/MulticallablePayable.sol";
 import {SignatureCheckerLib} from "src/libraries/SignatureCheckerLib.sol";
@@ -53,6 +54,9 @@ contract Engine is
     /// for a conditional order
     uint256 internal constant MAX_CONDITIONS = 8;
 
+    /// @notice "1" synthMarketId represents $WETH in Synthetix v3
+    uint128 public constant WETH_SYNTH_MARKET_ID = 4;
+
     /*//////////////////////////////////////////////////////////////
                                IMMUTABLES
     //////////////////////////////////////////////////////////////*/
@@ -76,6 +80,8 @@ contract Engine is
 
     /// @notice Zap contract
     Zap internal immutable zap;
+
+    IWETH public immutable WETH;
 
     address public immutable USDC;
 
@@ -121,7 +127,8 @@ contract Engine is
         address _sUSDProxy,
         address _pDAO,
         address _zap,
-        address _usdc
+        address _usdc,
+        address _weth
     ) {
         if (
             _perpsMarketProxy == address(0) || _spotMarketProxy == address(0)
@@ -134,6 +141,7 @@ contract Engine is
         SUSD = IERC20(_sUSDProxy);
         zap = Zap(_zap);
         USDC = _usdc;
+        WETH = IWETH(_weth);
 
         /// @dev pDAO address can be the zero address to
         /// make the Engine non-upgradeable
@@ -389,7 +397,7 @@ contract Engine is
         uint256 _tolerance,
         IERC20 _collateral,
         uint128 _synthMarketId
-    ) external payable override {
+    ) public payable override {
         if (_amount > 0) {
             _collateral.transferFrom(msg.sender, address(this), uint256(_amount));
             _collateral.approve(address(zap), uint256(_amount));
@@ -412,6 +420,30 @@ contract Engine is
 
             zap.unwrap(address(_collateral), _synthMarketId, uint256(_amount), _tolerance, msg.sender);
         }
+    }
+
+    /// @notice Deposits ETH as collateral by first wrapping to WETH and then calling modifyCollateralWrap
+    /// @param _accountId The ID of the account to modify collateral for
+    /// @param _tolerance The slippage tolerance for the wrap operation
+    function modifyCollateralETH(
+        uint128 _accountId,
+        uint256 _tolerance
+    ) external payable override {
+        require(msg.value > 0, "Must send ETH");
+
+        // Wrap ETH to WETH
+        WETH.deposit{value: msg.value}();
+
+        // Approve WETH spending by the zap contract
+        WETH.approve(address(zap), msg.value);
+
+        modifyCollateralWrap(
+            _accountId,
+            int256(msg.value),
+            _tolerance,
+            IERC20(address(WETH)),
+            WETH_SYNTH_MARKET_ID
+        );
     }
 
     function _depositCollateral(
@@ -457,6 +489,21 @@ contract Engine is
         synthAddress = _synthMarketId == USD_SYNTH_ID
             ? address(SUSD)
             : SPOT_MARKET_PROXY.getSynth(_synthMarketId);
+    }
+
+    /// @notice Burns a specified amount of USDx for a given account
+    /// @param _accountId The account ID to burn USDx for
+    /// @param _amount The amount of USDx to burn
+    function payDebt(uint128 _accountId, uint256 _amount) external payable override {
+        if (!isAccountOwner(_accountId, msg.sender)) revert Unauthorized();
+
+        SUSD.transferFrom(msg.sender, address(this), _amount);
+
+        SUSD.approve(address(zap), _amount);
+
+        zap.burn(_amount, _accountId);
+
+        emit Burned(_accountId, _amount);
     }
 
     /*//////////////////////////////////////////////////////////////
