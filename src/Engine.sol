@@ -418,6 +418,10 @@ contract Engine is
                 _accountId, _synthMarketId, -int256(_amount)
             );
 
+            IERC20 synth = IERC20(SPOT_MARKET_PROXY.getSynth(_synthMarketId));
+
+            synth.approve(address(zap), _amount.abs256());
+
             zap.unwrap(address(_collateral), _synthMarketId, uint256(_amount), _tolerance, msg.sender);
         }
     }
