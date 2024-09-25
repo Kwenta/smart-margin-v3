@@ -120,4 +120,10 @@ interface IPerpsMarketProxy {
         external
         view
         returns (uint256 maxMarketSize);
+
+    /*//////////////////////////////////////////////////////////////
+                                DEBT
+    //////////////////////////////////////////////////////////////*/
+
+    function payDebt(uint128 accountId, uint256 amount) external;
 }

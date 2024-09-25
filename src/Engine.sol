@@ -499,9 +499,9 @@ contract Engine is
 
         SUSD.transferFrom(msg.sender, address(this), _amount);
 
-        SUSD.approve(address(zap), _amount);
+        SUSD.approve(address(PERPS_MARKET_PROXY), _amount);
 
-        zap.burn(_amount, _accountId);
+        PERPS_MARKET_PROXY.payDebt(_accountId, _amount);
 
         emit Burned(_accountId, _amount);
     }
