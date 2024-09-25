@@ -238,34 +238,29 @@ interface IEngine {
     /// @notice modify the collateral of an
     /// account identified by the accountId
     /// via a zap of $collateral into/out of $sUSD
-    /// @dev when direction is In ->
+    /// @dev when amount > 0 ->
     ///     (1) transfers $collateral into the contract
-    ///     (2) zaps $collateral into $sUSD
+    ///     (2) swaps $collateral into $USDC
+    ///     (2) zaps $USDC into $sUSD
     ///     (3) adds the $sUSD to the account's collateral
-    /// @dev when direction is Out ->
+    /// @dev when amount < 0 ->
     ///     (1) removes the $sUSD from the account's collateral
-    ///     (2) zaps $sUSD into $collateral
-    ///     (3) transfers $collateral to the caller
+    ///     (2) zaps $sUSD into $USDC
+    ///     (3) transfers $USDC to the caller
     /// @dev if _amount is zero, Synthetix v3 wrapper
     /// will throw an error
     /// @param _accountId the account to modify
     /// @param _amount the amount of collateral
     /// to add or remove
-    /// @param _collateral the collateral to zap
-    /// @param _marketId Id of the market used for the trade
-    /// @param _tolerableWrapAmount The minimum amount of synths the wrap is
-    /// expected to receive, otherwise the transaction will revert.
-    /// @param _tolerableSwapAmount The minimum amount of synths the trader is
-    /// expected to receive, otherwise the transaction will revert.
-    /// @param _direction the direction of the zap
+    /// @param _swapTolerance the tolerance of the swap
+    /// @param _zapTolerance the tolerance of the zap
+    /// @param _collateral the collateral to zapIn
     function modifyCollateralZap(
         uint128 _accountId,
-        uint256 _amount,
-        IERC20 _collateral,
-        uint128 _marketId,
-        uint256 _tolerableWrapAmount,
-        uint256 _tolerableSwapAmount,
-        Zap.Direction _direction
+        int256 _amount,
+        uint256 _swapTolerance,
+        uint256 _zapTolerance,
+        IERC20 _collateral
     ) external payable;
 
     /// @notice modify the collateral of an
@@ -275,17 +270,15 @@ interface IEngine {
     /// as well as modifying it in the perps market
     /// @param _accountId the account to modify collateral for
     /// @param _amount The amount of collateral to wrap/unwrap and modify
+    /// @param _tolerance The tolerance of the wrap/unwrap
     /// @param _collateral the collateral to zap
     /// @param _synthMarketId Id of the synth market
-    /// @param _direction The direction of the operation (In for wrapping, Out for unwrapping)
-    /// @custom:throws Unauthorized If the caller is not the account owner when unwrapping
-    /// @custom:throws InvalidDirection If an invalid direction is provided
     function modifyCollateralWrap(
         uint128 _accountId,
-        uint256 _amount,
+        int256 _amount,
+        uint256 _tolerance,
         IERC20 _collateral,
-        uint128 _synthMarketId,
-        Zap.Direction _direction
+        uint128 _synthMarketId
     ) external payable;
 
     /*//////////////////////////////////////////////////////////////
@@ -344,18 +337,12 @@ interface IEngine {
     /// @param _accountId the id of the account to credit
     /// @param _amount the amount of $collateral to transfer and zap
     /// @param _collateral the collateral to zap
-    /// @param _marketId Id of the market used for the trade
-    /// @param _tolerableWrapAmount The minimum amount of synths the wrap is
-    /// expected to receive, otherwise the transaction will revert.
-    /// @param _tolerableSwapAmount The minimum amount of synths the trader is
-    /// expected to receive, otherwise the transaction will revert.
+    /// @param _zapTolerance the tolerance of the zap
     function creditAccountZap(
         uint128 _accountId,
         uint256 _amount,
         IERC20 _collateral,
-        uint128 _marketId,
-        uint256 _tolerableWrapAmount,
-        uint256 _tolerableSwapAmount
+        uint256 _zapTolerance
     ) external payable;
 
     /// @notice withdraw $sUSD from the engine and
@@ -368,26 +355,19 @@ interface IEngine {
 
     /// @notice debit the account identified by the accountId
     /// by the amount specified. The amount is then zapped
-    /// into $collateral and transferred to the caller
-    /// @dev _amount of $collateral transferred out of the
+    /// into $USDC and transferred to the caller
+    /// @dev _amount of $USDC transferred out of the
     /// engine may differ from the amount debited
     /// from the account due to precision differences
     /// (i.e. ERC-20 decimal discrepancies)
     /// @param _accountId the id of the account to debit
     /// @param _amount the amount of $sUSD to debit
-    /// @param _collateral the collateral to zap
-    /// @param _marketId Id of the market used for the trade
-    /// @param _tolerableWrapAmount The minimum amount of synths the wrap is
-    /// expected to receive, otherwise the transaction will revert.
-    /// @param _tolerableSwapAmount The minimum amount of synths the trader is
+    /// @param _zapTolerance the tolerance of the zap
     /// expected to receive, otherwise the transaction will revert.
     function debitAccountZap(
         uint128 _accountId,
         uint256 _amount,
-        IERC20 _collateral,
-        uint128 _marketId,
-        uint256 _tolerableWrapAmount,
-        uint256 _tolerableSwapAmount
+        uint256 _zapTolerance
     ) external payable;
 
     /*//////////////////////////////////////////////////////////////

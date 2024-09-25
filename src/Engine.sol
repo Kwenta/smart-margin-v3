@@ -77,6 +77,8 @@ contract Engine is
     /// @notice Zap contract
     Zap internal immutable zap;
 
+    address public immutable USDC;
+
     /*//////////////////////////////////////////////////////////////
                                  STATE
     //////////////////////////////////////////////////////////////*/
@@ -118,7 +120,8 @@ contract Engine is
         address _spotMarketProxy,
         address _sUSDProxy,
         address _pDAO,
-        address _zap
+        address _zap,
+        address _usdc
     ) {
         if (
             _perpsMarketProxy == address(0) || _spotMarketProxy == address(0)
@@ -130,6 +133,7 @@ contract Engine is
 
         SUSD = IERC20(_sUSDProxy);
         zap = Zap(_zap);
+        USDC = _usdc;
 
         /// @dev pDAO address can be the zero address to
         /// make the Engine non-upgradeable
@@ -343,101 +347,70 @@ contract Engine is
     /// @inheritdoc IEngine
     function modifyCollateralZap(
         uint128 _accountId,
-        uint256 _amount,
-        IERC20 _collateral,
-        uint128 _marketId,
-        uint256 _tolerableWrapAmount,
-        uint256 _tolerableSwapAmount,
-        Zap.Direction _direction
+        int256 _amount,
+        uint256 _swapTolerance,
+        uint256 _zapTolerance,
+        IERC20 _collateral
     ) external payable override {
-        Zap.ZapData memory zapData = Zap.ZapData({
-            spotMarket: SPOT_MARKET_PROXY,
-            collateral: _collateral,
-            marketId: _marketId,
-            amount: _amount,
-            tolerance: Zap.Tolerance({
-                tolerableWrapAmount: _tolerableWrapAmount,
-                tolerableSwapAmount: _tolerableSwapAmount
-            }),
-            direction: _direction,
-            receiver: _direction == Zap.Direction.In ? address(this) : msg.sender,
-            referrer: address(0)
-        });
+        if (_amount > 0) {
+            _collateral.transferFrom(msg.sender, address(this), uint256(_amount));
+            _collateral.approve(address(zap), uint256(_amount));
 
-        if (_direction == Zap.Direction.In) {
-            _collateral.transferFrom(msg.sender, address(this), _amount);
-            _collateral.approve(address(zap), _amount);
+            uint256 received = zap.swap(address(_collateral), uint256(_amount), _swapTolerance, address(this));
 
-            // zap $Collateral -> $sUSD
-            zap.zap(zapData);
+            IERC20(USDC).approve(address(zap), received);
 
-            uint256 susdAmount = SUSD.balanceOf(address(this));
+            // zap $USDC -> $sUSD
+            uint256 susdAmount = zap.zapIn(received, _zapTolerance, address(this));
 
             SUSD.approve(address(PERPS_MARKET_PROXY), susdAmount);
 
             PERPS_MARKET_PROXY.modifyCollateral(
                 _accountId, USD_SYNTH_ID, susdAmount.toInt256()
             );
-        } else if (_direction == Zap.Direction.Out) {
+        } else {
             if (!isAccountOwner(_accountId, msg.sender)) revert Unauthorized();
 
             PERPS_MARKET_PROXY.modifyCollateral(
-                _accountId, USD_SYNTH_ID, -int256(_amount)
+                _accountId, USD_SYNTH_ID, _amount
             );
 
-            // zap $sUSD -> $Collateral
-            zap.zap(zapData);
-        } else {
-            revert InvalidDirection();
+            // zap $sUSD -> $USDC
+            /// @dev given the amount is negative,
+            /// simply casting (int -> uint) is unsafe, thus we use .abs()
+            zap.zapOut(_amount.abs256(), _zapTolerance, msg.sender);
         }
     }
 
     /// @inheritdoc IEngine
     function modifyCollateralWrap(
         uint128 _accountId,
-        uint256 _amount,
+        int256 _amount,
+        uint256 _tolerance,
         IERC20 _collateral,
-        uint128 _synthMarketId,
-        Zap.Direction _direction
+        uint128 _synthMarketId
     ) external payable override {
-        Zap.ZapData memory zapData = Zap.ZapData({
-            spotMarket: SPOT_MARKET_PROXY,
-            collateral: _collateral,
-            marketId: _synthMarketId,
-            amount: _amount,
-            tolerance: Zap.Tolerance({
-                tolerableWrapAmount: _amount,
-                tolerableSwapAmount: 0
-            }),
-            direction: _direction,
-            receiver: _direction == Zap.Direction.In ? address(this) : msg.sender,
-            referrer: address(0)
-        });
+        if (_amount > 0) {
+            _collateral.transferFrom(msg.sender, address(this), uint256(_amount));
+            _collateral.approve(address(zap), uint256(_amount));
 
-        if (_direction == Zap.Direction.In) {
-            _collateral.transferFrom(msg.sender, address(this), _amount);
-            _collateral.approve(address(zap), _amount);
-
-            zap.wrap(zapData);
+            uint256 wrapped = zap.wrap(address(_collateral), _synthMarketId, uint256(_amount), _tolerance, address(this));
 
             IERC20 synth = IERC20(SPOT_MARKET_PROXY.getSynth(_synthMarketId));
-            uint256 synthAmount = synth.balanceOf(address(this));
 
-            synth.approve(address(PERPS_MARKET_PROXY), synthAmount);
+            synth.approve(address(PERPS_MARKET_PROXY), wrapped);
 
             PERPS_MARKET_PROXY.modifyCollateral(
-                _accountId, _synthMarketId, int256(_amount)
+                _accountId, _synthMarketId, int256(wrapped)
             );
-        } else if (_direction == Zap.Direction.Out) {
+        } else {
             if (!isAccountOwner(_accountId, msg.sender)) revert Unauthorized();
 
             PERPS_MARKET_PROXY.modifyCollateral(
                 _accountId, _synthMarketId, -int256(_amount)
             );
 
-            zap.unwrap(zapData);
-        } else {
-            revert InvalidDirection();
+            zap.unwrap(address(_collateral), _synthMarketId, uint256(_amount), _tolerance, msg.sender);
         }
     }
 
@@ -567,31 +540,17 @@ contract Engine is
         uint128 _accountId,
         uint256 _amount,
         IERC20 _collateral,
-        uint128 _marketId,
-        uint256 _tolerableWrapAmount,
-        uint256 _tolerableSwapAmount
+        uint256 _zapTolerance
     ) external payable override {
-        Zap.ZapData memory zapData = Zap.ZapData({
-            spotMarket: SPOT_MARKET_PROXY,
-            collateral: _collateral,
-            marketId: _marketId,
-            amount: _amount,
-            tolerance: Zap.Tolerance({
-                tolerableWrapAmount: _tolerableWrapAmount,
-                tolerableSwapAmount: _tolerableSwapAmount
-            }),
-            direction: Zap.Direction.In,
-            receiver: address(this),
-            referrer: address(0)
-        });
-
         _collateral.transferFrom(msg.sender, address(this), _amount);
         _collateral.approve(address(zap), _amount);
 
-        // zap $Collateral -> $sUSD
-        zap.zap(zapData);
+        uint256 received = zap.swap(address(_collateral), uint256(_amount), _zapTolerance, address(this));
 
-        uint256 susdAmount = SUSD.balanceOf(address(this));
+        IERC20(USDC).approve(address(zap), received);
+
+        // zap $USDC -> $sUSD
+        uint256 susdAmount = zap.zapIn(_amount, _zapTolerance, address(this));
 
         credit[_accountId] += susdAmount;
 
@@ -615,10 +574,7 @@ contract Engine is
     function debitAccountZap(
         uint128 _accountId,
         uint256 _amount,
-        IERC20 _collateral,
-        uint128 _marketId,
-        uint256 _tolerableWrapAmount,
-        uint256 _tolerableSwapAmount
+        uint256 _zapTolerance
     ) external payable override {
         if (!isAccountOwner(_accountId, msg.sender)) revert Unauthorized();
 
@@ -627,24 +583,10 @@ contract Engine is
         // decrement account credit prior to transfer
         credit[_accountId] -= _amount;
 
-        Zap.ZapData memory zapData = Zap.ZapData({
-            spotMarket: SPOT_MARKET_PROXY,
-            collateral: _collateral,
-            marketId: _marketId,
-            amount: _amount,
-            tolerance: Zap.Tolerance({
-                tolerableWrapAmount: _tolerableWrapAmount,
-                tolerableSwapAmount: _tolerableSwapAmount
-            }),
-            direction: Zap.Direction.Out,
-            receiver: msg.sender,
-            referrer: address(0)
-        });
+        // zap $sUSD -> $USDC
+        uint256 usdcAmount = zap.zapOut(_amount, _zapTolerance, msg.sender);
 
-        // zap $sUSD -> $collateral
-        zap.zap(zapData);
-
-        emit Debited(_accountId, _amount);
+        emit Debited(_accountId, usdcAmount);
     }
 
     function _debit(address _caller, uint128 _accountId, uint256 _amount)
