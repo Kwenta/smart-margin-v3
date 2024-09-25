@@ -19,6 +19,7 @@ contract DeploymentTest is Test, Setup {
     uint128 internal sUSDCId = 1;
     address internal sUSDC = address(0x6);
     address internal zap = address(0x7);
+    address internal weth = address(0x8);
 
     /// keccak256(abi.encodePacked("Synthetic USD Coin Spot Market"))
     bytes32 internal constant _HASHED_SUSDC_NAME =
@@ -54,7 +55,8 @@ contract DeploymentTest is Test, Setup {
             sUSDProxy: sUSDProxy,
             pDAO: pDAO,
             zap: zap,
-            usdc: usdc
+            usdc: usdc,
+            weth: weth
         });
 
         assertTrue(address(engine) != address(0x0));
@@ -67,7 +69,8 @@ contract DeploymentTest is Test, Setup {
             sUSDProxy: sUSDProxy,
             pDAO: pDAO,
             zap: zap,
-            usdc: usdc
+            usdc: usdc,
+            weth: weth
         }) {} catch (bytes memory reason) {
             assertEq(bytes4(reason), IEngine.ZeroAddress.selector);
         }
@@ -80,7 +83,8 @@ contract DeploymentTest is Test, Setup {
             sUSDProxy: sUSDProxy,
             pDAO: pDAO,
             zap: zap,
-            usdc: usdc
+            usdc: usdc,
+            weth: weth
         }) {} catch (bytes memory reason) {
             assertEq(bytes4(reason), IEngine.ZeroAddress.selector);
         }
@@ -93,7 +97,8 @@ contract DeploymentTest is Test, Setup {
             sUSDProxy: address(0),
             pDAO: pDAO,
             zap: zap,
-            usdc: usdc
+            usdc: usdc,
+            weth: weth
         }) {} catch (bytes memory reason) {
             assertEq(bytes4(reason), IEngine.ZeroAddress.selector);
         }

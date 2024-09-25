@@ -41,7 +41,8 @@ contract MockUpgrade is UpgradeTest {
             address(sUSD),
             address(pDAO),
             address(USDC),
-            address(USDC)
+            address(USDC),
+            address(0)
         );
     }
 
@@ -157,7 +158,8 @@ contract RemoveUpgradability is UpgradeTest {
             address(sUSD),
             address(0), // set pDAO to zero address to effectively remove upgradability
             address(USDC),
-            address(USDC)
+            address(USDC),
+            address(0)
         );
 
         vm.prank(pDAO);

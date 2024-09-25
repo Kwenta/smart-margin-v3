@@ -54,6 +54,7 @@ contract Bootstrap is Test, Constants, Conditions, SynthetixV3Errors {
     IERC20 public USDC;
     address public zap;
     address public usdc;
+    address public weth;
 
     // Synthetix v3 Andromeda Spot Market ID for $sUSDC
     uint128 public sUSDCId;
@@ -71,7 +72,8 @@ contract Bootstrap is Test, Constants, Conditions, SynthetixV3Errors {
             address _sUSDAddress,
             address _pDAOAddress,
             address _zapAddress,
-            address _usdcAddress
+            address _usdcAddress,
+            address _wethAddress
         ) = bootstrap.init();
 
         engine = Engine(_engineAddress);
@@ -83,6 +85,7 @@ contract Bootstrap is Test, Constants, Conditions, SynthetixV3Errors {
         pDAO = _pDAOAddress;
         zap = _zapAddress;
         usdc = _usdcAddress;
+        weth = _wethAddress;
 
         vm.startPrank(ACTOR);
         accountId = perpsMarketProxy.createAccount();
@@ -100,7 +103,7 @@ contract Bootstrap is Test, Constants, Conditions, SynthetixV3Errors {
 contract BootstrapBase is Setup, ArbitrumParameters {
     function init()
         public
-        returns (address, address, address, address, address, address, address, address)
+        returns (address, address, address, address, address, address, address, address, address)
     {
         (Engine engine) = Setup.deploySystem({
             perpsMarketProxy: PERPS_MARKET_PROXY,
@@ -108,7 +111,8 @@ contract BootstrapBase is Setup, ArbitrumParameters {
             sUSDProxy: USD_PROXY,
             pDAO: PDAO,
             zap: ZAP,
-            usdc: USDC
+            usdc: USDC,
+            weth: WETH
         });
 
         EngineExposed engineExposed = new EngineExposed({
@@ -117,7 +121,8 @@ contract BootstrapBase is Setup, ArbitrumParameters {
             _sUSDProxy: USD_PROXY,
             _pDAO: PDAO,
             _zap: ZAP,
-            _usdc: USDC
+            _usdc: USDC,
+            _weth: WETH
         });
 
         return (
@@ -128,7 +133,8 @@ contract BootstrapBase is Setup, ArbitrumParameters {
             USD_PROXY,
             PDAO,
             ZAP,
-            USDC
+            USDC,
+            WETH
         );
     }
 }
