@@ -415,7 +415,7 @@ contract Engine is
             if (!isAccountOwner(_accountId, msg.sender)) revert Unauthorized();
 
             PERPS_MARKET_PROXY.modifyCollateral(
-                _accountId, _synthMarketId, -int256(_amount)
+                _accountId, _synthMarketId, _amount
             );
 
             IERC20 synth = IERC20(SPOT_MARKET_PROXY.getSynth(_synthMarketId));
