@@ -53,6 +53,7 @@ contract Bootstrap is Test, Constants, Conditions, SynthetixV3Errors {
     IERC20 public sUSD;
     IERC20 public USDC;
     address public zap;
+    address public usdc;
 
     // Synthetix v3 Andromeda Spot Market ID for $sUSDC
     uint128 public sUSDCId;
@@ -69,7 +70,8 @@ contract Bootstrap is Test, Constants, Conditions, SynthetixV3Errors {
             address _spotMarketProxyAddress,
             address _sUSDAddress,
             address _pDAOAddress,
-            address _zapAddress
+            address _zapAddress,
+            address _usdcAddress
         ) = bootstrap.init();
 
         engine = Engine(_engineAddress);
@@ -80,6 +82,7 @@ contract Bootstrap is Test, Constants, Conditions, SynthetixV3Errors {
         synthMinter = new SynthMinter(_sUSDAddress, _spotMarketProxyAddress);
         pDAO = _pDAOAddress;
         zap = _zapAddress;
+        usdc = _usdcAddress;
 
         vm.startPrank(ACTOR);
         accountId = perpsMarketProxy.createAccount();
@@ -97,14 +100,15 @@ contract Bootstrap is Test, Constants, Conditions, SynthetixV3Errors {
 contract BootstrapBase is Setup, ArbitrumParameters {
     function init()
         public
-        returns (address, address, address, address, address, address, address)
+        returns (address, address, address, address, address, address, address, address)
     {
         (Engine engine) = Setup.deploySystem({
             perpsMarketProxy: PERPS_MARKET_PROXY,
             spotMarketProxy: SPOT_MARKET_PROXY,
             sUSDProxy: USD_PROXY,
             pDAO: PDAO,
-            zap: ZAP
+            zap: ZAP,
+            usdc: USDC
         });
 
         EngineExposed engineExposed = new EngineExposed({
@@ -112,7 +116,8 @@ contract BootstrapBase is Setup, ArbitrumParameters {
             _spotMarketProxy: SPOT_MARKET_PROXY,
             _sUSDProxy: USD_PROXY,
             _pDAO: PDAO,
-            _zap: ZAP
+            _zap: ZAP,
+            _usdc: USDC
         });
 
         return (
@@ -122,7 +127,8 @@ contract BootstrapBase is Setup, ArbitrumParameters {
             SPOT_MARKET_PROXY,
             USD_PROXY,
             PDAO,
-            ZAP
+            ZAP,
+            USDC
         );
     }
 }

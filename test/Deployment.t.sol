@@ -4,8 +4,8 @@ pragma solidity 0.8.20;
 import {Engine, Setup} from "script/Deploy.s.sol";
 import {IEngine} from "src/interfaces/IEngine.sol";
 import {IERC20} from "src/utils/zap/interfaces/IERC20.sol";
-import {ISpotMarketProxy} from "src/utils/zap/interfaces/ISpotMarketProxy.sol";
-import {ZapErrors} from "src/utils/zap/ZapErrors.sol";
+import {ISpotMarket} from "src/utils/zap/interfaces/ISynthetix.sol";
+import {Errors} from "src/utils/zap/Errors.sol";
 import {Test} from "lib/forge-std/src/Test.sol";
 
 contract DeploymentTest is Test, Setup {
@@ -37,12 +37,12 @@ contract DeploymentTest is Test, Setup {
         // mock calls to Synthetix v3 Spot Market Proxy that occurs in Zap constructor
         vm.mockCall(
             spotMarketProxy,
-            abi.encodeWithSelector(ISpotMarketProxy.name.selector, sUSDCId),
+            abi.encodeWithSelector(ISpotMarket.name.selector, sUSDCId),
             abi.encode(abi.encodePacked("Synthetic USD Coin Spot Market"))
         );
         vm.mockCall(
             spotMarketProxy,
-            abi.encodeWithSelector(ISpotMarketProxy.getSynth.selector, sUSDCId),
+            abi.encodeWithSelector(ISpotMarket.getSynth.selector, sUSDCId),
             abi.encode(sUSDC)
         );
     }
@@ -53,7 +53,8 @@ contract DeploymentTest is Test, Setup {
             spotMarketProxy: spotMarketProxy,
             sUSDProxy: sUSDProxy,
             pDAO: pDAO,
-            zap: zap
+            zap: zap,
+            usdc: usdc
         });
 
         assertTrue(address(engine) != address(0x0));
@@ -65,7 +66,8 @@ contract DeploymentTest is Test, Setup {
             spotMarketProxy: spotMarketProxy,
             sUSDProxy: sUSDProxy,
             pDAO: pDAO,
-            zap: zap
+            zap: zap,
+            usdc: usdc
         }) {} catch (bytes memory reason) {
             assertEq(bytes4(reason), IEngine.ZeroAddress.selector);
         }
@@ -77,7 +79,8 @@ contract DeploymentTest is Test, Setup {
             spotMarketProxy: address(0),
             sUSDProxy: sUSDProxy,
             pDAO: pDAO,
-            zap: zap
+            zap: zap,
+            usdc: usdc
         }) {} catch (bytes memory reason) {
             assertEq(bytes4(reason), IEngine.ZeroAddress.selector);
         }
@@ -89,7 +92,8 @@ contract DeploymentTest is Test, Setup {
             spotMarketProxy: spotMarketProxy,
             sUSDProxy: address(0),
             pDAO: pDAO,
-            zap: zap
+            zap: zap,
+            usdc: usdc
         }) {} catch (bytes memory reason) {
             assertEq(bytes4(reason), IEngine.ZeroAddress.selector);
         }
