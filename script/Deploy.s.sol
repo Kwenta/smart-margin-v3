@@ -23,14 +23,16 @@ contract Setup is Script {
         address spotMarketProxy,
         address sUSDProxy,
         address pDAO,
-        address zap
+        address zap,
+        address usdc
     ) public returns (Engine engine) {
         engine = new Engine({
             _perpsMarketProxy: perpsMarketProxy,
             _spotMarketProxy: spotMarketProxy,
             _sUSDProxy: sUSDProxy,
             _pDAO: pDAO,
-            _zap: zap
+            _zap: zap,
+            _usdc: usdc
         });
 
         // deploy ERC1967 proxy and set implementation to engine
@@ -54,7 +56,8 @@ contract DeployArbitrum is Setup, ArbitrumParameters {
             spotMarketProxy: SPOT_MARKET_PROXY,
             sUSDProxy: USD_PROXY,
             pDAO: PDAO,
-            zap: ZAP
+            zap: ZAP,
+            usdc: USDC
         });
 
         vm.stopBroadcast();
@@ -74,7 +77,8 @@ contract DeployArbitrumSepolia is Setup, ArbitrumSepoliaParameters {
             spotMarketProxy: SPOT_MARKET_PROXY,
             sUSDProxy: USD_PROXY,
             pDAO: PDAO,
-            zap: ZAP
+            zap: ZAP,
+            usdc: USDC
         });
 
         vm.stopBroadcast();
