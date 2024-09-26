@@ -103,7 +103,17 @@ contract Bootstrap is Test, Constants, Conditions, SynthetixV3Errors {
 contract BootstrapBase is Setup, ArbitrumParameters {
     function init()
         public
-        returns (address, address, address, address, address, address, address, address, address)
+        returns (
+            address,
+            address,
+            address,
+            address,
+            address,
+            address,
+            address,
+            address,
+            address
+        )
     {
         (Engine engine) = Setup.deploySystem({
             perpsMarketProxy: PERPS_MARKET_PROXY,

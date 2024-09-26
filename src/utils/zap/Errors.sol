@@ -4,7 +4,6 @@ pragma solidity 0.8.20;
 /// @title zap errors
 /// @author @jaredborders
 contract Errors {
-
     /// @notice thrown when a wrap operation fails
     /// @param reason string for the failure
     error WrapFailed(string reason);
@@ -27,5 +26,4 @@ contract Errors {
 
     /// @notice thrown when operation is not permitted
     error NotPermitted();
-
 }

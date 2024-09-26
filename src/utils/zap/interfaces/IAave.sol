@@ -3,7 +3,6 @@ pragma solidity 0.8.20;
 
 /// @custom:todo remove extraneous code
 library DataTypes {
-
     struct ReserveData {
         //stores the reserve configuration
         ReserveConfigurationMap configuration;
@@ -273,7 +272,6 @@ library DataTypes {
         uint16 reservesCount;
         uint16 maxNumberReserves;
     }
-
 }
 
 /**
@@ -282,7 +280,6 @@ library DataTypes {
  * @notice Defines the basic interface for a Pool Addresses Provider.
  */
 interface IPoolAddressesProvider {
-
     /**
      * @dev Emitted when the market identifier is updated.
      * @param oldMarketId The old id of the market
@@ -430,10 +427,7 @@ interface IPoolAddressesProvider {
      * @param id The id
      * @param newImplementationAddress The address of the new implementation
      */
-    function setAddressAsProxy(
-        bytes32 id,
-        address newImplementationAddress
-    )
+    function setAddressAsProxy(bytes32 id, address newImplementationAddress)
         external;
 
     /**
@@ -535,7 +529,6 @@ interface IPoolAddressesProvider {
      * @param newDataProvider The address of the new DataProvider
      */
     function setPoolDataProvider(address newDataProvider) external;
-
 }
 
 /**
@@ -544,7 +537,6 @@ interface IPoolAddressesProvider {
  * @notice Defines the basic interface for an Aave Pool.
  */
 interface IPool {
-
     /**
      * @dev Emitted on mintUnbacked()
      * @param reserve The address of the underlying asset of the reserve
@@ -793,8 +785,7 @@ interface IPool {
         uint256 amount,
         address onBehalfOf,
         uint16 referralCode
-    )
-        external;
+    ) external;
 
     /**
      * @notice Back the current unbacked underlying with `amount` and pay `fee`.
@@ -803,11 +794,7 @@ interface IPool {
      * @param fee The amount paid in fees
      * @return The backed amount
      */
-    function backUnbacked(
-        address asset,
-        uint256 amount,
-        uint256 fee
-    )
+    function backUnbacked(address asset, uint256 amount, uint256 fee)
         external
         returns (uint256);
 
@@ -832,8 +819,7 @@ interface IPool {
         uint256 amount,
         address onBehalfOf,
         uint16 referralCode
-    )
-        external;
+    ) external;
 
     /**
      * @notice Supply with transfer approval of asset to be supplied done via
@@ -865,8 +851,7 @@ interface IPool {
         uint8 permitV,
         bytes32 permitR,
         bytes32 permitS
-    )
-        external;
+    ) external;
 
     /**
      * @notice Withdraws an `amount` of underlying asset from the reserve,
@@ -884,11 +869,7 @@ interface IPool {
      *   different wallet
      * @return The final amount withdrawn
      */
-    function withdraw(
-        address asset,
-        uint256 amount,
-        address to
-    )
+    function withdraw(address asset, uint256 amount, address to)
         external
         returns (uint256);
 
@@ -922,8 +903,7 @@ interface IPool {
         uint256 interestRateMode,
         uint16 referralCode,
         address onBehalfOf
-    )
-        external;
+    ) external;
 
     /**
      * @notice Repays a borrowed `amount` on a specific reserve, burning the
@@ -949,9 +929,7 @@ interface IPool {
         uint256 amount,
         uint256 interestRateMode,
         address onBehalfOf
-    )
-        external
-        returns (uint256);
+    ) external returns (uint256);
 
     /**
      * @notice Repay with transfer approval of asset to be repaid done via
@@ -985,9 +963,7 @@ interface IPool {
         uint8 permitV,
         bytes32 permitR,
         bytes32 permitS
-    )
-        external
-        returns (uint256);
+    ) external returns (uint256);
 
     /**
      * @notice Repays a borrowed `amount` on a specific reserve using the
@@ -1011,9 +987,7 @@ interface IPool {
         address asset,
         uint256 amount,
         uint256 interestRateMode
-    )
-        external
-        returns (uint256);
+    ) external returns (uint256);
 
     /**
      * @notice Allows a borrower to swap his debt between stable and variable
@@ -1022,10 +996,7 @@ interface IPool {
      * @param interestRateMode The current interest rate mode of the position
      * being swapped: 1 for Stable, 2 for Variable
      */
-    function swapBorrowRateMode(
-        address asset,
-        uint256 interestRateMode
-    )
+    function swapBorrowRateMode(address asset, uint256 interestRateMode)
         external;
 
     /**
@@ -1049,10 +1020,7 @@ interface IPool {
      * @param useAsCollateral True if the user wants to use the supply as
      * collateral, false otherwise
      */
-    function setUserUseReserveAsCollateral(
-        address asset,
-        bool useAsCollateral
-    )
+    function setUserUseReserveAsCollateral(address asset, bool useAsCollateral)
         external;
 
     /**
@@ -1079,8 +1047,7 @@ interface IPool {
         address user,
         uint256 debtToCover,
         bool receiveAToken
-    )
-        external;
+    ) external;
 
     /**
      * @notice Allows smartcontracts to access the liquidity of the pool within
@@ -1119,8 +1086,7 @@ interface IPool {
         address onBehalfOf,
         bytes calldata params,
         uint16 referralCode
-    )
-        external;
+    ) external;
 
     /**
      * @notice Allows smartcontracts to access the liquidity of the pool within
@@ -1147,8 +1113,7 @@ interface IPool {
         uint256 amount,
         bytes calldata params,
         uint16 referralCode
-    )
-        external;
+    ) external;
 
     /**
      * @notice Returns the user account data across all the reserves
@@ -1196,8 +1161,7 @@ interface IPool {
         address stableDebtAddress,
         address variableDebtAddress,
         address interestRateStrategyAddress
-    )
-        external;
+    ) external;
 
     /**
      * @notice Drop a reserve
@@ -1216,8 +1180,7 @@ interface IPool {
     function setReserveInterestRateStrategyAddress(
         address asset,
         address rateStrategyAddress
-    )
-        external;
+    ) external;
 
     /**
      * @notice Sets the configuration bitmap of the reserve as a whole
@@ -1228,8 +1191,7 @@ interface IPool {
     function setConfiguration(
         address asset,
         DataTypes.ReserveConfigurationMap calldata configuration
-    )
-        external;
+    ) external;
 
     /**
      * @notice Returns the configuration of the reserve
@@ -1312,8 +1274,7 @@ interface IPool {
         uint256 amount,
         uint256 balanceFromBefore,
         uint256 balanceToBefore
-    )
-        external;
+    ) external;
 
     /**
      * @notice Returns the list of the underlying assets of all the initialized
@@ -1366,8 +1327,7 @@ interface IPool {
     function updateFlashloanPremiums(
         uint128 flashLoanPremiumTotal,
         uint128 flashLoanPremiumToProtocol
-    )
-        external;
+    ) external;
 
     /**
      * @notice Configures a new category for the eMode.
@@ -1380,8 +1340,7 @@ interface IPool {
     function configureEModeCategory(
         uint8 id,
         DataTypes.EModeCategory memory config
-    )
-        external;
+    ) external;
 
     /**
      * @notice Returns the data of an eMode category
@@ -1487,9 +1446,7 @@ interface IPool {
         uint256 amount,
         address onBehalfOf,
         uint16 referralCode
-    )
-        external;
-
+    ) external;
 }
 
 /**
@@ -1500,7 +1457,6 @@ interface IPool {
  * flashLoanReceiver contract
  */
 interface IFlashLoanSimpleReceiver {
-
     /**
      * @notice Executes an operation after receiving the flash-borrowed asset
      * @dev Ensure that the contract can return the debt + premium, e.g., has
@@ -1520,9 +1476,7 @@ interface IFlashLoanSimpleReceiver {
         uint256 premium,
         address initiator,
         bytes calldata params
-    )
-        external
-        returns (bool);
+    ) external returns (bool);
 
     function ADDRESSES_PROVIDER()
         external
@@ -1530,5 +1484,4 @@ interface IFlashLoanSimpleReceiver {
         returns (IPoolAddressesProvider);
 
     function POOL() external view returns (IPool);
-
 }

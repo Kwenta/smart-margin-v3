@@ -290,10 +290,9 @@ interface IEngine {
     /// @param _accountId The ID of the account to modify collateral for
     /// @param _tolerance The slippage tolerance for the wrap operation
     /// @dev This function must be called with a non-zero ETH value (msg.value)
-    function modifyCollateralETH(
-        uint128 _accountId,
-        uint256 _tolerance
-    ) external payable;
+    function modifyCollateralETH(uint128 _accountId, uint256 _tolerance)
+        external
+        payable;
 
     /// @notice Pays off debt for a specified account using USDx
     /// @param _accountId The ID of the account to pay debt for

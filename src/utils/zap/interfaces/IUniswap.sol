@@ -3,7 +3,6 @@ pragma solidity 0.8.20;
 
 /// @custom:todo add natspec
 interface IUniswap {
-
     struct ExactInputSingleParams {
         address tokenIn;
         address tokenOut;
@@ -33,5 +32,4 @@ interface IUniswap {
         external
         payable
         returns (uint256 amountIn);
-
 }

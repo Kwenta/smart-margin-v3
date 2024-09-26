@@ -7,7 +7,6 @@ pragma solidity 0.8.20;
 /// @notice Responsible for interacting with Synthetix v3 spot markets
 /// @author Synthetix
 interface ISpotMarket {
-
     /*//////////////////////////////////////////////////////////////
                             MARKET INTERFACE
     //////////////////////////////////////////////////////////////*/
@@ -55,9 +54,7 @@ interface ISpotMarket {
         uint128 marketId,
         uint256 wrapAmount,
         uint256 minAmountReceived
-    )
-        external
-        returns (uint256 amountToMint, Data memory fees);
+    ) external returns (uint256 amountToMint, Data memory fees);
 
     /// @notice Unwraps the synth and returns similar value of collateral minus
     /// the fees.
@@ -74,9 +71,7 @@ interface ISpotMarket {
         uint128 marketId,
         uint256 unwrapAmount,
         uint256 minAmountReceived
-    )
-        external
-        returns (uint256 returnCollateralAmount, Data memory fees);
+    ) external returns (uint256 returnCollateralAmount, Data memory fees);
 
     /*//////////////////////////////////////////////////////////////
                           ATOMIC ORDER MODULE
@@ -103,9 +98,7 @@ interface ISpotMarket {
         uint256 usdAmount,
         uint256 minAmountReceived,
         address referrer
-    )
-        external
-        returns (uint256 synthAmount, Data memory fees);
+    ) external returns (uint256 synthAmount, Data memory fees);
 
     /// @notice Initiates a sell trade returning snxUSD for the specified amount
     /// of synth (sellAmount)
@@ -126,14 +119,10 @@ interface ISpotMarket {
         uint256 synthAmount,
         uint256 minUsdAmount,
         address referrer
-    )
-        external
-        returns (uint256 usdAmountReceived, Data memory fees);
-
+    ) external returns (uint256 usdAmountReceived, Data memory fees);
 }
 
 interface IERC7412 {
-
     /// @dev Emitted when an oracle is requested to provide data.
     /// Upon receipt of this error, a wallet client
     /// should automatically resolve the requested oracle data
@@ -157,11 +146,9 @@ interface IERC7412 {
     function fulfillOracleQuery(bytes calldata signedOffchainData)
         external
         payable;
-
 }
 
 interface IPerpsMarket {
-
     /// @notice modify the collateral delegated to the account
     /// @param accountId id of the account
     /// @param synthMarketId id of the synth market used as collateral
@@ -170,22 +157,14 @@ interface IPerpsMarket {
         uint128 accountId,
         uint128 synthMarketId,
         int256 amountDelta
-    )
-        external;
+    ) external;
 
-    function hasPermission(
-        uint128 accountId,
-        bytes32 permission,
-        address user
-    )
+    function hasPermission(uint128 accountId, bytes32 permission, address user)
         external
         view
         returns (bool);
 
-    function renouncePermission(
-        uint128 accountId,
-        bytes32 permission
-    )
+    function renouncePermission(uint128 accountId, bytes32 permission)
         external;
 
     function createAccount() external returns (uint128 accountId);
@@ -194,14 +173,9 @@ interface IPerpsMarket {
         uint128 accountId,
         bytes32 permission,
         address user
-    )
-        external;
+    ) external;
 
-    function isAuthorized(
-        uint128 accountId,
-        bytes32 permission,
-        address target
-    )
+    function isAuthorized(uint128 accountId, bytes32 permission, address target)
         external
         view
         returns (bool isAuthorized);
@@ -230,18 +204,13 @@ interface IPerpsMarket {
      * market id, 0 for snxUSD.
      * @return collateralValue collateral value of the account.
      */
-    function getCollateralAmount(
-        uint128 accountId,
-        uint128 collateralId
-    )
+    function getCollateralAmount(uint128 accountId, uint128 collateralId)
         external
         view
         returns (uint256);
-
 }
 
 interface ICore {
-
     error ImplementationIsSterile(address implementation);
     error NoChange();
     error NotAContract(address contr);
@@ -279,10 +248,7 @@ interface ICore {
     event FeatureFlagDeniersReset(bytes32 indexed feature, address[] deniers);
     event FeatureFlagDenyAllSet(bytes32 indexed feature, bool denyAll);
 
-    function addToFeatureFlagAllowlist(
-        bytes32 feature,
-        address account
-    )
+    function addToFeatureFlagAllowlist(bytes32 feature, address account)
         external;
 
     function getDeniers(bytes32 feature)
@@ -305,18 +271,12 @@ interface ICore {
         view
         returns (bool);
 
-    function isFeatureAllowed(
-        bytes32 feature,
-        address account
-    )
+    function isFeatureAllowed(bytes32 feature, address account)
         external
         view
         returns (bool);
 
-    function removeFromFeatureFlagAllowlist(
-        bytes32 feature,
-        address account
-    )
+    function removeFromFeatureFlagAllowlist(bytes32 feature, address account)
         external;
 
     function setDeniers(bytes32 feature, address[] memory deniers) external;
@@ -376,41 +336,28 @@ interface ICore {
         uint128 accountId,
         bytes32 permission,
         address user
-    )
-        external;
+    ) external;
 
-    function hasPermission(
-        uint128 accountId,
-        bytes32 permission,
-        address user
-    )
+    function hasPermission(uint128 accountId, bytes32 permission, address user)
         external
         view
         returns (bool);
 
-    function isAuthorized(
-        uint128 accountId,
-        bytes32 permission,
-        address user
-    )
+    function isAuthorized(uint128 accountId, bytes32 permission, address user)
         external
         view
         returns (bool);
 
     function notifyAccountTransfer(address to, uint128 accountId) external;
 
-    function renouncePermission(
-        uint128 accountId,
-        bytes32 permission
-    )
+    function renouncePermission(uint128 accountId, bytes32 permission)
         external;
 
     function revokePermission(
         uint128 accountId,
         bytes32 permission,
         address user
-    )
-        external;
+    ) external;
 
     error AccountNotFound(uint128 accountId);
     error EmptyDistribution();
@@ -440,9 +387,7 @@ interface ICore {
         address collateralType,
         uint128 accountId,
         uint256 amount
-    )
-        external
-        returns (int256);
+    ) external returns (int256);
 
     error MismatchAssociatedSystemKind(bytes32 expected, bytes32 actual);
     error MissingAssociatedSystem(bytes32 id);
@@ -462,8 +407,7 @@ interface ICore {
         string memory symbol,
         string memory uri,
         address impl
-    )
-        external;
+    ) external;
 
     function initOrUpgradeToken(
         bytes32 id,
@@ -471,8 +415,7 @@ interface ICore {
         string memory symbol,
         uint8 decimals,
         address impl
-    )
-        external;
+    ) external;
 
     function registerUnmanagedSystem(bytes32 id, address endpoint) external;
 
@@ -518,37 +461,27 @@ interface ICore {
         address collateralType,
         uint256 offset,
         uint256 count
-    )
-        external
-        returns (uint256 cleared);
+    ) external returns (uint256 cleared);
 
     function createLock(
         uint128 accountId,
         address collateralType,
         uint256 amount,
         uint64 expireTimestamp
-    )
-        external;
+    ) external;
 
     function deposit(
         uint128 accountId,
         address collateralType,
         uint256 tokenAmount
-    )
-        external;
+    ) external;
 
     function getAccountAvailableCollateral(
         uint128 accountId,
         address collateralType
-    )
-        external
-        view
-        returns (uint256);
+    ) external view returns (uint256);
 
-    function getAccountCollateral(
-        uint128 accountId,
-        address collateralType
-    )
+    function getAccountCollateral(uint128 accountId, address collateralType)
         external
         view
         returns (
@@ -562,17 +495,13 @@ interface ICore {
         address collateralType,
         uint256 offset,
         uint256 count
-    )
-        external
-        view
-        returns (CollateralLock.Data[] memory locks);
+    ) external view returns (CollateralLock.Data[] memory locks);
 
     function withdraw(
         uint128 accountId,
         address collateralType,
         uint256 tokenAmount
-    )
-        external;
+    ) external;
 
     event CollateralConfigured(
         address indexed collateralType, CollateralConfiguration.Data config
@@ -625,16 +554,14 @@ interface ICore {
         uint128 poolId,
         address collateralType,
         uint256 amount
-    )
-        external;
+    ) external;
 
     function mintUsd(
         uint128 accountId,
         uint128 poolId,
         address collateralType,
         uint256 amount
-    )
-        external;
+    ) external;
 
     error CannotScaleEmptyMapping();
     error IneligibleForLiquidation(
@@ -667,14 +594,9 @@ interface ICore {
         uint128 accountId,
         uint128 poolId,
         address collateralType
-    )
-        external
-        returns (bool);
+    ) external returns (bool);
 
-    function isVaultLiquidatable(
-        uint128 poolId,
-        address collateralType
-    )
+    function isVaultLiquidatable(uint128 poolId, address collateralType)
         external
         returns (bool);
 
@@ -726,20 +648,15 @@ interface ICore {
         uint128 marketId,
         address collateralType,
         uint256 amount
-    )
-        external;
+    ) external;
 
     function depositMarketCollateral(
         uint128 marketId,
         address collateralType,
         uint256 tokenAmount
-    )
-        external;
+    ) external;
 
-    function getMarketCollateralAmount(
-        uint128 marketId,
-        address collateralType
-    )
+    function getMarketCollateralAmount(uint128 marketId, address collateralType)
         external
         view
         returns (uint256 collateralAmountD18);
@@ -752,17 +669,13 @@ interface ICore {
     function getMaximumMarketCollateral(
         uint128 marketId,
         address collateralType
-    )
-        external
-        view
-        returns (uint256);
+    ) external view returns (uint256);
 
     function withdrawMarketCollateral(
         uint128 marketId,
         address collateralType,
         uint256 tokenAmount
-    )
-        external;
+    ) external;
 
     error IncorrectMarketInterface(address market);
     error NotEnoughLiquidity(uint128 marketId, uint256 amount);
@@ -788,18 +701,11 @@ interface ICore {
     );
     event SetMinDelegateTime(uint128 indexed marketId, uint32 minDelegateTime);
 
-    function depositMarketUsd(
-        uint128 marketId,
-        address target,
-        uint256 amount
-    )
+    function depositMarketUsd(uint128 marketId, address target, uint256 amount)
         external
         returns (uint256 feeAmount);
 
-    function distributeDebtToPools(
-        uint128 marketId,
-        uint256 maxIter
-    )
+    function distributeDebtToPools(uint128 marketId, uint256 maxIter)
         external
         returns (bool);
 
@@ -812,10 +718,7 @@ interface ICore {
         external
         returns (int256);
 
-    function getMarketFees(
-        uint128,
-        uint256 amount
-    )
+    function getMarketFees(uint128, uint256 amount)
         external
         view
         returns (uint256 depositFeeAmount, uint256 withdrawFeeAmount);
@@ -863,23 +766,13 @@ interface ICore {
         external
         returns (uint128 marketId);
 
-    function setMarketMinDelegateTime(
-        uint128 marketId,
-        uint32 minDelegateTime
-    )
+    function setMarketMinDelegateTime(uint128 marketId, uint32 minDelegateTime)
         external;
 
-    function setMinLiquidityRatio(
-        uint128 marketId,
-        uint256 minLiquidityRatio
-    )
+    function setMinLiquidityRatio(uint128 marketId, uint256 minLiquidityRatio)
         external;
 
-    function withdrawMarketUsd(
-        uint128 marketId,
-        address target,
-        uint256 amount
-    )
+    function withdrawMarketUsd(uint128 marketId, address target, uint256 amount)
         external
         returns (uint256 feeAmount);
 
@@ -952,10 +845,7 @@ interface ICore {
 
     function getPoolOwner(uint128 poolId) external view returns (address);
 
-    function nominatePoolOwner(
-        address nominatedOwner,
-        uint128 poolId
-    )
+    function nominatePoolOwner(address nominatedOwner, uint128 poolId)
         external;
 
     function renouncePoolNomination(uint128 poolId) external;
@@ -967,8 +857,7 @@ interface ICore {
     function setPoolConfiguration(
         uint128 poolId,
         MarketConfiguration.Data[] memory newMarketConfigurations
-    )
-        external;
+    ) external;
 
     function setPoolName(uint128 poolId, string memory name) external;
 
@@ -1009,9 +898,7 @@ interface ICore {
         uint128 poolId,
         address collateralType,
         address distributor
-    )
-        external
-        returns (uint256);
+    ) external returns (uint256);
 
     function distributeRewards(
         uint128 poolId,
@@ -1019,39 +906,31 @@ interface ICore {
         uint256 amount,
         uint64 start,
         uint32 duration
-    )
-        external;
+    ) external;
 
     function getRewardRate(
         uint128 poolId,
         address collateralType,
         address distributor
-    )
-        external
-        view
-        returns (uint256);
+    ) external view returns (uint256);
 
     function registerRewardsDistributor(
         uint128 poolId,
         address collateralType,
         address distributor
-    )
-        external;
+    ) external;
 
     function removeRewardsDistributor(
         uint128 poolId,
         address collateralType,
         address distributor
-    )
-        external;
+    ) external;
 
     function updateRewards(
         uint128 poolId,
         address collateralType,
         uint128 accountId
-    )
-        external
-        returns (uint256[] memory, address[] memory);
+    ) external returns (uint256[] memory, address[] memory);
 
     function configureOracleManager(address oracleManagerAddress) external;
 
@@ -1061,8 +940,7 @@ interface ICore {
         address ccipSend,
         address ccipReceive,
         address ccipTokenPool
-    )
-        external;
+    ) external;
 
     function setConfig(bytes32 k, bytes32 v) external;
 
@@ -1085,8 +963,7 @@ interface ICore {
         address collateralType,
         uint256 newCollateralAmountD18,
         uint256 leverage
-    )
-        external;
+    ) external;
 
     function getPosition(
         uint128 accountId,
@@ -1105,71 +982,49 @@ interface ICore {
         uint128 accountId,
         uint128 poolId,
         address collateralType
-    )
-        external
-        view
-        returns (uint256 amount, uint256 value);
+    ) external view returns (uint256 amount, uint256 value);
 
     function getPositionCollateralRatio(
         uint128 accountId,
         uint128 poolId,
         address collateralType
-    )
-        external
-        returns (uint256);
+    ) external returns (uint256);
 
     function getPositionDebt(
         uint128 accountId,
         uint128 poolId,
         address collateralType
-    )
-        external
-        returns (int256);
+    ) external returns (int256);
 
-    function getVaultCollateral(
-        uint128 poolId,
-        address collateralType
-    )
+    function getVaultCollateral(uint128 poolId, address collateralType)
         external
         view
         returns (uint256 amount, uint256 value);
 
-    function getVaultCollateralRatio(
-        uint128 poolId,
-        address collateralType
-    )
+    function getVaultCollateralRatio(uint128 poolId, address collateralType)
         external
         returns (uint256);
 
-    function getVaultDebt(
-        uint128 poolId,
-        address collateralType
-    )
+    function getVaultDebt(uint128 poolId, address collateralType)
         external
         returns (int256);
-
 }
 
 interface IAccountModule {
-
     struct AccountPermissions {
         address user;
         bytes32[] permissions;
     }
-
 }
 
 interface CollateralLock {
-
     struct Data {
         uint128 amountD18;
         uint64 lockExpirationTime;
     }
-
 }
 
 interface CollateralConfiguration {
-
     struct Data {
         bool depositingEnabled;
         uint256 issuanceRatioD18;
@@ -1179,25 +1034,20 @@ interface CollateralConfiguration {
         address tokenAddress;
         uint256 minDelegationD18;
     }
-
 }
 
 interface ILiquidationModule {
-
     struct LiquidationData {
         uint256 debtLiquidated;
         uint256 collateralLiquidated;
         uint256 amountRewarded;
     }
-
 }
 
 interface MarketConfiguration {
-
     struct Data {
         uint128 marketId;
         uint128 weightD18;
         int128 maxDebtShareValueD18;
     }
-
 }

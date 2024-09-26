@@ -4,7 +4,6 @@ pragma solidity 0.8.20;
 /// @title Reduced Interface of the ERC20 standard as defined in the EIP
 /// @author OpenZeppelin
 interface IERC20 {
-
     /// @dev Returns the number of decimals used to get its user representation.
     /// For example, if `decimals` equals `2`, a balance of `505` tokens should
     /// be displayed to a user as `5.05` (`505 / 10 ** 2`).
@@ -36,12 +35,7 @@ interface IERC20 {
     /// @param amount The amount of tokens to transfer
     /// @return a boolean value indicating whether the operation succeeded.
     /// Emits a {Transfer} event
-    function transferFrom(
-        address from,
-        address to,
-        uint256 amount
-    )
+    function transferFrom(address from, address to, uint256 amount)
         external
         returns (bool);
-
 }
