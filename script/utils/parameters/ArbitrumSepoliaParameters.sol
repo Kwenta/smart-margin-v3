@@ -16,7 +16,7 @@ contract ArbitrumSepoliaParameters {
 
     address public constant USDC = 0x75faf114eafb1BDbe2F0316DF893fd58CE46AA4d;
 
-    address public constant WETH = 0x82aF49447D8a07e3bd95BD0d56f35241523fBab1;
+    address public constant WETH = 0xc556bAe1e86B2aE9c22eA5E036b07E55E7596074;
 
     address public constant ZAP = 0xa50f471Ae8322eae2f49eAb655D34F3fc986768d;
 
