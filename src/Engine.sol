@@ -422,7 +422,7 @@ contract Engine is
 
             synth.approve(address(zap), _amount.abs256());
 
-            zap.unwrap(address(_collateral), _synthMarketId, uint256(_amount), _tolerance, msg.sender);
+            zap.unwrap(address(_collateral), _synthMarketId, _amount.abs256(), _tolerance, msg.sender);
         }
     }
 
