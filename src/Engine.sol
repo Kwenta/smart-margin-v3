@@ -361,15 +361,23 @@ contract Engine is
         IERC20 _collateral
     ) external payable override {
         if (_amount > 0) {
-            _collateral.transferFrom(msg.sender, address(this), uint256(_amount));
+            _collateral.transferFrom(
+                msg.sender, address(this), uint256(_amount)
+            );
             _collateral.approve(address(zap), uint256(_amount));
 
-            uint256 received = zap.swapWith(address(_collateral), uint256(_amount), _swapTolerance, address(this));
+            uint256 received = zap.swapWith(
+                address(_collateral),
+                uint256(_amount),
+                _swapTolerance,
+                address(this)
+            );
 
             IERC20(USDC).approve(address(zap), received);
 
             // zap $USDC -> $sUSD
-            uint256 susdAmount = zap.zapIn(received, _zapTolerance, address(this));
+            uint256 susdAmount =
+                zap.zapIn(received, _zapTolerance, address(this));
 
             SUSD.approve(address(PERPS_MARKET_PROXY), susdAmount);
 
@@ -399,10 +407,18 @@ contract Engine is
         uint128 _synthMarketId
     ) public payable override {
         if (_amount > 0) {
-            _collateral.transferFrom(msg.sender, address(this), uint256(_amount));
+            _collateral.transferFrom(
+                msg.sender, address(this), uint256(_amount)
+            );
             _collateral.approve(address(zap), uint256(_amount));
 
-            uint256 wrapped = zap.wrap(address(_collateral), _synthMarketId, uint256(_amount), _tolerance, address(this));
+            uint256 wrapped = zap.wrap(
+                address(_collateral),
+                _synthMarketId,
+                uint256(_amount),
+                _tolerance,
+                address(this)
+            );
 
             IERC20 synth = IERC20(SPOT_MARKET_PROXY.getSynth(_synthMarketId));
 
@@ -422,17 +438,24 @@ contract Engine is
 
             synth.approve(address(zap), _amount.abs256());
 
-            zap.unwrap(address(_collateral), _synthMarketId, _amount.abs256(), _tolerance, msg.sender);
+            zap.unwrap(
+                address(_collateral),
+                _synthMarketId,
+                _amount.abs256(),
+                _tolerance,
+                msg.sender
+            );
         }
     }
 
     /// @notice Deposits ETH as collateral by first wrapping to WETH and then calling modifyCollateralWrap
     /// @param _accountId The ID of the account to modify collateral for
     /// @param _tolerance The slippage tolerance for the wrap operation
-    function modifyCollateralETH(
-        uint128 _accountId,
-        uint256 _tolerance
-    ) external payable override {
+    function modifyCollateralETH(uint128 _accountId, uint256 _tolerance)
+        external
+        payable
+        override
+    {
         require(msg.value > 0, "Must send ETH");
 
         // Wrap ETH to WETH
@@ -498,14 +521,17 @@ contract Engine is
     /// @notice Burns a specified amount of USDx for a given account
     /// @param _accountId The account ID to burn USDx for
     /// @param _amount The amount of USDx to burn
-    function payDebt(uint128 _accountId, uint256 _amount) external payable override {
+    function payDebt(uint128 _accountId, uint256 _amount)
+        external
+        payable
+        override
+    {
         if (!isAccountOwner(_accountId, msg.sender)) revert Unauthorized();
 
         SUSD.transferFrom(msg.sender, address(this), _amount);
+        SUSD.approve(address(zap), _amount);
 
-        SUSD.approve(address(PERPS_MARKET_PROXY), _amount);
-
-        PERPS_MARKET_PROXY.payDebt(_accountId, _amount);
+        zap.burn(_amount, _accountId);
 
         emit Burned(_accountId, _amount);
     }
@@ -596,7 +622,9 @@ contract Engine is
         _collateral.transferFrom(msg.sender, address(this), _amount);
         _collateral.approve(address(zap), _amount);
 
-        uint256 received = zap.swapWith(address(_collateral), uint256(_amount), _zapTolerance, address(this));
+        uint256 received = zap.swapWith(
+            address(_collateral), uint256(_amount), _zapTolerance, address(this)
+        );
 
         IERC20(USDC).approve(address(zap), received);
 
