@@ -364,7 +364,7 @@ contract Engine is
             _collateral.transferFrom(msg.sender, address(this), uint256(_amount));
             _collateral.approve(address(zap), uint256(_amount));
 
-            uint256 received = zap.swap(address(_collateral), uint256(_amount), _swapTolerance, address(this));
+            uint256 received = zap.swapWith(address(_collateral), uint256(_amount), _swapTolerance, address(this));
 
             IERC20(USDC).approve(address(zap), received);
 
@@ -596,7 +596,7 @@ contract Engine is
         _collateral.transferFrom(msg.sender, address(this), _amount);
         _collateral.approve(address(zap), _amount);
 
-        uint256 received = zap.swap(address(_collateral), uint256(_amount), _zapTolerance, address(this));
+        uint256 received = zap.swapWith(address(_collateral), uint256(_amount), _zapTolerance, address(this));
 
         IERC20(USDC).approve(address(zap), received);
 
