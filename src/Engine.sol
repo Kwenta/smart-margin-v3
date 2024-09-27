@@ -451,10 +451,9 @@ contract Engine is
     /// @notice Deposits ETH as collateral by first wrapping to WETH and then calling modifyCollateralWrap
     /// @param _accountId The ID of the account to modify collateral for
     /// @param _tolerance The slippage tolerance for the wrap operation
-    function modifyCollateralETH(uint128 _accountId, uint256 _tolerance)
+    function depositCollateralETH(uint128 _accountId, uint256 _tolerance)
         external
         payable
-        override
     {
         require(msg.value > 0, "Must send ETH");
 
@@ -464,13 +463,51 @@ contract Engine is
         // Approve WETH spending by the zap contract
         WETH.approve(address(zap), msg.value);
 
-        modifyCollateralWrap(
-            _accountId,
-            int256(msg.value),
-            _tolerance,
-            IERC20(address(WETH)),
-            WETH_SYNTH_MARKET_ID
+        uint256 wrapped = zap.wrap(
+                address(WETH),
+                WETH_SYNTH_MARKET_ID,
+                msg.value,
+                _tolerance,
+                address(this)
         );
+
+        IERC20 synth = IERC20(SPOT_MARKET_PROXY.getSynth(WETH_SYNTH_MARKET_ID));
+        synth.approve(address(PERPS_MARKET_PROXY), wrapped);
+
+        PERPS_MARKET_PROXY.modifyCollateral(
+            _accountId, WETH_SYNTH_MARKET_ID, int256(wrapped)
+        );
+    }
+
+    /// @notice Withdraws collateral as ETH
+    /// @param _accountId The ID of the account to withdraw collateral from
+    /// @param _amount The amount of collateral to withdraw
+    /// @param _tolerance The slippage tolerance for the unwrap operation
+    function withdrawCollateralETH(uint128 _accountId, int256 _amount, uint256 _tolerance)
+        external
+    {
+        if (_amount >= 0) revert InvalidWithdrawalAmount();
+        if (!isAccountOwner(_accountId, msg.sender)) revert Unauthorized();
+
+
+        PERPS_MARKET_PROXY.modifyCollateral(
+            _accountId, WETH_SYNTH_MARKET_ID, _amount
+        );
+
+        IERC20 synth = IERC20(SPOT_MARKET_PROXY.getSynth(WETH_SYNTH_MARKET_ID));
+        synth.approve(address(zap), _amount.abs256());
+
+        uint256 unwrappedWETH = zap.unwrap(
+            address(WETH),
+            WETH_SYNTH_MARKET_ID,
+            _amount.abs256(),
+            _tolerance,
+            address(this)
+        );
+
+        // Convert WETH to ETH and send to user
+        WETH.withdraw(unwrappedWETH);
+        payable(msg.sender).transfer(unwrappedWETH);
     }
 
     function _depositCollateral(

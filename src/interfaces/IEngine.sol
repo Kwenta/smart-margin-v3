@@ -120,9 +120,9 @@ interface IEngine {
     // an unsupported function
     error NotSupported();
 
-    /// @notice thrown when attempting to call
-    // a zap operation with an Invalid Direction
-    error InvalidDirection();
+    /// @notice thrown when attempting to withdraw Collateral
+    // as ETH with a positive amount
+    error InvalidWithdrawalAmount();
 
     /*//////////////////////////////////////////////////////////////
                                  EVENTS
@@ -285,14 +285,6 @@ interface IEngine {
         IERC20 _collateral,
         uint128 _synthMarketId
     ) external payable;
-
-    /// @notice Deposits ETH as collateral by first wrapping to WETH and then calling modifyCollateralWrap
-    /// @param _accountId The ID of the account to modify collateral for
-    /// @param _tolerance The slippage tolerance for the wrap operation
-    /// @dev This function must be called with a non-zero ETH value (msg.value)
-    function modifyCollateralETH(uint128 _accountId, uint256 _tolerance)
-        external
-        payable;
 
     /// @notice Pays off debt for a specified account using USDx
     /// @param _accountId The ID of the account to pay debt for
