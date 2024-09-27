@@ -18,7 +18,7 @@ contract ArbitrumSepoliaParameters {
 
     address public constant WETH = 0xc556bAe1e86B2aE9c22eA5E036b07E55E7596074;
 
-    address public constant ZAP = 0xa50f471Ae8322eae2f49eAb655D34F3fc986768d;
+    address public constant ZAP = 0x480e8096C4246EbD69b600605eF3DaAb65ed0de3;
 
     uint128 public constant SUSDC_SPOT_MARKET_ID = 2;
 }

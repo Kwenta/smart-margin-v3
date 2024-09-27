@@ -17,7 +17,7 @@ contract ArbitrumParameters {
 
     address public constant WETH = 0x82aF49447D8a07e3bd95BD0d56f35241523fBab1;
 
-    address public constant ZAP = 0xa50f471Ae8322eae2f49eAb655D34F3fc986768d;
+    address public constant ZAP = 0x36bb0dBBc79fc3d1263343769C57679f019ED58A;
 
     uint128 public constant SUSDC_SPOT_MARKET_ID = 1;
 }
