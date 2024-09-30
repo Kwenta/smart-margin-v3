@@ -448,19 +448,14 @@ contract Engine is
         }
     }
 
-    /// @notice Deposits ETH as collateral by first wrapping to WETH and then calling modifyCollateralWrap
-    /// @param _accountId The ID of the account to modify collateral for
-    /// @param _tolerance The slippage tolerance for the wrap operation
+    /// @inheritdoc IEngine
     function depositCollateralETH(uint128 _accountId, uint256 _tolerance)
         external
         payable
+        override
     {
-        require(msg.value > 0, "Must send ETH");
-
-        // Wrap ETH to WETH
         WETH.deposit{value: msg.value}();
 
-        // Approve WETH spending by the zap contract
         WETH.approve(address(zap), msg.value);
 
         uint256 wrapped = zap.wrap(
@@ -479,15 +474,12 @@ contract Engine is
         );
     }
 
-    /// @notice Withdraws collateral as ETH
-    /// @param _accountId The ID of the account to withdraw collateral from
-    /// @param _amount The amount of collateral to withdraw
-    /// @param _tolerance The slippage tolerance for the unwrap operation
+    /// @inheritdoc IEngine
     function withdrawCollateralETH(
         uint128 _accountId,
         int256 _amount,
         uint256 _tolerance
-    ) external {
+    ) external override {
         if (_amount >= 0) revert InvalidWithdrawalAmount();
         if (!isAccountOwner(_accountId, msg.sender)) revert Unauthorized();
 

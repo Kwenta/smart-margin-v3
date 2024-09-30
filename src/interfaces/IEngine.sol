@@ -286,6 +286,23 @@ interface IEngine {
         uint128 _synthMarketId
     ) external payable;
 
+    /// @notice Deposits ETH as collateral by first wrapping to WETH and then calling modifyCollateralWrap
+    /// @param _accountId The ID of the account to modify collateral for
+    /// @param _tolerance The slippage tolerance for the wrap operation
+    function depositCollateralETH(uint128 _accountId, uint256 _tolerance)
+        external
+        payable;
+
+    /// @notice Withdraws collateral as ETH
+    /// @param _accountId The ID of the account to withdraw collateral from
+    /// @param _amount The amount of collateral to withdraw
+    /// @param _tolerance The slippage tolerance for the unwrap operation
+    function withdrawCollateralETH(
+        uint128 _accountId,
+        int256 _amount,
+        uint256 _tolerance
+    ) external;
+
     /// @notice Pays off debt for a specified account using USDx
     /// @param _accountId The ID of the account to pay debt for
     /// @param _amount The amount of USDx to use for paying the debt
