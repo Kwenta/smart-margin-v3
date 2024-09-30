@@ -464,11 +464,11 @@ contract Engine is
         WETH.approve(address(zap), msg.value);
 
         uint256 wrapped = zap.wrap(
-                address(WETH),
-                WETH_SYNTH_MARKET_ID,
-                msg.value,
-                _tolerance,
-                address(this)
+            address(WETH),
+            WETH_SYNTH_MARKET_ID,
+            msg.value,
+            _tolerance,
+            address(this)
         );
 
         IERC20 synth = IERC20(SPOT_MARKET_PROXY.getSynth(WETH_SYNTH_MARKET_ID));
@@ -483,12 +483,13 @@ contract Engine is
     /// @param _accountId The ID of the account to withdraw collateral from
     /// @param _amount The amount of collateral to withdraw
     /// @param _tolerance The slippage tolerance for the unwrap operation
-    function withdrawCollateralETH(uint128 _accountId, int256 _amount, uint256 _tolerance)
-        external
-    {
+    function withdrawCollateralETH(
+        uint128 _accountId,
+        int256 _amount,
+        uint256 _tolerance
+    ) external {
         if (_amount >= 0) revert InvalidWithdrawalAmount();
         if (!isAccountOwner(_accountId, msg.sender)) revert Unauthorized();
-
 
         PERPS_MARKET_PROXY.modifyCollateral(
             _accountId, WETH_SYNTH_MARKET_ID, _amount
