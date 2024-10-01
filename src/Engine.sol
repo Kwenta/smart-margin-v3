@@ -480,27 +480,26 @@ contract Engine is
         int256 _amount,
         uint256 _tolerance
     ) external override {
-        if (_amount >= 0) revert InvalidWithdrawalAmount();
+        if (_amount <= 0) revert InvalidWithdrawalAmount();
         if (!isAccountOwner(_accountId, msg.sender)) revert Unauthorized();
 
         PERPS_MARKET_PROXY.modifyCollateral(
-            _accountId, WETH_SYNTH_MARKET_ID, _amount
+            _accountId, WETH_SYNTH_MARKET_ID, -_amount
         );
 
         IERC20 synth = IERC20(SPOT_MARKET_PROXY.getSynth(WETH_SYNTH_MARKET_ID));
-        synth.approve(address(zap), _amount.abs256());
+        synth.approve(address(zap), uint256(_amount));
 
         uint256 unwrappedWETH = zap.unwrap(
             address(WETH),
             WETH_SYNTH_MARKET_ID,
-            _amount.abs256(),
+            uint256(_amount),
             _tolerance,
             address(this)
         );
 
         // Convert WETH to ETH and send to user
-        WETH.withdraw(unwrappedWETH);
-        payable(msg.sender).transfer(unwrappedWETH);
+        WETH.withdrawTo(msg.sender, unwrappedWETH);
     }
 
     function _depositCollateral(
