@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-pragma solidity 0.8.20;
+pragma solidity 0.8.27;
 
 contract BaseParameters {
     // https://app.safe.global/home?safe=base:0x2f4004Bc32cc5D18a62fE26E35A0881d5397c549

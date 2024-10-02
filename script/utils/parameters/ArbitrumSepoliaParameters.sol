@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-pragma solidity 0.8.20;
+pragma solidity 0.8.27;
 
 contract ArbitrumSepoliaParameters {
     // Set to deployer key on testnet to perform testnet upgrades without multisig requirements

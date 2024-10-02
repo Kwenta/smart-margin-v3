@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-pragma solidity 0.8.20;
+pragma solidity 0.8.27;
 
 contract ArbitrumParameters {
     address public constant PDAO = 0x12d970154Ac171293323f20757130d5731850deB;
