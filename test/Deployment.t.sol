@@ -1,11 +1,10 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-pragma solidity 0.8.20;
+pragma solidity 0.8.27;
 
 import {Engine, Setup} from "script/Deploy.s.sol";
 import {IEngine} from "src/interfaces/IEngine.sol";
 import {IERC20} from "src/utils/zap/interfaces/IERC20.sol";
-import {ISpotMarket} from "src/utils/zap/interfaces/ISynthetix.sol";
-import {Errors} from "src/utils/zap/Errors.sol";
+import {Errors} from "src/utils/zap/utils/Errors.sol";
 import {Test} from "lib/forge-std/src/Test.sol";
 
 contract DeploymentTest is Test, Setup {
@@ -33,18 +32,6 @@ contract DeploymentTest is Test, Setup {
             usdc,
             abi.encodeWithSelector(IERC20.decimals.selector),
             abi.encode(8)
-        );
-
-        // mock calls to Synthetix v3 Spot Market Proxy that occurs in Zap constructor
-        vm.mockCall(
-            spotMarketProxy,
-            abi.encodeWithSelector(ISpotMarket.name.selector, sUSDCId),
-            abi.encode(abi.encodePacked("Synthetic USD Coin Spot Market"))
-        );
-        vm.mockCall(
-            spotMarketProxy,
-            abi.encodeWithSelector(ISpotMarket.getSynth.selector, sUSDCId),
-            abi.encode(sUSDC)
         );
     }
 
