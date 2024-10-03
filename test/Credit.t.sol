@@ -9,8 +9,8 @@ contract CreditTest is Bootstrap {
     event Debited(uint128 indexed accountId, uint256 amount);
 
     function setUp() public {
-        vm.rollFork(BASE_BLOCK_NUMBER);
-        initializeBase();
+        vm.rollFork(ARBITRUM_BLOCK_NUMBER);
+        initializeArbitrum();
     }
 }
 

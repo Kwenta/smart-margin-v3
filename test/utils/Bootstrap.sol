@@ -62,8 +62,8 @@ contract Bootstrap is Test, Constants, Conditions, SynthetixV3Errors {
     // ACTOR's account id in the Synthetix v3 perps market
     uint128 public accountId;
 
-    function initializeBase() public {
-        BootstrapBase bootstrap = new BootstrapBase();
+    function initializeArbitrum() public {
+        BootstrapArbitrum bootstrap = new BootstrapArbitrum();
         (
             address _engineAddress,
             address _engineExposedAddress,
@@ -100,7 +100,7 @@ contract Bootstrap is Test, Constants, Conditions, SynthetixV3Errors {
     }
 }
 
-contract BootstrapBase is Setup, ArbitrumParameters {
+contract BootstrapArbitrum is Setup, ArbitrumParameters {
     function init()
         public
         returns (

@@ -15,8 +15,8 @@ contract NonceBitmapTest is Bootstrap, ConditionalOrderSignature {
     );
 
     function setUp() public {
-        vm.rollFork(BASE_BLOCK_NUMBER);
-        initializeBase();
+        vm.rollFork(ARBITRUM_BLOCK_NUMBER);
+        initializeArbitrum();
 
         signerPrivateKey = 0x12341234;
         signer = vm.addr(signerPrivateKey);
