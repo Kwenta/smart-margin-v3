@@ -51,7 +51,7 @@ contract Constants {
 
     uint128 internal constant INVALID_PERPS_MARKET_ID = type(uint128).max;
 
-    uint128 constant SETH_PERPS_MARKET_ID = 200;
+    uint128 constant SETH_PERPS_MARKET_ID = 100;
 
     uint256 internal constant AMOUNT = 10_000 ether;
 
