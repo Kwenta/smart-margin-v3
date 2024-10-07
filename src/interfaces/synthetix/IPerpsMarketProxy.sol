@@ -27,6 +27,15 @@ interface IPerpsMarketProxy {
         view
         returns (bool hasPermission);
 
+    function grantPermission(
+        uint128 accountId,
+        bytes32 permission,
+        address user
+    ) external;
+
+    function renouncePermission(uint128 accountId, bytes32 permission)
+        external;
+
     /// @notice Returns `true` if `target` is authorized to `permission` for account `accountId`.
     /// @param accountId The id of the account whose permission is being queried.
     /// @param permission The bytes32 identifier of the permission.
