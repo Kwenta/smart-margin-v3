@@ -19,5 +19,7 @@ contract ArbitrumParameters {
 
     address public constant ZAP = 0x0954b6d3B2448768F1AdfF38E331d33790529da7;
 
+    address public constant USDT = 0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9;
+
     uint128 public constant SUSDC_SPOT_MARKET_ID = 1;
 }
