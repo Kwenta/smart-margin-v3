@@ -52,6 +52,8 @@ contract Bootstrap is Test, Constants, Conditions, SynthetixV3Errors {
     ISpotMarketProxy public spotMarketProxy;
     IERC20 public sUSD;
     IERC20 public USDC;
+    IERC20 public WETH;
+    IERC20 public USDT;
     address public zap;
     address public usdc;
     address public weth;
@@ -73,7 +75,8 @@ contract Bootstrap is Test, Constants, Conditions, SynthetixV3Errors {
             address _pDAOAddress,
             address _zapAddress,
             address _usdcAddress,
-            address _wethAddress
+            address _wethAddress,
+            address _usdtAddress
         ) = bootstrap.init();
 
         engine = Engine(_engineAddress);
@@ -81,6 +84,9 @@ contract Bootstrap is Test, Constants, Conditions, SynthetixV3Errors {
         perpsMarketProxy = IPerpsMarketProxy(_perpsMarketProxyAddress);
         spotMarketProxy = ISpotMarketProxy(_spotMarketProxyAddress);
         sUSD = IERC20(_sUSDAddress);
+        USDC = IERC20(_usdcAddress);
+        WETH = IERC20(_wethAddress);
+        USDT = IERC20(_usdtAddress);
         synthMinter = new SynthMinter(_sUSDAddress, _spotMarketProxyAddress);
         pDAO = _pDAOAddress;
         zap = _zapAddress;
@@ -104,6 +110,7 @@ contract BootstrapArbitrum is Setup, ArbitrumParameters {
     function init()
         public
         returns (
+            address,
             address,
             address,
             address,
@@ -144,7 +151,8 @@ contract BootstrapArbitrum is Setup, ArbitrumParameters {
             PDAO,
             ZAP,
             USDC,
-            WETH
+            WETH,
+            USDT
         );
     }
 }
