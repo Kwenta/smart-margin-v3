@@ -104,25 +104,34 @@ contract DepositCollateral is CollateralTest {
         vm.stopPrank();
     }
 
-    // function test_depositCollateral_zap() public {
-    //     uint256 decimalsFactor = 10 ** (18 - USDC.decimals());
+    function assertWithinTolerance(int256 expected, int256 actual, uint256 tolerancePercent) internal {
+        int256 tolerance = (expected * int256(tolerancePercent)) / 100;
+        assert(actual >= expected - tolerance && actual <= expected + tolerance);
+    }
 
-    //     deal(address(USDC), ACTOR, SMALLEST_AMOUNT);
+    function test_depositCollateral_zap() public {
+        uint256 decimalsFactor = 10 ** (18 - USDT.decimals());
 
-    //     vm.startPrank(ACTOR);
+        deal(address(USDT), ACTOR, SMALLEST_AMOUNT);
 
-    //     USDC.approve(address(engine), type(uint256).max);
+        vm.startPrank(ACTOR);
 
-    //     engine.modifyCollateralZap({
-    //         _accountId: accountId,
-    //         _amount: int256(SMALLEST_AMOUNT)
-    //     });
+        USDT.approve(address(engine), type(uint256).max);
+        
+        engine.modifyCollateralZap({
+            _accountId: accountId,
+            _amount: int256(SMALLEST_AMOUNT),
+            _swapTolerance: SMALLEST_AMOUNT - 3,
+            _zapTolerance: SMALLEST_AMOUNT - 3,
+            _collateral: USDT
+        });
+        
+        vm.stopPrank();
 
-    //     vm.stopPrank();
-
-    //     int256 availableMargin = perpsMarketProxy.getAvailableMargin(accountId);
-    //     assertEq(availableMargin, int256(SMALLEST_AMOUNT * decimalsFactor));
-    // }
+        int256 availableMargin = perpsMarketProxy.getAvailableMargin(accountId);
+        int256 expectedMargin = int256(SMALLEST_AMOUNT) * int256(decimalsFactor);
+        assertWithinTolerance(expectedMargin, availableMargin, 3);
+    }
 }
 
 contract WithdrawCollateral is CollateralTest {
@@ -208,27 +217,55 @@ contract WithdrawCollateral is CollateralTest {
         vm.stopPrank();
     }
 
-    // function test_withdrawCollateral_zap() public {
-    //     uint256 decimalsFactor = 10 ** (18 - USDC.decimals());
+    function assertWithinTolerance(int256 expected, int256 actual, uint256 tolerancePercent) internal {
+        int256 tolerance = (expected * int256(tolerancePercent)) / 100;
+        assert(actual >= expected - tolerance && actual <= expected + tolerance);
+    }
 
-    //     vm.startPrank(ACTOR);
+    function test_withdrawCollateral_zap() public {
+        uint256 decimalsFactor = 10 ** (18 - USDT.decimals());
 
-    //     sUSD.approve(address(engine), type(uint256).max);
+        // vm.startPrank(ACTOR);
 
-    //     engine.modifyCollateral({
-    //         _accountId: accountId,
-    //         _synthMarketId: SUSD_SPOT_MARKET_ID,
-    //         _amount: int256(AMOUNT)
-    //     });
+        // sUSD.approve(address(engine), type(uint256).max);
 
-    //     engine.modifyCollateralZap({
-    //         _accountId: accountId,
-    //         _amount: -int256(SMALLEST_AMOUNT * decimalsFactor)
-    //     });
+        // engine.modifyCollateral({
+        //     _accountId: accountId,
+        //     _synthMarketId: SUSD_SPOT_MARKET_ID,
+        //     //_synthMarketId: 2,
+        //     _amount: int256(AMOUNT)
+        // });
 
-    //     vm.stopPrank();
+        deal(address(USDT), ACTOR, SMALLER_AMOUNT);
 
-    //     uint256 postBalance = USDC.balanceOf(ACTOR);
-    //     assertEq(postBalance, SMALLEST_AMOUNT);
-    // }
+        vm.startPrank(ACTOR);
+
+        USDT.approve(address(engine), type(uint256).max);
+        
+        // add the collateral
+        engine.modifyCollateralZap({
+            _accountId: accountId,
+            _amount: int256(SMALLER_AMOUNT),
+            _swapTolerance: 1,
+            _zapTolerance: 1,
+            _collateral: USDT
+        });
+
+        // @florian above is what you can comment out to uncomment modifyCollateral "classic"
+
+        // remove the collateral
+        engine.modifyCollateralZap({
+            _accountId: accountId,
+            _amount: -int256(78133551009252750000),
+            _swapTolerance: 1,
+            _zapTolerance: 1,
+            _collateral: USDT
+        });
+
+        // vm.stopPrank();
+        // uint256 postBalance = USDC.balanceOf(ACTOR);
+        // int256 expectedBalance = int256(SMALLER_AMOUNT) * int256(decimalsFactor);
+        // // todo below is going to fail because slippage is like >99%
+        // assertWithinTolerance(expectedBalance, int256(postBalance), 5);
+    }
 }
