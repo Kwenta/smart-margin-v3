@@ -19,7 +19,6 @@ import {Reentrancy} from "./utils/Reentrancy.sol";
 /// @author @barrasso
 /// @author @moss-eth
 contract Zap is Reentrancy, Errors {
-
     /// @custom:circle
     address public immutable USDC;
 
@@ -107,11 +106,7 @@ contract Zap is Reentrancy, Errors {
     /// @param _tolerance acceptable slippage for wrapping and selling
     /// @param _receiver address to receive USDx
     /// @return zapped amount of USDx received
-    function zapIn(
-        uint256 _amount,
-        uint256 _tolerance,
-        address _receiver
-    )
+    function zapIn(uint256 _amount, uint256 _tolerance, address _receiver)
         external
         returns (uint256 zapped)
     {
@@ -122,10 +117,7 @@ contract Zap is Reentrancy, Errors {
 
     /// @dev allowance is assumed
     /// @dev following execution, this contract will hold the zapped USDx
-    function _zapIn(
-        uint256 _amount,
-        uint256 _tolerance
-    )
+    function _zapIn(uint256 _amount, uint256 _tolerance)
         internal
         returns (uint256 zapped)
     {
@@ -139,11 +131,7 @@ contract Zap is Reentrancy, Errors {
     /// @param _tolerance acceptable slippage for buying and unwrapping
     /// @param _receiver address to receive USDC
     /// @return zapped amount of USDC received
-    function zapOut(
-        uint256 _amount,
-        uint256 _tolerance,
-        address _receiver
-    )
+    function zapOut(uint256 _amount, uint256 _tolerance, address _receiver)
         external
         returns (uint256 zapped)
     {
@@ -154,10 +142,7 @@ contract Zap is Reentrancy, Errors {
 
     /// @dev allowance is assumed
     /// @dev following execution, this contract will hold the zapped USDC
-    function _zapOut(
-        uint256 _amount,
-        uint256 _tolerance
-    )
+    function _zapOut(uint256 _amount, uint256 _tolerance)
         internal
         returns (uint256 zapped)
     {
@@ -184,10 +169,7 @@ contract Zap is Reentrancy, Errors {
         uint256 _amount,
         uint256 _tolerance,
         address _receiver
-    )
-        external
-        returns (uint256 wrapped)
-    {
+    ) external returns (uint256 wrapped) {
         _pull(_token, msg.sender, _amount);
         wrapped = _wrap(_token, _synthId, _amount, _tolerance);
         _push(ISpotMarket(SPOT_MARKET).getSynth(_synthId), _receiver, wrapped);
@@ -200,10 +182,7 @@ contract Zap is Reentrancy, Errors {
         uint128 _synthId,
         uint256 _amount,
         uint256 _tolerance
-    )
-        internal
-        returns (uint256 wrapped)
-    {
+    ) internal returns (uint256 wrapped) {
         IERC20(_token).approve(SPOT_MARKET, _amount);
         try ISpotMarket(SPOT_MARKET).wrap({
             marketId: _synthId,
@@ -231,10 +210,7 @@ contract Zap is Reentrancy, Errors {
         uint256 _amount,
         uint256 _tolerance,
         address _receiver
-    )
-        external
-        returns (uint256 unwrapped)
-    {
+    ) external returns (uint256 unwrapped) {
         address synth = ISpotMarket(SPOT_MARKET).getSynth(_synthId);
         _pull(synth, msg.sender, _amount);
         unwrapped = _unwrap(_synthId, _amount, _tolerance);
@@ -243,11 +219,7 @@ contract Zap is Reentrancy, Errors {
 
     /// @dev allowance is assumed
     /// @dev following execution, this contract will hold the unwrapped token
-    function _unwrap(
-        uint128 _synthId,
-        uint256 _amount,
-        uint256 _tolerance
-    )
+    function _unwrap(uint128 _synthId, uint256 _amount, uint256 _tolerance)
         private
         returns (uint256 unwrapped)
     {
@@ -280,10 +252,7 @@ contract Zap is Reentrancy, Errors {
         uint256 _amount,
         uint256 _tolerance,
         address _receiver
-    )
-        external
-        returns (uint256 received, address synth)
-    {
+    ) external returns (uint256 received, address synth) {
         _pull(USDX, msg.sender, _amount);
         (received, synth) = _buy(_synthId, _amount, _tolerance);
         _push(synth, _receiver, received);
@@ -291,11 +260,7 @@ contract Zap is Reentrancy, Errors {
 
     /// @dev allowance is assumed
     /// @dev following execution, this contract will hold the bought synth
-    function _buy(
-        uint128 _synthId,
-        uint256 _amount,
-        uint256 _tolerance
-    )
+    function _buy(uint128 _synthId, uint256 _amount, uint256 _tolerance)
         internal
         returns (uint256 received, address synth)
     {
@@ -325,10 +290,7 @@ contract Zap is Reentrancy, Errors {
         uint256 _amount,
         uint256 _tolerance,
         address _receiver
-    )
-        external
-        returns (uint256 received)
-    {
+    ) external returns (uint256 received) {
         address synth = ISpotMarket(SPOT_MARKET).getSynth(_synthId);
         _pull(synth, msg.sender, _amount);
         received = _sell(_synthId, _amount, _tolerance);
@@ -337,11 +299,7 @@ contract Zap is Reentrancy, Errors {
 
     /// @dev allowance is assumed
     /// @dev following execution, this contract will hold the sold USDX
-    function _sell(
-        uint128 _synthId,
-        uint256 _amount,
-        uint256 _tolerance
-    )
+    function _sell(uint128 _synthId, uint256 _amount, uint256 _tolerance)
         internal
         returns (uint256 received)
     {
@@ -383,11 +341,7 @@ contract Zap is Reentrancy, Errors {
         uint256 _unwrapTolerance,
         uint256 _swapTolerance,
         address _receiver
-    )
-        external
-        isAuthorized(_accountId)
-        requireStage(Stage.UNSET)
-    {
+    ) external isAuthorized(_accountId) requireStage(Stage.UNSET) {
         stage = Stage.LEVEL1;
 
         bytes memory params = abi.encode(
@@ -428,12 +382,7 @@ contract Zap is Reentrancy, Errors {
         uint256 _premium,
         address,
         bytes calldata _params
-    )
-        external
-        onlyAave
-        requireStage(Stage.LEVEL1)
-        returns (bool)
-    {
+    ) external onlyAave requireStage(Stage.LEVEL1) returns (bool) {
         stage = Stage.LEVEL2;
 
         (,,, address _collateral,,,, address _receiver) = abi.decode(
@@ -466,11 +415,7 @@ contract Zap is Reentrancy, Errors {
         uint256 _flashloan,
         uint256 _premium,
         bytes calldata _params
-    )
-        internal
-        requireStage(Stage.LEVEL2)
-        returns (uint256 unwound)
-    {
+    ) internal requireStage(Stage.LEVEL2) returns (uint256 unwound) {
         (
             uint128 _accountId,
             uint128 _collateralId,
@@ -587,10 +532,7 @@ contract Zap is Reentrancy, Errors {
         uint256 _amount,
         uint128 _accountId,
         address _receiver
-    )
-        external
-        isAuthorized(_accountId)
-    {
+    ) external isAuthorized(_accountId) {
         _withdraw(_synthId, _amount, _accountId);
         address synth = _synthId == USDX_ID
             ? USDX
@@ -601,11 +543,7 @@ contract Zap is Reentrancy, Errors {
     /// @custom:synthetix RBAC permission required: "PERPS_MODIFY_COLLATERAL"
     /// @dev following execution, this contract will hold the withdrawn
     /// collateral
-    function _withdraw(
-        uint128 _synthId,
-        uint256 _amount,
-        uint128 _accountId
-    )
+    function _withdraw(uint128 _synthId, uint256 _amount, uint128 _accountId)
         internal
     {
         IPerpsMarket market = IPerpsMarket(PERPS_MARKET);
@@ -702,10 +640,7 @@ contract Zap is Reentrancy, Errors {
         uint256 _amount,
         uint256 _tolerance,
         address _receiver
-    )
-        external
-        returns (uint256 deducted)
-    {
+    ) external returns (uint256 deducted) {
         _pull(_from, msg.sender, _tolerance);
         deducted = _swapFor(_from, _amount, _tolerance);
         _push(USDC, _receiver, _amount);
@@ -717,11 +652,7 @@ contract Zap is Reentrancy, Errors {
 
     /// @dev allowance is assumed
     /// @dev following execution, this contract will hold the swapped USDC
-    function _swapFor(
-        address _from,
-        uint256 _amount,
-        uint256 _tolerance
-    )
+    function _swapFor(address _from, uint256 _amount, uint256 _tolerance)
         internal
         returns (uint256 deducted)
     {
@@ -759,10 +690,7 @@ contract Zap is Reentrancy, Errors {
         uint256 _amount,
         uint256 _tolerance,
         address _receiver
-    )
-        external
-        returns (uint256 received)
-    {
+    ) external returns (uint256 received) {
         _pull(_from, msg.sender, _amount);
         received = _swapWith(_from, _amount, _tolerance);
         _push(USDC, _receiver, received);
@@ -770,11 +698,7 @@ contract Zap is Reentrancy, Errors {
 
     /// @dev allowance is assumed
     /// @dev following execution, this contract will hold the swapped USDC
-    function _swapWith(
-        address _from,
-        uint256 _amount,
-        uint256 _tolerance
-    )
+    function _swapWith(address _from, uint256 _amount, uint256 _tolerance)
         internal
         returns (uint256 received)
     {
@@ -808,11 +732,7 @@ contract Zap is Reentrancy, Errors {
     /// @param _from address of sender
     /// @param _amount amount of token to pull
     /// @return success boolean representing execution success
-    function _pull(
-        address _token,
-        address _from,
-        uint256 _amount
-    )
+    function _pull(address _token, address _from, uint256 _amount)
         internal
         returns (bool success)
     {
@@ -836,11 +756,7 @@ contract Zap is Reentrancy, Errors {
     /// @param _receiver address of receiver
     /// @param _amount amount of token to push
     /// @return success boolean representing execution success
-    function _push(
-        address _token,
-        address _receiver,
-        uint256 _amount
-    )
+    function _push(address _token, address _receiver, uint256 _amount)
         internal
         returns (bool success)
     {
@@ -856,5 +772,4 @@ contract Zap is Reentrancy, Errors {
             revert PushFailed(bytes(reason));
         }
     }
-
 }
