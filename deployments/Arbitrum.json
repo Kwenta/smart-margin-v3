@@ -1,6 +1,10 @@
 {
-    "EngineImplementation": "0x149042fE4fBb741582125e709378F07b55D3eDF0",
-    "EngineProxy": "0x2712DeDE1d4Aac904b91D4a2426281A274971b7c",
-    "TestEngineImplementation": "0x5225dFdC934f9569d2612a082E1F66B16DD5d624",
-    "TestEngineProxy": "0x51D3F6bE4B8b6476346Fbc3ed8790Ef863af4b77"
+    "prod": {
+        "EngineImplementation": "0x5225dFdC934f9569d2612a082E1F66B16DD5d624",
+        "EngineProxy": "0x51D3F6bE4B8b6476346Fbc3ed8790Ef863af4b77"
+    },
+    "test": {
+        "EngineImplementation": "0xE525A858bF5cb87cb6EcAC4F6267bA444e5F42b6",
+        "EngineProxy": "0xf548577fEe82Fb675B24f47fE7FCC26984Da00fC"
+    }
 }
