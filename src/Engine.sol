@@ -47,6 +47,10 @@ contract Engine is
     bytes32 internal constant PERPS_COMMIT_ASYNC_ORDER_PERMISSION =
         "PERPS_COMMIT_ASYNC_ORDER";
 
+    /// @notice the permission required to modify collateral
+    bytes32 internal constant PERPS_MODIFY_COLLATERAL_PERMISSION =
+        "PERPS_MODIFY_COLLATERAL";
+
     /// @notice "0" synthMarketId represents $sUSD in Synthetix v3
     uint128 internal constant USD_SYNTH_ID = 0;
 
@@ -446,6 +450,34 @@ contract Engine is
                 msg.sender
             );
         }
+    }
+
+    /// @inheritdoc IEngine
+    function unwindCollateral(
+        uint128 _accountId,
+        uint128 _collateralId,
+        uint256 _collateralAmount,
+        address _collateral,
+        uint256 _zapTolerance,
+        uint256 _unwrapTolerance,
+        uint256 _swapTolerance,
+        address _receiver
+    ) external payable override {
+        /// @dev "PERPS_MODIFY_COLLATERAL" permission will be revoked after unwinding through zap
+        PERPS_MARKET_PROXY.grantPermission(
+            _accountId, PERPS_MODIFY_COLLATERAL_PERMISSION, address(zap)
+        );
+
+        zap.unwind(
+            _accountId,
+            _collateralId,
+            _collateralAmount,
+            _collateral,
+            _zapTolerance,
+            _unwrapTolerance,
+            _swapTolerance,
+            _receiver
+        );
     }
 
     /// @inheritdoc IEngine
