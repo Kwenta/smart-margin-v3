@@ -398,6 +398,7 @@ contract Engine is
             // zap $sUSD -> $USDC
             /// @dev given the amount is negative,
             /// simply casting (int -> uint) is unsafe, thus we use .abs()
+            SUSD.approve(address(zap), _amount.abs256());
             zap.zapOut(_amount.abs256(), _zapTolerance, msg.sender);
         }
     }
