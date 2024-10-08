@@ -143,7 +143,7 @@ contract DepositCollateral is CollateralTest {
         engine.modifyCollateralWrap({
             _accountId: accountId,
             _amount: int256(SMALLER_AMOUNT),
-            _tolerance: SMALLER_AMOUNT - 3,
+            _tolerance: SMALLER_AMOUNT,
             _collateral: WETH,
             _synthMarketId: 4
         });
@@ -167,11 +167,10 @@ contract DepositCollateral is CollateralTest {
         engine.modifyCollateralWrap({
             _accountId: accountId,
             _amount: int256(SMALLEST_AMOUNT),
-            _tolerance: SMALLEST_AMOUNT - 3,
+            _tolerance: SMALLEST_AMOUNT,
             _collateral: USDC,
             _synthMarketId: 2
         });
-        
     }
 
     function test_depositCollateral_ETH() public {
@@ -348,9 +347,8 @@ contract WithdrawCollateral is CollateralTest {
     }
 
     function test_withdrawCollateral_wrap() public {
-        //uint256 decimalsFactor = 10 ** (18 - USDC.decimals());
-
-        deal(address(WETH), ACTOR, SMALLEST_AMOUNT);
+        deal(address(WETH), ACTOR, SMALLER_AMOUNT);
+        uint256 preBalance = WETH.balanceOf(ACTOR);
 
         vm.startPrank(ACTOR);
 
@@ -358,17 +356,24 @@ contract WithdrawCollateral is CollateralTest {
         
         engine.modifyCollateralWrap({
             _accountId: accountId,
-            _amount: -int256(SMALLEST_AMOUNT),
-            _tolerance: SMALLEST_AMOUNT - 3,
+            _amount: int256(SMALLER_AMOUNT),
+            _tolerance: SMALLER_AMOUNT,
+            _collateral: WETH,
+            _synthMarketId: 4
+        });
+
+        engine.modifyCollateralWrap({
+            _accountId: accountId,
+            _amount: -int256(SMALLER_AMOUNT),
+            _tolerance: SMALLER_AMOUNT,
             _collateral: WETH,
             _synthMarketId: 4
         });
         
         vm.stopPrank();
 
-        // int256 availableMargin = perpsMarketProxy.getAvailableMargin(accountId);
-        // int256 expectedMargin = int256(SMALLEST_AMOUNT) * int256(decimalsFactor);
-        // assertWithinTolerance(expectedMargin, availableMargin, 3);
+        uint256 postBalance = WETH.balanceOf(ACTOR);
+        assertEq(postBalance, preBalance);
     }
 
     function test_withdrawCollateral_ETH() public {
