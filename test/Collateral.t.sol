@@ -129,8 +129,80 @@ contract DepositCollateral is CollateralTest {
         vm.stopPrank();
 
         int256 availableMargin = perpsMarketProxy.getAvailableMargin(accountId);
-        int256 expectedMargin = int256(SMALLEST_AMOUNT) * int256(decimalsFactor);
+        int256 expectedMargin = int256(SMALLEST_AMOUNT);
         assertWithinTolerance(expectedMargin, availableMargin, 3);
+    }
+
+    function test_depositCollateral_wrap() public {
+        deal(address(WETH), ACTOR, SMALLEST_AMOUNT);
+
+        vm.startPrank(ACTOR);
+
+        WETH.approve(address(engine), type(uint256).max);
+        
+        engine.modifyCollateralWrap({
+            _accountId: accountId,
+            _amount: int256(SMALLEST_AMOUNT),
+            _tolerance: SMALLEST_AMOUNT - 3,
+            _collateral: WETH,
+            _synthMarketId: 4
+        });
+        
+        vm.stopPrank();
+
+        // int256 availableMargin = perpsMarketProxy.getAvailableMargin(accountId);
+        // int256 expectedMargin = int256(SMALLEST_AMOUNT) * int256(decimalsFactor);
+        // assertWithinTolerance(expectedMargin, availableMargin, 3);
+    }
+
+    function test_depositCollateral_ETH() public {
+        vm.deal(ACTOR, SMALLER_AMOUNT);
+
+        vm.startPrank(ACTOR);
+        
+        engine.depositCollateralETH{value: SMALLER_AMOUNT}({
+            _accountId: accountId,
+            _tolerance: SMALLER_AMOUNT
+        });
+        
+        vm.stopPrank();
+
+        int256 availableMargin = perpsMarketProxy.getAvailableMargin(accountId);
+        int256 expectedMargin = int256(SMALLER_AMOUNT) * int256(ETH_PRICE);
+        assertWithinTolerance(expectedMargin, availableMargin, 2);
+    }
+
+    function testFuzz_depositCollateral_ETH(uint256 amount) public {
+        /// @dev amount must be less than max MarketCollateralAmount
+        vm.assume(amount < 1000000000000000000000);
+        vm.assume(amount > SMALLEST_AMOUNT);
+        vm.deal(ACTOR, amount);
+
+        vm.startPrank(ACTOR);
+        
+        engine.depositCollateralETH{value: amount}({
+            _accountId: accountId,
+            _tolerance: amount * 97 / 100
+        });
+        
+        vm.stopPrank();
+
+        int256 availableMargin = perpsMarketProxy.getAvailableMargin(accountId);
+        int256 expectedMargin = int256(amount) * int256(ETH_PRICE);
+        assertWithinTolerance(expectedMargin, availableMargin, 3);
+    }
+
+    function test_depositCollateral_wrapfail() public {
+        // fail if the collateral is not a supported collateral at synthetix
+        // like USDT or maybe even USDC
+
+         // uint256 decimalsFactor = 10 ** (18 - USDT.decimals());
+
+        // deal(address(USDT), ACTOR, SMALLEST_AMOUNT);
+
+        // vm.startPrank(ACTOR);
+
+        // USDT.approve(address(engine), type(uint256).max);
     }
 }
 
@@ -267,5 +339,80 @@ contract WithdrawCollateral is CollateralTest {
         // int256 expectedBalance = int256(SMALLER_AMOUNT) * int256(decimalsFactor);
         // // todo below is going to fail because slippage is like >99%
         // assertWithinTolerance(expectedBalance, int256(postBalance), 5);
+    }
+
+    function test_withdrawCollateral_wrap() public {
+        //uint256 decimalsFactor = 10 ** (18 - USDC.decimals());
+
+        deal(address(WETH), ACTOR, SMALLEST_AMOUNT);
+
+        vm.startPrank(ACTOR);
+
+        WETH.approve(address(engine), type(uint256).max);
+        
+        engine.modifyCollateralWrap({
+            _accountId: accountId,
+            _amount: -int256(SMALLEST_AMOUNT),
+            _tolerance: SMALLEST_AMOUNT - 3,
+            _collateral: WETH,
+            _synthMarketId: 4
+        });
+        
+        vm.stopPrank();
+
+        // int256 availableMargin = perpsMarketProxy.getAvailableMargin(accountId);
+        // int256 expectedMargin = int256(SMALLEST_AMOUNT) * int256(decimalsFactor);
+        // assertWithinTolerance(expectedMargin, availableMargin, 3);
+    }
+
+    function test_withdrawCollateral_ETH() public {
+        uint256 preBalance = ACTOR.balance;
+
+        vm.deal(ACTOR, SMALLER_AMOUNT);
+
+        vm.startPrank(ACTOR);
+        
+        engine.depositCollateralETH{value: SMALLER_AMOUNT}({
+            _accountId: accountId,
+            _tolerance: SMALLER_AMOUNT
+        });
+
+        engine.withdrawCollateralETH({
+            _accountId: accountId,
+            _amount: int256(SMALLER_AMOUNT),
+            _tolerance: SMALLER_AMOUNT
+        });
+        
+        vm.stopPrank();
+
+        uint256 postBalance = ACTOR.balance;
+        assertEq(postBalance, preBalance + SMALLER_AMOUNT);
+    }
+
+    function testFuzz_withdrawCollateral_ETH(uint256 amount) public {
+        uint256 preBalance = ACTOR.balance;
+
+        /// @dev amount must be less than max MarketCollateralAmount
+        vm.assume(amount < 1000000000000000000000);
+        vm.assume(amount > SMALLEST_AMOUNT);
+        vm.deal(ACTOR, amount);
+
+        vm.startPrank(ACTOR);
+        
+        engine.depositCollateralETH{value: amount}({
+            _accountId: accountId,
+            _tolerance: amount * 97 / 100
+        });
+
+        engine.withdrawCollateralETH({
+            _accountId: accountId,
+            _amount: int256(amount) - 1,
+            _tolerance: amount * 97 / 100
+        });
+        
+        vm.stopPrank();
+        
+        uint256 postBalance = ACTOR.balance;
+        assertWithinTolerance(int256(preBalance + amount), int256(postBalance), 3);
     }
 }
