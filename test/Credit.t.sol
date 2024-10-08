@@ -56,35 +56,34 @@ contract Credit is CreditTest {
         vm.stopPrank();
     }
 
-    // function test_credit_zap() public {
-    //     uint256 decimalsFactor = 10 ** (18 - USDC.decimals());
+    function test_credit_zap() public {
+        uint256 decimalsFactor = 10 ** (18 - USDT.decimals());
 
-    //     deal(address(USDC), ACTOR, SMALLEST_AMOUNT);
+        deal(address(USDT), ACTOR, SMALLEST_AMOUNT);
 
-    //     vm.startPrank(ACTOR);
+        vm.startPrank(ACTOR);
 
-    //     USDC.approve(address(engine), type(uint256).max);
+        USDT.approve(address(engine), type(uint256).max);
 
-    //     uint256 preActorUSDCBalance = USDC.balanceOf(ACTOR);
-    //     uint256 preEngineSUSDBalance = sUSD.balanceOf(address(engine));
+        uint256 preActorUSDTBalance = USDT.balanceOf(ACTOR);
+        uint256 preEngineSUSDBalance = sUSD.balanceOf(address(engine));
 
-    //     engine.creditAccountZap({
-    //         _accountId: accountId,
-    //         _amount: SMALLEST_AMOUNT
-    //     });
+        engine.creditAccountZap({
+            _accountId: accountId,
+            _amount: SMALLEST_AMOUNT,
+            _collateral: USDT,
+            _zapTolerance: SMALLEST_AMOUNT - 3
+        });
 
-    //     uint256 postActorUSDCBalance = USDC.balanceOf(ACTOR);
-    //     uint256 postEngineSUSDBalance = sUSD.balanceOf(address(engine));
+        uint256 postActorUSDTBalance = USDT.balanceOf(ACTOR);
+        uint256 postEngineSUSDBalance = sUSD.balanceOf(address(engine));
 
-    //     vm.stopPrank();
+        vm.stopPrank();
 
-    //     assert(postActorUSDCBalance == preActorUSDCBalance - SMALLEST_AMOUNT);
-    //     assert(
-    //         postEngineSUSDBalance
-    //             == preEngineSUSDBalance + SMALLEST_AMOUNT * decimalsFactor
-    //     );
-    //     assert(engine.credit(accountId) == SMALLEST_AMOUNT * decimalsFactor);
-    // }
+        assert(postActorUSDTBalance == preActorUSDTBalance - SMALLEST_AMOUNT);
+        assertWithinTolerance(preEngineSUSDBalance + SMALLEST_AMOUNT * decimalsFactor, postEngineSUSDBalance, 3);
+        assertWithinTolerance(engine.credit(accountId), SMALLEST_AMOUNT * decimalsFactor, 3);
+    }
 
     function test_credit_event() public {
         vm.startPrank(ACTOR);
