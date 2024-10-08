@@ -134,7 +134,7 @@ contract DepositCollateral is CollateralTest {
     }
 
     function test_depositCollateral_wrap() public {
-        deal(address(WETH), ACTOR, SMALLEST_AMOUNT);
+        deal(address(WETH), ACTOR, SMALLER_AMOUNT);
 
         vm.startPrank(ACTOR);
 
@@ -142,17 +142,36 @@ contract DepositCollateral is CollateralTest {
         
         engine.modifyCollateralWrap({
             _accountId: accountId,
-            _amount: int256(SMALLEST_AMOUNT),
-            _tolerance: SMALLEST_AMOUNT - 3,
+            _amount: int256(SMALLER_AMOUNT),
+            _tolerance: SMALLER_AMOUNT - 3,
             _collateral: WETH,
             _synthMarketId: 4
         });
         
         vm.stopPrank();
 
-        // int256 availableMargin = perpsMarketProxy.getAvailableMargin(accountId);
-        // int256 expectedMargin = int256(SMALLEST_AMOUNT) * int256(decimalsFactor);
-        // assertWithinTolerance(expectedMargin, availableMargin, 3);
+        int256 availableMargin = perpsMarketProxy.getAvailableMargin(accountId);
+        int256 expectedMargin = int256(SMALLER_AMOUNT) * int256(ETH_PRICE);
+        assertWithinTolerance(expectedMargin, availableMargin, 2);
+    }
+
+    function test_depositCollateral_wrapfail() public {
+        // fail if the collateral is not a supported collateral at synthetix
+        deal(address(USDC), ACTOR, SMALLEST_AMOUNT);
+
+        vm.startPrank(ACTOR);
+
+        USDC.approve(address(engine), type(uint256).max);
+        
+        vm.expectRevert();
+        engine.modifyCollateralWrap({
+            _accountId: accountId,
+            _amount: int256(SMALLEST_AMOUNT),
+            _tolerance: SMALLEST_AMOUNT - 3,
+            _collateral: USDC,
+            _synthMarketId: 2
+        });
+        
     }
 
     function test_depositCollateral_ETH() public {
@@ -190,19 +209,6 @@ contract DepositCollateral is CollateralTest {
         int256 availableMargin = perpsMarketProxy.getAvailableMargin(accountId);
         int256 expectedMargin = int256(amount) * int256(ETH_PRICE);
         assertWithinTolerance(expectedMargin, availableMargin, 3);
-    }
-
-    function test_depositCollateral_wrapfail() public {
-        // fail if the collateral is not a supported collateral at synthetix
-        // like USDT or maybe even USDC
-
-         // uint256 decimalsFactor = 10 ** (18 - USDT.decimals());
-
-        // deal(address(USDT), ACTOR, SMALLEST_AMOUNT);
-
-        // vm.startPrank(ACTOR);
-
-        // USDT.approve(address(engine), type(uint256).max);
     }
 }
 
@@ -411,7 +417,7 @@ contract WithdrawCollateral is CollateralTest {
         });
         
         vm.stopPrank();
-        
+
         uint256 postBalance = ACTOR.balance;
         assertWithinTolerance(int256(preBalance + amount), int256(postBalance), 3);
     }
