@@ -757,6 +757,8 @@ contract Engine is
         // decrement account credit prior to transfer
         credit[_accountId] -= _amount;
 
+        SUSD.approve(address(zap), _amount);
+
         // zap $sUSD -> $USDC
         uint256 usdcAmount = zap.zapOut(_amount, _zapTolerance, msg.sender);
 
