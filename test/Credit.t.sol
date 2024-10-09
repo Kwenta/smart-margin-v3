@@ -144,7 +144,7 @@ contract Debit is CreditTest {
     function test_debit_zap() public {
         uint256 decimalsFactor = 10 ** (18 - USDT.decimals());
 
-        // this is 100 USDC
+        // this is 100 USDC/USDT
         uint256 amount = SMALLEST_AMOUNT * 10 ** 6;
 
         deal(address(USDT), ACTOR, amount);
@@ -243,29 +243,34 @@ contract Debit is CreditTest {
         vm.stopPrank();
     }
 
-    // function test_debit_zap_InsufficientBalance() public {
-    //     uint256 decimalsFactor = 10 ** (18 - USDC.decimals());
+    function test_debit_zap_InsufficientBalance() public {
+        uint256 decimalsFactor = 10 ** (18 - USDT.decimals());
 
-    //     deal(address(USDC), ACTOR, SMALLEST_AMOUNT);
+        deal(address(USDT), ACTOR, SMALLEST_AMOUNT);
 
-    //     vm.startPrank(ACTOR);
+        vm.startPrank(ACTOR);
 
-    //     USDC.approve(address(engine), type(uint256).max);
+        USDT.approve(address(engine), type(uint256).max);
 
-    //     engine.creditAccountZap({
-    //         _accountId: accountId,
-    //         _amount: SMALLEST_AMOUNT
-    //     });
+        engine.creditAccountZap({
+            _accountId: accountId,
+            _amount: SMALLEST_AMOUNT,
+            _collateral: USDT,
+            _zapTolerance: SMALLEST_AMOUNT - 3
+        });
 
-    //     vm.expectRevert(
-    //         abi.encodeWithSelector(IEngine.InsufficientCredit.selector)
-    //     );
+        vm.expectRevert(
+            abi.encodeWithSelector(IEngine.InsufficientCredit.selector)
+        );
 
-    //     engine.debitAccountZap({
-    //         _accountId: accountId,
-    //         _amount: (SMALLEST_AMOUNT * decimalsFactor) + 1
-    //     });
+        engine.debitAccountZap({
+            _accountId: accountId,
+            // this is how much credit is available    97_997476500000
+            // this is how much we are trying to debit 98_000000000000
+            _amount: (SMALLEST_AMOUNT - 2) * decimalsFactor,
+            _zapTolerance: 1
+        });
 
-    //     vm.stopPrank();
-    // }
+        vm.stopPrank();
+    }
 }
