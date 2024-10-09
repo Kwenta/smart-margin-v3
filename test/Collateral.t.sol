@@ -150,6 +150,28 @@ contract DepositCollateral is CollateralTest {
         assertWithinTolerance(expectedMargin, availableMargin, 2);
     }
 
+    function test_depositCollateral_wrapTBTC() public {
+        deal(address(tBTC), ACTOR, 1);
+
+        vm.startPrank(ACTOR);
+
+        tBTC.approve(address(engine), type(uint256).max);
+        
+        engine.modifyCollateralWrap({
+            _accountId: accountId,
+            _amount: int256(1),
+            _tolerance: 1,
+            _collateral: tBTC,
+            _synthMarketId: 3
+        });
+        
+        vm.stopPrank();
+
+        // uint256 availableMargin = uint256(perpsMarketProxy.getAvailableMargin(accountId));
+        // uint256 expectedMargin = BTC_PRICE; // todo add BTC_PRICE to constants
+        // assertWithinTolerance(expectedMargin, availableMargin, 2);
+    }
+
     /// @notice This test is expected to fail because sUSD is not a supported collateral
     function test_depositCollateral_wrapfail_sUSD() public {
         deal(address(sUSD), ACTOR, SMALLER_AMOUNT);

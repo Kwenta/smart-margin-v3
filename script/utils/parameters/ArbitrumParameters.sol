@@ -21,5 +21,7 @@ contract ArbitrumParameters {
 
     address public constant USDT = 0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9;
 
+    address public constant TBTC = 0x6c84a8f1c29108F47a79964b5Fe888D4f4D0dE40;
+
     uint128 public constant SUSDC_SPOT_MARKET_ID = 1;
 }
