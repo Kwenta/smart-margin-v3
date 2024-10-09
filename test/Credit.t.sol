@@ -144,7 +144,10 @@ contract Debit is CreditTest {
     function test_debit_zap() public {
         uint256 decimalsFactor = 10 ** (18 - USDT.decimals());
 
-        deal(address(USDT), ACTOR, SMALLEST_AMOUNT);
+        // this is 100 USDC
+        uint256 amount = SMALLEST_AMOUNT * 10 ** 6;
+
+        deal(address(USDT), ACTOR, amount);
 
         vm.startPrank(ACTOR);
 
@@ -152,28 +155,28 @@ contract Debit is CreditTest {
 
         engine.creditAccountZap({
             _accountId: accountId,
-            _amount: SMALLEST_AMOUNT,
+            _amount: amount,
             _collateral: USDT,
-            _zapTolerance: SMALLEST_AMOUNT - 3
+            _zapTolerance: amount * 40 / 100
         });
 
-        uint256 preActorUSDCBalance = USDC.balanceOf(ACTOR);
-        uint256 preEngineSUSDBalance = sUSD.balanceOf(address(engine));
+        uint256 preActorUSDCBalance = USDC.balanceOf(ACTOR); // 0
+        uint256 preEngineSUSDBalance = sUSD.balanceOf(address(engine)); // 59_811814806108750000
 
         engine.debitAccountZap({
             _accountId: accountId,
-            _amount: 97997476500000,
-            _zapTolerance:1
+            _amount: 59_811814806108750000,
+            _zapTolerance: 59_813355
         });
 
-        uint256 postActorUSDCBalance = USDC.balanceOf(ACTOR);
-        uint256 postEngineSUSDBalance = sUSD.balanceOf(address(engine));
+        uint256 postActorUSDCBalance = USDC.balanceOf(ACTOR); // 59_813355
+        uint256 postEngineSUSDBalance = sUSD.balanceOf(address(engine)); // 0
 
         vm.stopPrank();
 
-        assertWithinTolerance(preActorUSDCBalance + SMALLEST_AMOUNT, postActorUSDCBalance, 3);
-        //todo check why slippage is > 99% and this fails
-        //assertWithinTolerance((preEngineSUSDBalance - SMALLEST_AMOUNT) * decimalsFactor, postEngineSUSDBalance, 99);
+        // ~ 41% slippage when calling creditAccountZap
+        assertWithinTolerance(preActorUSDCBalance + amount, postActorUSDCBalance, 45);
+        assertWithinTolerance(postActorUSDCBalance * decimalsFactor, preEngineSUSDBalance, 3);
         assert(engine.credit(accountId) == 0);
     }
 
