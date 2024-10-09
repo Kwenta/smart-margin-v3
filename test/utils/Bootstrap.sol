@@ -16,6 +16,7 @@ import {ArbitrumParameters} from
     "script/utils/parameters/ArbitrumParameters.sol";
 import {ArbitrumSepoliaParameters} from
     "script/utils/parameters/ArbitrumSepoliaParameters.sol";
+import {TestHelpers} from "test/utils/TestHelpers.sol";
 
 /// @title Contract for bootstrapping the SMv3 system for testing purposes
 /// @dev it deploys the SMv3 Engine and EngineExposed, and defines
@@ -34,7 +35,7 @@ import {ArbitrumSepoliaParameters} from
 /// and effectively tests the deploy script as well
 ///
 /// @author JaredBorders (jaredborders@pm.me)
-contract Bootstrap is Test, Constants, Conditions, SynthetixV3Errors {
+contract Bootstrap is Test, Constants, Conditions, SynthetixV3Errors, TestHelpers {
     // lets any test contract that inherits from this contract
     // use the console.log()
     using console2 for *;
