@@ -724,7 +724,7 @@ contract Engine is
         IERC20(USDC).approve(address(zap), received);
 
         // zap $USDC -> $sUSD
-        uint256 susdAmount = zap.zapIn(_amount, _zapTolerance, address(this));
+        uint256 susdAmount = zap.zapIn(received, _zapTolerance, address(this));
 
         credit[_accountId] += susdAmount;
 
