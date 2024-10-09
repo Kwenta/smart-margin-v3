@@ -180,21 +180,21 @@ contract Debit is CreditTest {
         assert(engine.credit(accountId) == 0);
     }
 
-    // function test_debit_zap_Unauthorized() public {
-    //     vm.startPrank(ACTOR);
+    function test_debit_zap_Unauthorized() public {
+        vm.startPrank(ACTOR);
 
-    //     sUSD.approve(address(engine), type(uint256).max);
+        sUSD.approve(address(engine), type(uint256).max);
 
-    //     engine.creditAccount(accountId, AMOUNT);
+        engine.creditAccount(accountId, AMOUNT);
 
-    //     vm.stopPrank();
+        vm.stopPrank();
 
-    //     vm.expectRevert(abi.encodeWithSelector(IEngine.Unauthorized.selector));
+        vm.expectRevert(abi.encodeWithSelector(IEngine.Unauthorized.selector));
 
-    //     vm.prank(BAD_ACTOR);
+        vm.prank(BAD_ACTOR);
 
-    //     engine.debitAccountZap({_accountId: accountId, _amount: AMOUNT});
-    // }
+        engine.debitAccountZap({_accountId: accountId, _amount: AMOUNT, _zapTolerance: 1});
+    }
 
     function test_debit_Unauthorized() public {
         vm.startPrank(ACTOR);
