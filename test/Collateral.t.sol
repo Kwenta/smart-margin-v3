@@ -155,8 +155,26 @@ contract DepositCollateral is CollateralTest {
         assertWithinTolerance(expectedMargin, availableMargin, 2);
     }
 
-    function test_depositCollateral_wrapfail() public {
-        // fail if the collateral is not a supported collateral at synthetix
+    /// @notice This test is expected to fail because sUSD is not a supported collateral
+    function test_depositCollateral_wrapfail_sUSD() public {
+        deal(address(sUSD), ACTOR, SMALLER_AMOUNT);
+
+        vm.startPrank(ACTOR);
+
+        sUSD.approve(address(engine), type(uint256).max);
+        
+        vm.expectRevert();
+        engine.modifyCollateralWrap({
+            _accountId: accountId,
+            _amount: int256(SMALLER_AMOUNT),
+            _tolerance: SMALLER_AMOUNT,
+            _collateral: sUSD,
+            _synthMarketId: 0
+        });
+    }
+
+    /// @notice This test is expected to fail because USDC is not a supported collateral
+    function test_depositCollateral_wrapfail_USDC() public {
         deal(address(USDC), ACTOR, SMALLEST_AMOUNT);
 
         vm.startPrank(ACTOR);
