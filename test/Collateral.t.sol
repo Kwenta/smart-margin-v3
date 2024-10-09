@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 pragma solidity 0.8.27;
 
+import {IEngine} from "src/interfaces/IEngine.sol";
 import {Bootstrap} from "test/utils/Bootstrap.sol";
 
 contract CollateralTest is Bootstrap {
@@ -400,6 +401,34 @@ contract WithdrawCollateral is CollateralTest {
         // assertWithinTolerance(expectedBalance, int256(postBalance), 5);
     }
 
+    function test_withdrawCollateral_zap_Unauthorized() public {
+        deal(address(USDT), ACTOR, SMALLER_AMOUNT);
+
+        vm.startPrank(ACTOR);
+
+        USDT.approve(address(engine), type(uint256).max);
+        
+        engine.modifyCollateralZap({
+            _accountId: accountId,
+            _amount: int256(SMALLER_AMOUNT),
+            _swapTolerance: 1,
+            _zapTolerance: 1,
+            _collateral: USDT
+        });
+
+        vm.stopPrank();
+
+        vm.expectRevert(abi.encodeWithSelector(IEngine.Unauthorized.selector));
+
+        engine.modifyCollateralZap({
+            _accountId: accountId,
+            _amount: -int256(78133551009252750000),
+            _swapTolerance: 1,
+            _zapTolerance: 1,
+            _collateral: USDT
+        });
+    }
+
     function test_withdrawCollateral_wrap() public {
         deal(address(WETH), ACTOR, SMALLER_AMOUNT);
         uint256 preBalance = WETH.balanceOf(ACTOR);
@@ -428,6 +457,35 @@ contract WithdrawCollateral is CollateralTest {
 
         uint256 postBalance = WETH.balanceOf(ACTOR);
         assertEq(postBalance, preBalance);
+    }
+
+    function test_withdrawCollateral_wrap_Unauthorized() public {
+        deal(address(WETH), ACTOR, SMALLER_AMOUNT);
+        uint256 preBalance = WETH.balanceOf(ACTOR);
+
+        vm.startPrank(ACTOR);
+
+        WETH.approve(address(engine), type(uint256).max);
+        
+        engine.modifyCollateralWrap({
+            _accountId: accountId,
+            _amount: int256(SMALLER_AMOUNT),
+            _tolerance: SMALLER_AMOUNT,
+            _collateral: WETH,
+            _synthMarketId: 4
+        });
+
+        vm.stopPrank();
+
+        vm.expectRevert(abi.encodeWithSelector(IEngine.Unauthorized.selector));
+
+        engine.modifyCollateralWrap({
+            _accountId: accountId,
+            _amount: -int256(SMALLER_AMOUNT),
+            _tolerance: SMALLER_AMOUNT,
+            _collateral: WETH,
+            _synthMarketId: 4
+        });
     }
 
     function test_withdrawCollateral_ETH() public {
@@ -479,5 +537,28 @@ contract WithdrawCollateral is CollateralTest {
 
         uint256 postBalance = ACTOR.balance;
         assertWithinTolerance(preBalance + amount, postBalance, 3);
+    }
+
+    function test_withdrawCollateral_ETH_Unauthorized() public {
+        uint256 preBalance = ACTOR.balance;
+
+        vm.deal(ACTOR, SMALLER_AMOUNT);
+
+        vm.startPrank(ACTOR);
+        
+        engine.depositCollateralETH{value: SMALLER_AMOUNT}({
+            _accountId: accountId,
+            _tolerance: SMALLER_AMOUNT
+        });
+
+        vm.stopPrank();
+
+        vm.expectRevert(abi.encodeWithSelector(IEngine.Unauthorized.selector));
+
+        engine.withdrawCollateralETH({
+            _accountId: accountId,
+            _amount: int256(SMALLER_AMOUNT),
+            _tolerance: SMALLER_AMOUNT
+        });
     }
 }
