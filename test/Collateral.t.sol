@@ -172,6 +172,30 @@ contract DepositCollateral is CollateralTest {
         // assertWithinTolerance(expectedMargin, availableMargin, 2);
     }
 
+    function test_depositCollateral_wrapUSDE() public {
+        uint256 decimalsFactor = 10 ** (18 - USDe.decimals());
+
+        deal(address(USDe), ACTOR, SMALLER_AMOUNT);
+
+        vm.startPrank(ACTOR);
+
+        USDe.approve(address(engine), type(uint256).max);
+        
+        engine.modifyCollateralWrap({
+            _accountId: accountId,
+            _amount: int256(SMALLER_AMOUNT),
+            _tolerance: SMALLER_AMOUNT,
+            _collateral: USDe,
+            _synthMarketId: 5
+        });
+        
+        vm.stopPrank();
+
+        // uint256 availableMargin = uint256(perpsMarketProxy.getAvailableMargin(accountId));
+        // uint256 expectedMargin = SMALLEST_AMOUNT * decimalsFactor;
+        // assertWithinTolerance(expectedMargin, availableMargin, 2);
+    }
+
     /// @notice This test is expected to fail because sUSD is not a supported collateral
     function test_depositCollateral_wrapfail_sUSD() public {
         deal(address(sUSD), ACTOR, SMALLER_AMOUNT);

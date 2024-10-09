@@ -56,6 +56,7 @@ contract Bootstrap is Test, Constants, Conditions, SynthetixV3Errors, TestHelper
     IERC20 public WETH;
     IERC20 public USDT;
     IERC20 public tBTC;
+    IERC20 public USDe;
     address public zap;
     address public usdc;
     address public weth;
@@ -79,7 +80,8 @@ contract Bootstrap is Test, Constants, Conditions, SynthetixV3Errors, TestHelper
             address _usdcAddress,
             address _wethAddress,
             address _usdtAddress,
-            address _tBTCAddress
+            address _tBTCAddress,
+            address _usdeAddress
         ) = bootstrap.init();
 
         engine = Engine(_engineAddress);
@@ -91,6 +93,7 @@ contract Bootstrap is Test, Constants, Conditions, SynthetixV3Errors, TestHelper
         WETH = IERC20(_wethAddress);
         USDT = IERC20(_usdtAddress);
         tBTC = IERC20(_tBTCAddress);
+        USDe = IERC20(_usdeAddress);
         synthMinter = new SynthMinter(_sUSDAddress, _spotMarketProxyAddress);
         pDAO = _pDAOAddress;
         zap = _zapAddress;
@@ -114,6 +117,7 @@ contract BootstrapArbitrum is Setup, ArbitrumParameters {
     function init()
         public
         returns (
+            address,
             address,
             address,
             address,
@@ -158,7 +162,8 @@ contract BootstrapArbitrum is Setup, ArbitrumParameters {
             USDC,
             WETH,
             USDT,
-            TBTC
+            TBTC,
+            USDE
         );
     }
 }
