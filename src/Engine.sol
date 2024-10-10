@@ -460,8 +460,7 @@ contract Engine is
         address _collateral,
         uint256 _zapTolerance,
         uint256 _unwrapTolerance,
-        uint256 _swapTolerance,
-        address _receiver
+        uint256 _swapTolerance
     ) external payable override {
         /// @dev "PERPS_MODIFY_COLLATERAL" permission will be revoked after unwinding through zap
         PERPS_MARKET_PROXY.grantPermission(
@@ -476,8 +475,42 @@ contract Engine is
             _zapTolerance,
             _unwrapTolerance,
             _swapTolerance,
-            _receiver
+            msg.sender
         );
+    }
+
+    /// @inheritdoc IEngine
+    function unwindCollateralETH(
+        uint128 _accountId,
+        uint256 _collateralAmount,
+        address _collateral,
+        uint256 _zapTolerance,
+        uint256 _unwrapTolerance,
+        uint256 _swapTolerance
+    ) external payable override {
+        uint256 balanceBefore = WETH.balanceOf(address(this));
+
+        /// @dev "PERPS_MODIFY_COLLATERAL" permission will be revoked after unwinding through zap
+        PERPS_MARKET_PROXY.grantPermission(
+            _accountId, PERPS_MODIFY_COLLATERAL_PERMISSION, address(zap)
+        );
+
+        zap.unwind(
+            _accountId,
+            WETH_SYNTH_MARKET_ID,
+            _collateralAmount,
+            _collateral,
+            _zapTolerance,
+            _unwrapTolerance,
+            _swapTolerance,
+            address(this)
+        );
+
+        uint256 balanceAfter = WETH.balanceOf(address(this));
+        uint256 receivedAmount = balanceAfter - balanceBefore;
+
+        // Convert WETH to ETH and send to user
+        WETH.withdrawTo(msg.sender, receivedAmount);
     }
 
     /// @inheritdoc IEngine
@@ -511,7 +544,7 @@ contract Engine is
         uint128 _accountId,
         int256 _amount,
         uint256 _tolerance
-    ) external override {
+    ) external payable override {
         if (_amount <= 0) revert InvalidWithdrawalAmount();
         if (!isAccountOwner(_accountId, msg.sender)) revert Unauthorized();
 

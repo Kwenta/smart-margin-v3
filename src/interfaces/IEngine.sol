@@ -294,7 +294,6 @@ interface IEngine {
     /// @param _zapTolerance acceptable slippage for zapping
     /// @param _unwrapTolerance acceptable slippage for unwrapping
     /// @param _swapTolerance acceptable slippage for swapping
-    /// @param _receiver address to receive unwound collateral
     function unwindCollateral(
         uint128 _accountId,
         uint128 _collateralId,
@@ -302,8 +301,23 @@ interface IEngine {
         address _collateral,
         uint256 _zapTolerance,
         uint256 _unwrapTolerance,
-        uint256 _swapTolerance,
-        address _receiver
+        uint256 _swapTolerance
+    ) external payable;
+
+    /// @notice unwind synthetix perp WETH_SYNTH_MARKET_ID position collateral and withdraw as ETH
+    /// @param _accountId synthetix perp market account id
+    /// @param _collateralAmount amount of collateral to unwind
+    /// @param _collateral address of collateral to unwind
+    /// @param _zapTolerance acceptable slippage for zapping
+    /// @param _unwrapTolerance acceptable slippage for unwrapping
+    /// @param _swapTolerance acceptable slippage for swapping
+    function unwindCollateralETH(
+        uint128 _accountId,
+        uint256 _collateralAmount,
+        address _collateral,
+        uint256 _zapTolerance,
+        uint256 _unwrapTolerance,
+        uint256 _swapTolerance
     ) external payable;
 
     /// @notice Deposits ETH as collateral by first wrapping to WETH and then calling modifyCollateralWrap
@@ -321,7 +335,7 @@ interface IEngine {
         uint128 _accountId,
         int256 _amount,
         uint256 _tolerance
-    ) external;
+    ) external payable;
 
     /// @notice Pays off debt for a specified account using USDx
     /// @param _accountId The ID of the account to pay debt for
