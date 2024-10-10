@@ -376,6 +376,8 @@ contract WithdrawCollateral is CollateralTest {
         assertEq(postBalanceUSDT, 0);
 
         uint256 preBalanceUSDC = USDC.balanceOf(ACTOR);
+        assertEq(preBalanceUSDC, 0);
+
         uint256 availableMargin = uint256(perpsMarketProxy.getAvailableMargin(accountId)); // 78_133551009252750000
 
         // remove the collateral
@@ -389,8 +391,8 @@ contract WithdrawCollateral is CollateralTest {
 
         vm.stopPrank();
         uint256 postBalanceUSDC = USDC.balanceOf(ACTOR);
-        uint256 expectedBalance = preBalanceUSDC + SMALLER_AMOUNT;
-        assertWithinTolerance(postBalanceUSDC * decimalsFactor, availableMargin, 30);
+        uint256 expectedBalance = postBalanceUSDC * decimalsFactor;
+        assertWithinTolerance(expectedBalance, availableMargin, 30);
     }
 
     function test_withdrawCollateral_zap_Unauthorized() public {
