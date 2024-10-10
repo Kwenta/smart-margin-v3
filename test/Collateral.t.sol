@@ -250,7 +250,7 @@ contract DepositCollateral is CollateralTest {
         assertWithinTolerance(expectedMargin, availableMargin, 2);
     }
 
-    function testFuzz_depositCollateral_ETH(uint256 amount) public {
+    function test_depositCollateral_ETH_Fuzz(uint256 amount) public {
         /// @dev amount must be less than max MarketCollateralAmount
         vm.assume(amount < 1000000000000000000000);
         vm.assume(amount > SMALLEST_AMOUNT);
@@ -509,7 +509,7 @@ contract WithdrawCollateral is CollateralTest {
         assertEq(postBalance, preBalance + SMALLER_AMOUNT);
     }
 
-    function testFuzz_withdrawCollateral_ETH(uint256 amount) public {
+    function test_withdrawCollateral_ETH_Fuzz(uint256 amount) public {
         uint256 preBalance = ACTOR.balance;
 
         /// @dev amount must be less than max MarketCollateralAmount
