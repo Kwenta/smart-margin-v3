@@ -2,6 +2,7 @@
 pragma solidity 0.8.27;
 
 interface IRouter {
+
     struct ExactInputSingleParams {
         address tokenIn;
         address tokenOut;
@@ -31,9 +32,11 @@ interface IRouter {
         external
         payable
         returns (uint256 amountIn);
+
 }
 
 interface IQuoter {
+
     struct QuoteExactInputSingleParams {
         address tokenIn;
         address tokenOut;
@@ -67,4 +70,5 @@ interface IQuoter {
             uint32 initializedTicksCrossed,
             uint256 gasEstimate
         );
+
 }

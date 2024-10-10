@@ -5,6 +5,7 @@ pragma solidity 0.8.27;
 /// @author @moss-eth
 /// @author @jaredborders
 contract Reentrancy {
+
     /// @notice enumerated stages of execution
     /// @dev each stage denotes a different level of protection
     enum Stage {
@@ -34,4 +35,5 @@ contract Reentrancy {
             ReentrancyDetected({actual: stage, expected: _expected})
         );
     }
+
 }
