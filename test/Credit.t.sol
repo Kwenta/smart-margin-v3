@@ -157,16 +157,19 @@ contract Debit is CreditTest {
             _accountId: accountId,
             _amount: amount,
             _collateral: USDT,
-            _zapTolerance: amount * 40 / 100
+            _zapTolerance: amount * 50 / 100
         });
 
         uint256 preActorUSDCBalance = USDC.balanceOf(ACTOR); // 0
         uint256 preEngineSUSDBalance = sUSD.balanceOf(address(engine)); // 59_811814806108750000
+        // this gets the SUSD value in USDC decimals
+        uint256 zapTolerance = preEngineSUSDBalance / decimalsFactor;
+        assertEq(zapTolerance, 59_811814);
 
         engine.debitAccountZap({
             _accountId: accountId,
-            _amount: 59_811814806108750000,
-            _zapTolerance: 59_813355
+            _amount: preEngineSUSDBalance,
+            _zapTolerance: zapTolerance
         });
 
         uint256 postActorUSDCBalance = USDC.balanceOf(ACTOR); // 59_813355
