@@ -502,6 +502,9 @@ contract WithdrawCollateral is CollateralTest {
             _tolerance: SMALLER_AMOUNT
         });
 
+        uint256 midBalance = ACTOR.balance;
+        assertEq(midBalance, 0);
+
         engine.withdrawCollateralETH({
             _accountId: accountId,
             _amount: int256(SMALLER_AMOUNT),
@@ -528,6 +531,9 @@ contract WithdrawCollateral is CollateralTest {
             _accountId: accountId,
             _tolerance: amount * 97 / 100
         });
+
+        uint256 midBalance = ACTOR.balance;
+        assertEq(midBalance, 0);
 
         engine.withdrawCollateralETH({
             _accountId: accountId,
