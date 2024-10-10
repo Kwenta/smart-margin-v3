@@ -357,17 +357,6 @@ contract WithdrawCollateral is CollateralTest {
     function test_withdrawCollateral_zap() public {
         uint256 decimalsFactor = 10 ** (18 - USDT.decimals());
 
-        // vm.startPrank(ACTOR);
-
-        // sUSD.approve(address(engine), type(uint256).max);
-
-        // engine.modifyCollateral({
-        //     _accountId: accountId,
-        //     _synthMarketId: SUSD_SPOT_MARKET_ID,
-        //     //_synthMarketId: 2,
-        //     _amount: int256(AMOUNT)
-        // });
-
         deal(address(USDT), ACTOR, SMALLER_AMOUNT);
 
         vm.startPrank(ACTOR);
@@ -383,22 +372,25 @@ contract WithdrawCollateral is CollateralTest {
             _collateral: USDT
         });
 
-        // @florian above is what you can comment out to uncomment modifyCollateral "classic"
+        uint256 postBalanceUSDT = USDT.balanceOf(ACTOR);
+        assertEq(postBalanceUSDT, 0);
+
+        uint256 preBalanceUSDC = USDC.balanceOf(ACTOR);
+        uint256 availableMargin = uint256(perpsMarketProxy.getAvailableMargin(accountId)); // 78_133551009252750000
 
         // remove the collateral
         engine.modifyCollateralZap({
             _accountId: accountId,
-            _amount: -int256(78133551009252750000),
+            _amount: -int256(availableMargin),
             _swapTolerance: 1,
             _zapTolerance: 1,
             _collateral: USDT
         });
 
-        // vm.stopPrank();
-        // uint256 postBalance = USDC.balanceOf(ACTOR);
-        // int256 expectedBalance = int256(SMALLER_AMOUNT) * int256(decimalsFactor);
-        // // todo below is going to fail because slippage is like >99%
-        // assertWithinTolerance(expectedBalance, int256(postBalance), 5);
+        vm.stopPrank();
+        uint256 postBalanceUSDC = USDC.balanceOf(ACTOR);
+        uint256 expectedBalance = preBalanceUSDC + SMALLER_AMOUNT;
+        assertWithinTolerance(postBalanceUSDC * decimalsFactor, availableMargin, 30);
     }
 
     function test_withdrawCollateral_zap_Unauthorized() public {
@@ -422,7 +414,7 @@ contract WithdrawCollateral is CollateralTest {
 
         engine.modifyCollateralZap({
             _accountId: accountId,
-            _amount: -int256(78133551009252750000),
+            _amount: -int256(1),
             _swapTolerance: 1,
             _zapTolerance: 1,
             _collateral: USDT
