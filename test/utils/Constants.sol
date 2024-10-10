@@ -4,7 +4,7 @@ pragma solidity 0.8.27;
 /// @title Contract for defining constants used in testing
 /// @author JaredBorders (jaredborders@pm.me)
 contract Constants {
-    uint256 public constant ARBITRUM_BLOCK_NUMBER = 262_399_473;
+    uint256 public constant ARBITRUM_BLOCK_NUMBER = 262_365_073;
 
     address internal constant OWNER = address(0x01);
 
