@@ -205,7 +205,7 @@ contract DepositCollateral is CollateralTest {
 
         sUSD.approve(address(engine), type(uint256).max);
         
-        //vm.expectRevert();
+        vm.expectRevert();
         engine.modifyCollateralWrap({
             _accountId: accountId,
             _amount: int256(SMALLER_AMOUNT),
