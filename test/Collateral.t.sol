@@ -431,7 +431,6 @@ contract WithdrawCollateral is CollateralTest {
 
     function test_withdrawCollateral_wrap() public {
         deal(address(WETH), ACTOR, SMALLER_AMOUNT);
-        uint256 preBalance = WETH.balanceOf(ACTOR);
 
         vm.startPrank(ACTOR);
 
@@ -445,6 +444,9 @@ contract WithdrawCollateral is CollateralTest {
             _synthMarketId: 4
         });
 
+        uint256 preBalance = WETH.balanceOf(ACTOR);
+        assertEq(preBalance, 0);
+
         engine.modifyCollateralWrap({
             _accountId: accountId,
             _amount: -int256(SMALLER_AMOUNT),
@@ -456,7 +458,7 @@ contract WithdrawCollateral is CollateralTest {
         vm.stopPrank();
 
         uint256 postBalance = WETH.balanceOf(ACTOR);
-        assertEq(postBalance, preBalance);
+        assertEq(postBalance, SMALLER_AMOUNT);
     }
 
     function test_withdrawCollateral_wrap_Unauthorized() public {
