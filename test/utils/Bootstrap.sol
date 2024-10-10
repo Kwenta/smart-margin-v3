@@ -35,7 +35,13 @@ import {TestHelpers} from "test/utils/TestHelpers.sol";
 /// and effectively tests the deploy script as well
 ///
 /// @author JaredBorders (jaredborders@pm.me)
-contract Bootstrap is Test, Constants, Conditions, SynthetixV3Errors, TestHelpers {
+contract Bootstrap is
+    Test,
+    Constants,
+    Conditions,
+    SynthetixV3Errors,
+    TestHelpers
+{
     // lets any test contract that inherits from this contract
     // use the console.log()
     using console2 for *;

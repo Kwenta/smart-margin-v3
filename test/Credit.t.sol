@@ -81,8 +81,14 @@ contract Credit is CreditTest {
         vm.stopPrank();
 
         assert(postActorUSDTBalance == preActorUSDTBalance - SMALLEST_AMOUNT);
-        assertWithinTolerance(preEngineSUSDBalance + SMALLEST_AMOUNT * decimalsFactor, postEngineSUSDBalance, 3);
-        assertWithinTolerance(engine.credit(accountId), SMALLEST_AMOUNT * decimalsFactor, 3);
+        assertWithinTolerance(
+            preEngineSUSDBalance + SMALLEST_AMOUNT * decimalsFactor,
+            postEngineSUSDBalance,
+            3
+        );
+        assertWithinTolerance(
+            engine.credit(accountId), SMALLEST_AMOUNT * decimalsFactor, 3
+        );
     }
 
     function test_credit_event() public {
@@ -164,7 +170,7 @@ contract Debit is CreditTest {
         uint256 preEngineSUSDBalance = sUSD.balanceOf(address(engine)); // 59_811814806108750000
         // this gets the SUSD value in USDC decimals
         uint256 zapTolerance = preEngineSUSDBalance / decimalsFactor;
-        assertEq(zapTolerance, 59_811814);
+        assertEq(zapTolerance, 59_811_814);
 
         engine.debitAccountZap({
             _accountId: accountId,
@@ -178,8 +184,12 @@ contract Debit is CreditTest {
         vm.stopPrank();
 
         // ~ 41% slippage when calling creditAccountZap
-        assertWithinTolerance(preActorUSDCBalance + amount, postActorUSDCBalance, 45);
-        assertWithinTolerance(postActorUSDCBalance * decimalsFactor, preEngineSUSDBalance, 3);
+        assertWithinTolerance(
+            preActorUSDCBalance + amount, postActorUSDCBalance, 45
+        );
+        assertWithinTolerance(
+            postActorUSDCBalance * decimalsFactor, preEngineSUSDBalance, 3
+        );
         assert(engine.credit(accountId) == 0);
     }
 
@@ -196,7 +206,11 @@ contract Debit is CreditTest {
 
         vm.prank(BAD_ACTOR);
 
-        engine.debitAccountZap({_accountId: accountId, _amount: AMOUNT, _zapTolerance: 1});
+        engine.debitAccountZap({
+            _accountId: accountId,
+            _amount: AMOUNT,
+            _zapTolerance: 1
+        });
     }
 
     function test_debit_Unauthorized() public {
