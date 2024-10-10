@@ -6,7 +6,14 @@ interface IERC20 {
 
     function balanceOf(address account) external view returns (uint256);
 
+<<<<<<< HEAD
     function allowance(address owner, address spender)
+=======
+    function allowance(
+        address owner,
+        address spender
+    )
+>>>>>>> 4af916b (👷 pull latest zap)
         external
         view
         returns (uint256);

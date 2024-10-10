@@ -6,6 +6,10 @@ import {IERC20} from "../interfaces/IERC20.sol";
 /// @title token flushing utility
 /// @author @jaredborders
 contract Flush {
+<<<<<<< HEAD
+=======
+
+>>>>>>> 4af916b (👷 pull latest zap)
     /// @custom:plumber
     address public PLUMBER;
 
@@ -34,4 +38,8 @@ contract Flush {
         require(msg.sender == PLUMBER, OnlyPlumber());
         PLUMBER = _newPlumber;
     }
+<<<<<<< HEAD
+=======
+
+>>>>>>> 4af916b (👷 pull latest zap)
 }

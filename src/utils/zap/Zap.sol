@@ -238,7 +238,14 @@ contract Zap is Reentrancy, Errors {
         uint256 _amount,
         uint256 _tolerance,
         address _receiver
+<<<<<<< HEAD
     ) external returns (uint256 received, address synth) {
+=======
+    )
+        external
+        returns (uint256 received, address synth)
+    {
+>>>>>>> 4af916b (👷 pull latest zap)
         synth = ISpotMarket(SPOT_MARKET).getSynth(_synthId);
         _pull(USDX, msg.sender, _amount);
         received = _buy(_synthId, _amount, _tolerance);
