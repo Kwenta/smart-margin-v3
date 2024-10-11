@@ -254,8 +254,8 @@ contract DepositCollateral is CollateralTest {
     }
 
     function test_depositCollateral_ETH_Fuzz(uint256 amount) public {
-        /// @dev amount must be less than max MarketCollateralAmount
-        vm.assume(amount < 1_000_000_000_000_000_000_000);
+        /// @dev amount must be less than max MarketCollateralAmount - currentDepositedCollateral
+        vm.assume(amount < MAX_WRAPPABLE_AMOUNT);
         vm.assume(amount > SMALLEST_AMOUNT);
         vm.deal(ACTOR, amount);
 
@@ -520,7 +520,7 @@ contract WithdrawCollateral is CollateralTest {
         uint256 preBalance = ACTOR.balance;
 
         /// @dev amount must be less than max MarketCollateralAmount
-        vm.assume(amount < 1_000_000_000_000_000_000_000);
+        vm.assume(amount < MAX_WRAPPABLE_AMOUNT);
         vm.assume(amount > SMALLEST_AMOUNT);
         vm.deal(ACTOR, amount);
 
