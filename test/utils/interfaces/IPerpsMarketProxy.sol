@@ -102,4 +102,11 @@ interface IPerpsMarketProxy {
             uint256 requiredMaintenanceMargin,
             uint256 maxLiquidationReward
         );
+
+    function payDebt(uint128 accountId, uint256 amount) external;
+
+    function debt(uint128 accountId)
+        external
+        view
+        returns (uint256 accountDebt);
 }

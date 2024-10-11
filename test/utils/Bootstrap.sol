@@ -16,6 +16,7 @@ import {ArbitrumParameters} from
     "script/utils/parameters/ArbitrumParameters.sol";
 import {ArbitrumSepoliaParameters} from
     "script/utils/parameters/ArbitrumSepoliaParameters.sol";
+import {TestHelpers} from "test/utils/TestHelpers.sol";
 
 /// @title Contract for bootstrapping the SMv3 system for testing purposes
 /// @dev it deploys the SMv3 Engine and EngineExposed, and defines
@@ -34,7 +35,13 @@ import {ArbitrumSepoliaParameters} from
 /// and effectively tests the deploy script as well
 ///
 /// @author JaredBorders (jaredborders@pm.me)
-contract Bootstrap is Test, Constants, Conditions, SynthetixV3Errors {
+contract Bootstrap is
+    Test,
+    Constants,
+    Conditions,
+    SynthetixV3Errors,
+    TestHelpers
+{
     // lets any test contract that inherits from this contract
     // use the console.log()
     using console2 for *;
@@ -52,6 +59,10 @@ contract Bootstrap is Test, Constants, Conditions, SynthetixV3Errors {
     ISpotMarketProxy public spotMarketProxy;
     IERC20 public sUSD;
     IERC20 public USDC;
+    IERC20 public WETH;
+    IERC20 public USDT;
+    IERC20 public tBTC;
+    IERC20 public USDe;
     address public zap;
     address public usdc;
     address public weth;
@@ -73,7 +84,10 @@ contract Bootstrap is Test, Constants, Conditions, SynthetixV3Errors {
             address _pDAOAddress,
             address _zapAddress,
             address _usdcAddress,
-            address _wethAddress
+            address _wethAddress,
+            address _usdtAddress,
+            address _tBTCAddress,
+            address _usdeAddress
         ) = bootstrap.init();
 
         engine = Engine(_engineAddress);
@@ -81,6 +95,11 @@ contract Bootstrap is Test, Constants, Conditions, SynthetixV3Errors {
         perpsMarketProxy = IPerpsMarketProxy(_perpsMarketProxyAddress);
         spotMarketProxy = ISpotMarketProxy(_spotMarketProxyAddress);
         sUSD = IERC20(_sUSDAddress);
+        USDC = IERC20(_usdcAddress);
+        WETH = IERC20(_wethAddress);
+        USDT = IERC20(_usdtAddress);
+        tBTC = IERC20(_tBTCAddress);
+        USDe = IERC20(_usdeAddress);
         synthMinter = new SynthMinter(_sUSDAddress, _spotMarketProxyAddress);
         pDAO = _pDAOAddress;
         zap = _zapAddress;
@@ -104,6 +123,9 @@ contract BootstrapArbitrum is Setup, ArbitrumParameters {
     function init()
         public
         returns (
+            address,
+            address,
+            address,
             address,
             address,
             address,
@@ -144,7 +166,10 @@ contract BootstrapArbitrum is Setup, ArbitrumParameters {
             PDAO,
             ZAP,
             USDC,
-            WETH
+            WETH,
+            USDT,
+            TBTC,
+            USDE
         );
     }
 }

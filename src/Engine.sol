@@ -398,6 +398,7 @@ contract Engine is
             // zap $sUSD -> $USDC
             /// @dev given the amount is negative,
             /// simply casting (int -> uint) is unsafe, thus we use .abs()
+            SUSD.approve(address(zap), _amount.abs256());
             zap.zapOut(_amount.abs256(), _zapTolerance, msg.sender);
         }
     }
@@ -723,7 +724,7 @@ contract Engine is
         IERC20(USDC).approve(address(zap), received);
 
         // zap $USDC -> $sUSD
-        uint256 susdAmount = zap.zapIn(_amount, _zapTolerance, address(this));
+        uint256 susdAmount = zap.zapIn(received, _zapTolerance, address(this));
 
         credit[_accountId] += susdAmount;
 
@@ -755,6 +756,8 @@ contract Engine is
 
         // decrement account credit prior to transfer
         credit[_accountId] -= _amount;
+
+        SUSD.approve(address(zap), _amount);
 
         // zap $sUSD -> $USDC
         uint256 usdcAmount = zap.zapOut(_amount, _zapTolerance, msg.sender);

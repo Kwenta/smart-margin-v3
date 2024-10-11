@@ -140,6 +140,7 @@ contract MulticallableEngine is MulticallablePayableTest {
     {
         bytes[] memory data = new bytes[](2);
 
+        vm.deal(ACTOR, AMOUNT);
         vm.startPrank(ACTOR);
 
         sUSD.approve(address(engine), type(uint256).max);
