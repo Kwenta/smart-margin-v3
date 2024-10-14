@@ -64,8 +64,6 @@ contract Constants {
 
     uint256 internal constant MAX_WRAPPABLE_AMOUNT = 900_000_000_000_000_000_000;
 
-    address internal constant MARKET_CONFIGURATION_MODULE = address(0xC0FE);
-
     uint256 internal constant ZERO_CO_FEE = 0;
 
     uint256 internal constant CO_FEE = 620_198 wei;
