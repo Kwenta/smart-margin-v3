@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 pragma solidity 0.8.27;
 
+import {ArbGasInfoMock} from "test/utils/mocks/ArbGasInfoMock.sol";
 import {console2} from "lib/forge-std/src/console2.sol";
 import {Test} from "lib/forge-std/src/Test.sol";
 import {Conditions} from "test/utils/Conditions.sol";
@@ -11,7 +12,6 @@ import {Engine, BaseParameters, Setup} from "script/Deploy.s.sol";
 import {IERC20} from "src/interfaces/tokens/IERC20.sol";
 import {IPerpsMarketProxy} from "test/utils/interfaces/IPerpsMarketProxy.sol";
 import {ISpotMarketProxy} from "src/interfaces/synthetix/ISpotMarketProxy.sol";
-import {PricesMock} from "test/utils/mocks/PricesMock.sol";
 import {SynthMinter} from "test/utils/SynthMinter.sol";
 import {ArbitrumParameters} from
     "script/utils/parameters/ArbitrumParameters.sol";
@@ -58,7 +58,7 @@ contract Bootstrap is
     // defined contracts
     IPerpsMarketProxy public perpsMarketProxy;
     ISpotMarketProxy public spotMarketProxy;
-    PricesMock public pricesMock;
+    ArbGasInfoMock public arbGasInfoMock;
     IERC20 public sUSD;
     IERC20 public USDC;
     IERC20 public WETH;
@@ -119,8 +119,8 @@ contract Bootstrap is
 
         synthMinter.mint_sUSD(ACTOR, AMOUNT);
 
-        pricesMock = new PricesMock();
-        vm.etch(0x000000000000000000000000000000000000006C, address(pricesMock).code);
+        arbGasInfoMock = new ArbGasInfoMock();
+        vm.etch(0x000000000000000000000000000000000000006C, address(arbGasInfoMock).code);
     }
 }
 
