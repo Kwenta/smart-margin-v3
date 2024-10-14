@@ -28,33 +28,33 @@ contract AsyncOrderTest is Bootstrap, SynthetixMock {
 /// @custom:todo rewrite commented tests with hardhat
 /// cause : InvalidFEOpcode when calling getPricesInWei on Arbitrum
 contract CommitOrder is AsyncOrderTest {
-// function test_commitOrder() public {
-//     vm.prank(ACTOR);
+function test_commitOrder() public {
+    vm.prank(ACTOR);
 
-//     (IPerpsMarketProxy.Data memory retOrder, uint256 fees) = engine
-//         .commitOrder({
-//         _perpsMarketId: SETH_PERPS_MARKET_ID,
-//         _accountId: accountId,
-//         _sizeDelta: SIZE_DELTA,
-//         _settlementStrategyId: SETTLEMENT_STRATEGY_ID,
-//         _acceptablePrice: ACCEPTABLE_PRICE_LONG,
-//         _trackingCode: TRACKING_CODE,
-//         _referrer: REFERRER
-//     });
+    (IPerpsMarketProxy.Data memory retOrder, uint256 fees) = engine
+        .commitOrder({
+        _perpsMarketId: SETH_PERPS_MARKET_ID,
+        _accountId: accountId,
+        _sizeDelta: SIZE_DELTA,
+        _settlementStrategyId: SETTLEMENT_STRATEGY_ID,
+        _acceptablePrice: ACCEPTABLE_PRICE_LONG,
+        _trackingCode: TRACKING_CODE,
+        _referrer: REFERRER
+    });
 
-//     assertTrue(retOrder.settlementTime != 0);
-//     assertTrue(retOrder.request.marketId == SETH_PERPS_MARKET_ID);
-//     assertTrue(retOrder.request.accountId == accountId);
-//     assertTrue(retOrder.request.sizeDelta == SIZE_DELTA);
-//     assertTrue(
-//         retOrder.request.settlementStrategyId == SETTLEMENT_STRATEGY_ID
-//     );
-//     assertTrue(retOrder.request.acceptablePrice == ACCEPTABLE_PRICE_LONG);
-//     assertTrue(retOrder.request.trackingCode == TRACKING_CODE);
-//     assertTrue(retOrder.request.referrer == REFERRER);
+    assertTrue(retOrder.settlementTime != 0);
+    assertTrue(retOrder.request.marketId == SETH_PERPS_MARKET_ID);
+    assertTrue(retOrder.request.accountId == accountId);
+    assertTrue(retOrder.request.sizeDelta == SIZE_DELTA);
+    assertTrue(
+        retOrder.request.settlementStrategyId == SETTLEMENT_STRATEGY_ID
+    );
+    assertTrue(retOrder.request.acceptablePrice == ACCEPTABLE_PRICE_LONG);
+    assertTrue(retOrder.request.trackingCode == TRACKING_CODE);
+    assertTrue(retOrder.request.referrer == REFERRER);
 
-//     assertTrue(fees != 0);
-// }
+    assertTrue(fees != 0);
+}
 
 // function test_commitOrder_invalid_market() public {
 //     vm.prank(ACTOR);
