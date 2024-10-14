@@ -1137,7 +1137,7 @@ contract Conditions is ConditionalOrderTest {
         assertTrue(isOpen);
 
         mock_getMaxMarketSize(
-            MARKET_CONFIGURATION_MODULE, SETH_PERPS_MARKET_ID, 0
+            address(perpsMarketProxy), SETH_PERPS_MARKET_ID, 0
         );
 
         isOpen = engine.isMarketOpen(SETH_PERPS_MARKET_ID);

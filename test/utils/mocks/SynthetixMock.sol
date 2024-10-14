@@ -23,12 +23,12 @@ contract SynthetixMock is Test {
     }
 
     function mock_getMaxMarketSize(
-        address marketConfigurationModule,
+        address perpsMarketProxy,
         uint128 marketId,
         uint256 maxMarketSize
     ) public {
         vm.mockCall(
-            marketConfigurationModule,
+            perpsMarketProxy,
             abi.encodeWithSelector(
                 IPerpsMarketProxy.getMaxMarketSize.selector, marketId
             ),
