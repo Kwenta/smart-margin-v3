@@ -115,6 +115,10 @@ contract DepositCollateral is CollateralTest {
 
     //     USDT.approve(address(engine), type(uint256).max);
 
+        // uint256 availableMarginBefore =
+        //     uint256(perpsMarketProxy.getAvailableMargin(accountId));
+        // assertEq(availableMarginBefore, 0);
+
     //     engine.modifyCollateralZap({
     //         _accountId: accountId,
     //         _amount: int256(SMALLEST_AMOUNT),
@@ -137,6 +141,10 @@ contract DepositCollateral is CollateralTest {
         vm.startPrank(ACTOR);
 
         WETH.approve(address(engine), type(uint256).max);
+
+        uint256 availableMarginBefore =
+            uint256(perpsMarketProxy.getAvailableMargin(accountId));
+        assertEq(availableMarginBefore, 0);
 
         engine.modifyCollateralWrap({
             _accountId: accountId,
@@ -162,6 +170,10 @@ contract DepositCollateral is CollateralTest {
 
     //     tBTC.approve(address(engine), type(uint256).max);
 
+        // uint256 availableMarginBefore =
+        //     uint256(perpsMarketProxy.getAvailableMargin(accountId));
+        // assertEq(availableMarginBefore, 0);
+
     //     engine.modifyCollateralWrap({
     //         _accountId: accountId,
     //         _amount: int256(1),
@@ -186,6 +198,10 @@ contract DepositCollateral is CollateralTest {
     //     vm.startPrank(ACTOR);
 
     //     USDe.approve(address(engine), type(uint256).max);
+
+        // uint256 availableMarginBefore =
+        //     uint256(perpsMarketProxy.getAvailableMargin(accountId));
+        // assertEq(availableMarginBefore, 0);
 
     //     engine.modifyCollateralWrap({
     //         _accountId: accountId,
@@ -241,6 +257,10 @@ contract DepositCollateral is CollateralTest {
     function test_depositCollateral_ETH() public {
         vm.deal(ACTOR, SMALLER_AMOUNT);
 
+        uint256 availableMarginBefore =
+            uint256(perpsMarketProxy.getAvailableMargin(accountId));
+        assertEq(availableMarginBefore, 0);
+
         vm.startPrank(ACTOR);
 
         engine.depositCollateralETH{value: SMALLER_AMOUNT}({
@@ -261,6 +281,10 @@ contract DepositCollateral is CollateralTest {
         vm.assume(amount < MAX_WRAPPABLE_AMOUNT);
         vm.assume(amount > SMALLEST_AMOUNT);
         vm.deal(ACTOR, amount);
+
+        uint256 availableMarginBefore =
+            uint256(perpsMarketProxy.getAvailableMargin(accountId));
+        assertEq(availableMarginBefore, 0);
 
         vm.startPrank(ACTOR);
 
