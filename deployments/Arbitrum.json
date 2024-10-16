@@ -4,7 +4,7 @@
         "EngineProxy": "0x51D3F6bE4B8b6476346Fbc3ed8790Ef863af4b77"
     },
     "test": {
-        "EngineImplementation": "0x5139d3f368bE37F8269a02653CDb1D5e1Ed094b4",
-        "EngineProxy": "0x51f25391bd458B898D6e9156c9C90e423746310A"
+        "EngineImplementation": "0x66738E1Fe5D958108aa45400bCC46EB7b42008Ee",
+        "EngineProxy": "0xC6Fa9b8BB675aef176F2a1cf8F3D9f1bDe7B78EC"
     }
 }
