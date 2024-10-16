@@ -491,7 +491,6 @@ contract WithdrawCollateral is CollateralTest {
 
     function test_withdrawCollateral_wrap_Unauthorized() public {
         deal(address(WETH), ACTOR, SMALLER_AMOUNT);
-        uint256 preBalance = WETH.balanceOf(ACTOR);
 
         vm.startPrank(ACTOR);
 
@@ -576,8 +575,6 @@ contract WithdrawCollateral is CollateralTest {
     }
 
     function test_withdrawCollateral_ETH_Unauthorized() public {
-        uint256 preBalance = ACTOR.balance;
-
         vm.deal(ACTOR, SMALLER_AMOUNT);
 
         vm.startPrank(ACTOR);
