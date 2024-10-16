@@ -25,7 +25,7 @@ contract ArbGasInfoMock {
     }
 
     /// @notice Get ArbOS's estimate of the L1 basefee in wei
-    function getL1BaseFeeEstimate() external view returns (uint256) {
+    function getL1BaseFeeEstimate() external pure returns (uint256) {
         return 10;
     }
 }

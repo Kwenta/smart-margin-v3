@@ -6,7 +6,7 @@ contract TestHelpers {
         uint256 expected,
         uint256 actual,
         uint256 tolerancePercent
-    ) internal {
+    ) internal pure {
         uint256 tolerance = (expected * tolerancePercent) / 100;
         assert(actual >= expected - tolerance && actual <= expected + tolerance);
     }
