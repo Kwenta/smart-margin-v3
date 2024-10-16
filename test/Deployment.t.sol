@@ -91,5 +91,45 @@ contract DeploymentTest is Test, Setup {
         }
     }
 
-    //@custom:todo add zero address missing tests
+    function test_deploy_zap_zero_address() public {
+        try setup.deploySystem({
+            perpsMarketProxy: perpsMarketProxy,
+            spotMarketProxy: spotMarketProxy,
+            sUSDProxy: sUSDProxy,
+            pDAO: pDAO,
+            zap: address(0),
+            usdc: usdc,
+            weth: weth
+        }) {} catch (bytes memory reason) {
+            assertEq(bytes4(reason), IEngine.ZeroAddress.selector);
+        }
+    }
+
+    function test_deploy_usdc_zero_address() public {
+        try setup.deploySystem({
+            perpsMarketProxy: perpsMarketProxy,
+            spotMarketProxy: spotMarketProxy,
+            sUSDProxy: sUSDProxy,
+            pDAO: pDAO,
+            zap: zap,
+            usdc: address(0),
+            weth: weth
+        }) {} catch (bytes memory reason) {
+            assertEq(bytes4(reason), IEngine.ZeroAddress.selector);
+        }
+    }
+
+    function test_deploy_weth_zero_address() public {
+        try setup.deploySystem({
+            perpsMarketProxy: perpsMarketProxy,
+            spotMarketProxy: spotMarketProxy,
+            sUSDProxy: sUSDProxy,
+            pDAO: pDAO,
+            zap: zap,
+            usdc: usdc,
+            weth: address(0)
+        }) {} catch (bytes memory reason) {
+            assertEq(bytes4(reason), IEngine.ZeroAddress.selector);
+        }
+    }
 }
