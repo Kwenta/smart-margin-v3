@@ -9,17 +9,17 @@ contract PayDebtTest is Bootstrap {
         address(0x325cd6b3CD80EDB102ac78848f5B127eB6DB13f3);
     uint128 public constant ACCOUNT_ID =
         170_141_183_460_469_231_731_687_303_715_884_105_729;
-    uint256 public constant INITIAL_DEBT = 2_510_703_436_713_643_968;
+    uint256 public constant INITIAL_DEBT = 9_709_051_981_579_806_842;
 
     function setUp() public {
-        vm.rollFork(262_400_000);
+        vm.rollFork(264_552_063);
         initializeArbitrum();
 
         synthMinter.mint_sUSD(DEBT_ACTOR, AMOUNT);
     }
 
     function test_payDebt() public {
-        /// @dev on this block (262_400_000), ACCOUNT_ID has a debt value of INITIAL_DEBT
+        /// @dev on this block (264_552_063), ACCOUNT_ID has a debt value of INITIAL_DEBT
         uint256 initialAccountDebt = perpsMarketProxy.debt(ACCOUNT_ID);
         assertEq(initialAccountDebt, INITIAL_DEBT);
 
@@ -61,7 +61,7 @@ contract PayDebtTest is Bootstrap {
         assertEq(finalAccountDebt, 0);
 
         uint256 finalSUSD = sUSD.balanceOf(DEBT_ACTOR);
-        // assertEq(finalSUSD, initialSUSD - INITIAL_DEBT);
+        assertEq(finalSUSD, initialSUSD - INITIAL_DEBT);
     }
 
     function test_payDebt_Unauthorized() public {
@@ -98,7 +98,7 @@ contract PayDebtTest is Bootstrap {
             // If amount is greater than the initial debt, the debt should be fully paid
             // and excess sUSD should be sent back to the user
             assertEq(finalAccountDebt, 0);
-            // assertEq(finalSUSD, initialSUSD - INITIAL_DEBT);
+            assertEq(finalSUSD, initialSUSD - INITIAL_DEBT);
         } else {
             // If amount is less or equal than the initial debt, only part of the debt is paid
             assertEq(finalAccountDebt, INITIAL_DEBT - amount);
