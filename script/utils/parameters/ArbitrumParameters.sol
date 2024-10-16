@@ -17,7 +17,7 @@ contract ArbitrumParameters {
 
     address public constant WETH = 0x82aF49447D8a07e3bd95BD0d56f35241523fBab1;
 
-    address public constant ZAP = 0x0954b6d3B2448768F1AdfF38E331d33790529da7;
+    address public constant ZAP = 0x7467195D042250c347F07F9E0661a85c837e0d6b;
 
     address public constant USDT = 0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9;
 
