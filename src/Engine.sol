@@ -87,7 +87,7 @@ contract Engine is
 
     IWETH public immutable WETH;
 
-    address public immutable USDC;
+    IERC20 public immutable USDC;
 
     /*//////////////////////////////////////////////////////////////
                                  STATE
@@ -124,6 +124,8 @@ contract Engine is
     /// @param _pDAO Kwenta owned/operated multisig address
     /// that can authorize upgrades
     /// @param _zap Zap contract address
+    /// @param _usdc $USDC token contract address
+    /// @param _weth $WETH token contract address
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor(
         address _perpsMarketProxy,
@@ -136,7 +138,8 @@ contract Engine is
     ) {
         if (
             _perpsMarketProxy == address(0) || _spotMarketProxy == address(0)
-                || _sUSDProxy == address(0)
+                || _sUSDProxy == address(0) || _zap == address(0)
+                || _usdc == address(0) || _weth == address(0)
         ) revert ZeroAddress();
 
         PERPS_MARKET_PROXY = IPerpsMarketProxy(_perpsMarketProxy);
@@ -144,7 +147,7 @@ contract Engine is
 
         SUSD = IERC20(_sUSDProxy);
         zap = Zap(_zap);
-        USDC = _usdc;
+        USDC = IERC20(_usdc);
         WETH = IWETH(_weth);
 
         /// @dev pDAO address can be the zero address to
@@ -379,7 +382,7 @@ contract Engine is
                 address(this)
             );
 
-            IERC20(USDC).approve(address(zap), received);
+            USDC.approve(address(zap), received);
 
             // zap $USDC -> $sUSD
             uint256 susdAmount =
@@ -619,9 +622,7 @@ contract Engine is
             : SPOT_MARKET_PROXY.getSynth(_synthMarketId);
     }
 
-    /// @notice Burns a specified amount of USDx for a given account
-    /// @param _accountId The account ID to burn USDx for
-    /// @param _amount The amount of USDx to burn
+    /// @inheritdoc IEngine
     function payDebt(uint128 _accountId, uint256 _amount)
         external
         payable
@@ -734,7 +735,7 @@ contract Engine is
             address(this)
         );
 
-        IERC20(USDC).approve(address(zap), received);
+        USDC.approve(address(zap), received);
 
         // zap $USDC -> $sUSD
         uint256 susdAmount = zap.zapIn(received, _zapTolerance, address(this));
