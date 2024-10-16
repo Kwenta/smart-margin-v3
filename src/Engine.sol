@@ -362,7 +362,8 @@ contract Engine is
         int256 _amount,
         uint256 _swapTolerance,
         uint256 _zapTolerance,
-        IERC20 _collateral
+        IERC20 _collateral,
+        bytes memory _path
     ) external payable override {
         if (_amount > 0) {
             _collateral.transferFrom(
@@ -372,6 +373,7 @@ contract Engine is
 
             uint256 received = zap.swapWith(
                 address(_collateral),
+                _path,
                 uint256(_amount),
                 _swapTolerance,
                 address(this)
@@ -461,7 +463,8 @@ contract Engine is
         address _collateral,
         uint256 _zapTolerance,
         uint256 _unwrapTolerance,
-        uint256 _swapTolerance
+        uint256 _swapTolerance,
+        bytes memory _path
     ) external payable override {
         /// @dev "PERPS_MODIFY_COLLATERAL" permission will be revoked after unwinding through zap
         PERPS_MARKET_PROXY.grantPermission(
@@ -473,6 +476,7 @@ contract Engine is
             _collateralId,
             _collateralAmount,
             _collateral,
+            _path,
             _zapTolerance,
             _unwrapTolerance,
             _swapTolerance,
@@ -487,7 +491,8 @@ contract Engine is
         address _collateral,
         uint256 _zapTolerance,
         uint256 _unwrapTolerance,
-        uint256 _swapTolerance
+        uint256 _swapTolerance,
+        bytes memory _path
     ) external payable override {
         uint256 balanceBefore = WETH.balanceOf(address(this));
 
@@ -501,6 +506,7 @@ contract Engine is
             WETH_SYNTH_MARKET_ID,
             _collateralAmount,
             _collateral,
+            _path,
             _zapTolerance,
             _unwrapTolerance,
             _swapTolerance,
@@ -712,13 +718,18 @@ contract Engine is
         uint128 _accountId,
         uint256 _amount,
         IERC20 _collateral,
-        uint256 _zapTolerance
+        uint256 _zapTolerance,
+        bytes memory _path
     ) external payable override {
         _collateral.transferFrom(msg.sender, address(this), _amount);
         _collateral.approve(address(zap), _amount);
 
         uint256 received = zap.swapWith(
-            address(_collateral), uint256(_amount), _zapTolerance, address(this)
+            address(_collateral),
+            _path,
+            uint256(_amount),
+            _zapTolerance,
+            address(this)
         );
 
         IERC20(USDC).approve(address(zap), received);

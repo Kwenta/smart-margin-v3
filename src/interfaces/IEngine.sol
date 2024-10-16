@@ -260,12 +260,14 @@ interface IEngine {
     /// @param _swapTolerance the tolerance of the swap
     /// @param _zapTolerance the tolerance of the zap
     /// @param _collateral the collateral to zapIn
+    /// @param _path uniswap swap path encoded in order
     function modifyCollateralZap(
         uint128 _accountId,
         int256 _amount,
         uint256 _swapTolerance,
         uint256 _zapTolerance,
-        IERC20 _collateral
+        IERC20 _collateral,
+        bytes memory _path
     ) external payable;
 
     /// @notice modify the collateral of an
@@ -294,6 +296,7 @@ interface IEngine {
     /// @param _zapTolerance acceptable slippage for zapping
     /// @param _unwrapTolerance acceptable slippage for unwrapping
     /// @param _swapTolerance acceptable slippage for swapping
+    /// @param _path Uniswap swap path encoded in reverse order
     function unwindCollateral(
         uint128 _accountId,
         uint128 _collateralId,
@@ -301,7 +304,8 @@ interface IEngine {
         address _collateral,
         uint256 _zapTolerance,
         uint256 _unwrapTolerance,
-        uint256 _swapTolerance
+        uint256 _swapTolerance,
+        bytes memory _path
     ) external payable;
 
     /// @notice unwind synthetix perp WETH_SYNTH_MARKET_ID position collateral and withdraw as ETH
@@ -311,13 +315,15 @@ interface IEngine {
     /// @param _zapTolerance acceptable slippage for zapping
     /// @param _unwrapTolerance acceptable slippage for unwrapping
     /// @param _swapTolerance acceptable slippage for swapping
+    /// @param _path Uniswap swap path encoded in reverse order
     function unwindCollateralETH(
         uint128 _accountId,
         uint256 _collateralAmount,
         address _collateral,
         uint256 _zapTolerance,
         uint256 _unwrapTolerance,
-        uint256 _swapTolerance
+        uint256 _swapTolerance,
+        bytes memory _path
     ) external payable;
 
     /// @notice Deposits ETH as collateral by first wrapping to WETH and then calling modifyCollateralWrap
@@ -399,11 +405,13 @@ interface IEngine {
     /// @param _amount the amount of $collateral to transfer and zap
     /// @param _collateral the collateral to zap
     /// @param _zapTolerance the tolerance of the zap
+    /// @param _path uniswap swap path encoded in order
     function creditAccountZap(
         uint128 _accountId,
         uint256 _amount,
         IERC20 _collateral,
-        uint256 _zapTolerance
+        uint256 _zapTolerance,
+        bytes memory _path
     ) external payable;
 
     /// @notice withdraw $sUSD from the engine and
