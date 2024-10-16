@@ -1195,7 +1195,7 @@ contract Conditions is ConditionalOrderTest {
     }
 
     function test_isOrderFeeBelow() public {
-        int128 sizeDelta = 1 ether;
+        int128 sizeDelta = -1 ether;
         (uint256 orderFees,) = perpsMarketProxy.computeOrderFees({
             marketId: SETH_PERPS_MARKET_ID,
             sizeDelta: sizeDelta
