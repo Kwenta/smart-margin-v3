@@ -374,13 +374,13 @@ contract Engine is
             );
             _collateral.approve(address(zap), uint256(_amount));
 
-            uint256 received = zap.swapWith(
-                address(_collateral),
-                _path,
-                uint256(_amount),
-                _swapTolerance,
-                address(this)
-            );
+            uint256 received = zap.swapWith({
+                _from: address(_collateral),
+                _path: _path,
+                _amount: uint256(_amount),
+                _tolerance: _swapTolerance,
+                _receiver: address(this)
+            });
 
             USDC.approve(address(zap), received);
 
@@ -474,17 +474,17 @@ contract Engine is
             _accountId, PERPS_MODIFY_COLLATERAL_PERMISSION, address(zap)
         );
 
-        zap.unwind(
-            _accountId,
-            _collateralId,
-            _collateralAmount,
-            _collateral,
-            _path,
-            _zapTolerance,
-            _unwrapTolerance,
-            _swapTolerance,
-            msg.sender
-        );
+        zap.unwind({
+            _accountId: _accountId,
+            _collateralId: _collateralId,
+            _collateralAmount: _collateralAmount,
+            _collateral: _collateral,
+            _path: _path,
+            _zapTolerance: _zapTolerance,
+            _unwrapTolerance: _unwrapTolerance,
+            _swapTolerance: _swapTolerance,
+            _receiver: msg.sender
+        });
     }
 
     /// @inheritdoc IEngine
@@ -504,17 +504,17 @@ contract Engine is
             _accountId, PERPS_MODIFY_COLLATERAL_PERMISSION, address(zap)
         );
 
-        zap.unwind(
-            _accountId,
-            WETH_SYNTH_MARKET_ID,
-            _collateralAmount,
-            _collateral,
-            _path,
-            _zapTolerance,
-            _unwrapTolerance,
-            _swapTolerance,
-            address(this)
-        );
+        zap.unwind({
+            _accountId: _accountId,
+            _collateralId: WETH_SYNTH_MARKET_ID,
+            _collateralAmount: _collateralAmount,
+            _collateral: _collateral,
+            _path: _path,
+            _zapTolerance: _zapTolerance,
+            _unwrapTolerance: _unwrapTolerance,
+            _swapTolerance: _swapTolerance,
+            _receiver: address(this)
+        });
 
         uint256 balanceAfter = WETH.balanceOf(address(this));
         uint256 receivedAmount = balanceAfter - balanceBefore;
@@ -727,13 +727,13 @@ contract Engine is
         _collateral.transferFrom(msg.sender, address(this), _amount);
         _collateral.approve(address(zap), _amount);
 
-        uint256 received = zap.swapWith(
-            address(_collateral),
-            _path,
-            uint256(_amount),
-            _zapTolerance,
-            address(this)
-        );
+        uint256 received = zap.swapWith({
+            _from: address(_collateral),
+            _path: _path,
+            _amount: uint256(_amount),
+            _tolerance: _zapTolerance,
+            _receiver: address(this)
+        });
 
         USDC.approve(address(zap), received);
 
