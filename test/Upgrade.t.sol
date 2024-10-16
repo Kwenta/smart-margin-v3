@@ -40,9 +40,9 @@ contract MockUpgrade is UpgradeTest {
             address(spotMarketProxy),
             address(sUSD),
             address(pDAO),
+            address(zap),
             address(USDC),
-            address(USDC),
-            address(0)
+            address(WETH)
         );
     }
 
@@ -157,9 +157,9 @@ contract RemoveUpgradability is UpgradeTest {
             address(spotMarketProxy),
             address(sUSD),
             address(0), // set pDAO to zero address to effectively remove upgradability
+            address(zap),
             address(USDC),
-            address(USDC),
-            address(0)
+            address(WETH)
         );
 
         vm.prank(pDAO);
