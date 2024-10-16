@@ -53,8 +53,8 @@ contract Constants {
 
     uint128 constant SETH_PERPS_MARKET_ID = 100;
 
-    /// @dev this is the ETH price in USD at the block number 259_979_368
-    uint256 internal constant ETH_PRICE = 2339;
+    /// @dev this is the ETH price in USD at the block number 264_441_861
+    uint256 internal constant ETH_PRICE = 2600;
 
     uint256 internal constant AMOUNT = 10_000 ether;
 
