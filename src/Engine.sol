@@ -632,9 +632,11 @@ contract Engine is
         SUSD.transferFrom(msg.sender, address(this), _amount);
         SUSD.approve(address(zap), _amount);
 
-        zap.burn(_amount, _accountId);
+        uint256 remaining = zap.burn(_amount, _accountId);
 
-        emit Burned(_accountId, _amount);
+        if (remaining > 0) SUSD.transfer(msg.sender, remaining);
+
+        emit Burned(_accountId, _amount - remaining);
     }
 
     /*//////////////////////////////////////////////////////////////
