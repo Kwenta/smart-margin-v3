@@ -115,9 +115,9 @@ contract DepositCollateral is CollateralTest {
 
     //     USDT.approve(address(engine), type(uint256).max);
 
-        // uint256 availableMarginBefore =
-        //     uint256(perpsMarketProxy.getAvailableMargin(accountId));
-        // assertEq(availableMarginBefore, 0);
+    // uint256 availableMarginBefore =
+    //     uint256(perpsMarketProxy.getAvailableMargin(accountId));
+    // assertEq(availableMarginBefore, 0);
 
     //     engine.modifyCollateralZap({
     //         _accountId: accountId,
@@ -170,9 +170,9 @@ contract DepositCollateral is CollateralTest {
 
     //     tBTC.approve(address(engine), type(uint256).max);
 
-        // uint256 availableMarginBefore =
-        //     uint256(perpsMarketProxy.getAvailableMargin(accountId));
-        // assertEq(availableMarginBefore, 0);
+    // uint256 availableMarginBefore =
+    //     uint256(perpsMarketProxy.getAvailableMargin(accountId));
+    // assertEq(availableMarginBefore, 0);
 
     //     engine.modifyCollateralWrap({
     //         _accountId: accountId,
@@ -199,9 +199,9 @@ contract DepositCollateral is CollateralTest {
 
     //     USDe.approve(address(engine), type(uint256).max);
 
-        // uint256 availableMarginBefore =
-        //     uint256(perpsMarketProxy.getAvailableMargin(accountId));
-        // assertEq(availableMarginBefore, 0);
+    // uint256 availableMarginBefore =
+    //     uint256(perpsMarketProxy.getAvailableMargin(accountId));
+    // assertEq(availableMarginBefore, 0);
 
     //     engine.modifyCollateralWrap({
     //         _accountId: accountId,

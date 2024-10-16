@@ -16,10 +16,12 @@ contract ArbGasInfoMock {
     ///            per ArbGas congestion,
     ///            per ArbGas total
     ///        )
-    function getPricesInWei() external pure returns (uint256, uint256, uint256, uint256, uint256, uint256) {
-        return (
-            10, 10, 10, 10, 10, 10
-        );
+    function getPricesInWei()
+        external
+        pure
+        returns (uint256, uint256, uint256, uint256, uint256, uint256)
+    {
+        return (10, 10, 10, 10, 10, 10);
     }
 
     /// @notice Get ArbOS's estimate of the L1 basefee in wei

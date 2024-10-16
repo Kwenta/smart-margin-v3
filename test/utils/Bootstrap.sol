@@ -120,7 +120,10 @@ contract Bootstrap is
         synthMinter.mint_sUSD(ACTOR, AMOUNT);
 
         arbGasInfoMock = new ArbGasInfoMock();
-        vm.etch(0x000000000000000000000000000000000000006C, address(arbGasInfoMock).code);
+        vm.etch(
+            0x000000000000000000000000000000000000006C,
+            address(arbGasInfoMock).code
+        );
     }
 }
 
