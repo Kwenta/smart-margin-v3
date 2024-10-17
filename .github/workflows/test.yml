@@ -24,7 +24,7 @@ jobs:
             - name: Build Project
               run: |
                   forge --version
-                  forge build --sizes
+                  forge build
               id: build
 
             - name: Test Project
