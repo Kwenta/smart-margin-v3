@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-pragma solidity 0.8.20;
+pragma solidity 0.8.27;
 
 import {Engine} from "src/Engine.sol";
 
@@ -11,16 +11,18 @@ contract MockEngineUpgrade is Engine {
         address _spotMarketProxy,
         address _sUSDProxy,
         address _pDAO,
+        address _zap,
         address _usdc,
-        uint128 _sUSDCId
+        address _weth
     )
         Engine(
             _perpsMarketProxy,
             _spotMarketProxy,
             _sUSDProxy,
             _pDAO,
+            _zap,
             _usdc,
-            _sUSDCId
+            _weth
         )
     {}
 
