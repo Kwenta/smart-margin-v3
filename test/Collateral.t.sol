@@ -265,6 +265,7 @@ contract DepositCollateral is CollateralTest {
 
         engine.depositCollateralETH{value: SMALLER_AMOUNT}({
             _accountId: accountId,
+            _amount: SMALLER_AMOUNT,
             _tolerance: SMALLER_AMOUNT
         });
 
@@ -290,6 +291,7 @@ contract DepositCollateral is CollateralTest {
 
         engine.depositCollateralETH{value: amount}({
             _accountId: accountId,
+            _amount: amount,
             _tolerance: amount * 97 / 100
         });
 
@@ -526,6 +528,7 @@ contract WithdrawCollateral is CollateralTest {
 
         engine.depositCollateralETH{value: SMALLER_AMOUNT}({
             _accountId: accountId,
+            _amount: SMALLER_AMOUNT,
             _tolerance: SMALLER_AMOUNT
         });
 
@@ -556,6 +559,7 @@ contract WithdrawCollateral is CollateralTest {
 
         engine.depositCollateralETH{value: amount}({
             _accountId: accountId,
+            _amount: amount,
             _tolerance: amount * 97 / 100
         });
 
@@ -581,6 +585,7 @@ contract WithdrawCollateral is CollateralTest {
 
         engine.depositCollateralETH{value: SMALLER_AMOUNT}({
             _accountId: accountId,
+            _amount: SMALLER_AMOUNT,
             _tolerance: SMALLER_AMOUNT
         });
 
