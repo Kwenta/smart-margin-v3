@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-pragma solidity 0.8.20;
+pragma solidity 0.8.27;
 
 /// @title Kwenta Smart Margin v3: Math Library for int128 and int256
 /// @author JaredBorders (jaredborders@pm.me)

@@ -1,4 +1,10 @@
 {
-    "EngineImplementation": "0x149042fE4fBb741582125e709378F07b55D3eDF0",
-    "EngineProxy": "0x2712DeDE1d4Aac904b91D4a2426281A274971b7c"
+    "prod": {
+        "EngineImplementation": "0x5225dFdC934f9569d2612a082E1F66B16DD5d624",
+        "EngineProxy": "0x51D3F6bE4B8b6476346Fbc3ed8790Ef863af4b77"
+    },
+    "test": {
+        "EngineImplementation": "0xCFe66Bdac2Ebc15705210326dC2e0F87Fa874400",
+        "EngineProxy": "0x3eBAEAD525a11872B60A3B53E13F17E3351c24e7"
+    }
 }
