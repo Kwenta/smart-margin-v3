@@ -46,7 +46,10 @@ contract MulticallerWithSender {
      */
     receive() external payable {
         assembly {
-            mstore(returndatasize(), and(sub(shl(160, 1), 1), sload(returndatasize())))
+            mstore(
+                returndatasize(),
+                and(sub(shl(160, 1), 1), sload(returndatasize()))
+            )
             return(returndatasize(), 0x20)
         }
     }
@@ -67,7 +70,12 @@ contract MulticallerWithSender {
         uint256[] calldata values
     ) external payable returns (bytes[] memory) {
         assembly {
-            if iszero(and(eq(targets.length, data.length), eq(data.length, values.length))) {
+            if iszero(
+                and(
+                    eq(targets.length, data.length),
+                    eq(data.length, values.length)
+                )
+            ) {
                 // Store the function selector of `ArrayLengthsMismatch()`.
                 mstore(returndatasize(), 0x3b800a46)
                 // Revert with (offset, size).
@@ -137,7 +145,8 @@ contract MulticallerWithSender {
                 returndatacopy(add(memPtr, 0x20), 0x00, returndatasize())
                 // Advance the `resultsOffset` by `returndatasize() + 0x20`,
                 // rounded up to the next multiple of 0x20.
-                resultsOffset := and(add(add(resultsOffset, returndatasize()), 0x3f), not(0x1f))
+                resultsOffset :=
+                    and(add(add(resultsOffset, returndatasize()), 0x3f), not(0x1f))
                 if iszero(lt(results, data.length)) { break }
             }
             // Restore the `sender` slot.
