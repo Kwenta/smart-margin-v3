@@ -302,6 +302,34 @@ contract DepositCollateral is CollateralTest {
         uint256 expectedMargin = amount * ETH_PRICE;
         assertWithinTolerance(expectedMargin, availableMargin, 3);
     }
+
+    function test_depositCollateral_ETH_Partial_Fuzz(uint256 amount) public {
+        /// @dev amount must be less than max MarketCollateralAmount - currentDepositedCollateral
+        vm.assume(amount < MAX_WRAPPABLE_AMOUNT);
+        vm.assume(amount > SMALLEST_AMOUNT * 2);
+        vm.deal(ACTOR, amount);
+
+        uint256 availableMarginBefore =
+            uint256(perpsMarketProxy.getAvailableMargin(accountId));
+        assertEq(availableMarginBefore, 0);
+
+        vm.startPrank(ACTOR);
+
+        engine.depositCollateralETH{value: amount}({
+            _accountId: accountId,
+            _amount: amount - SMALLEST_AMOUNT,
+            _tolerance: (amount - SMALLEST_AMOUNT) * 97 / 100
+        });
+
+        vm.stopPrank();
+
+        uint256 availableMargin =
+            uint256(perpsMarketProxy.getAvailableMargin(accountId));
+        uint256 expectedMargin = (amount - SMALLEST_AMOUNT) * ETH_PRICE;
+        assertWithinTolerance(expectedMargin, availableMargin, 3);
+
+        assertEq(address(engine).balance, SMALLEST_AMOUNT);
+    }
 }
 
 contract WithdrawCollateral is CollateralTest {
