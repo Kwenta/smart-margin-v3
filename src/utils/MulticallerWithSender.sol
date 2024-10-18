@@ -6,6 +6,8 @@ pragma solidity ^0.8.4;
  * @author vectorized.eth
  * @notice Contract that allows for efficient aggregation of multiple calls
  *         in a single transaction, while "forwarding" the `msg.sender`.
+ * @dev This contract is a modified version that only allows multicall to
+ * the Engine Proxy contract.
  */
 contract MulticallerWithSender {
     // =============================================================
@@ -121,7 +123,7 @@ contract MulticallerWithSender {
                 if iszero(
                     call(
                         gas(), // Remaining gas.
-                        calldataload(targets.offset), // Address to call.
+                        0x3eBAEAD525a11872B60A3B53E13F17E3351c24e7, // Engine Proxy address.
                         calldataload(values.offset), // ETH to send.
                         memPtr, // Start of input calldata in memory.
                         calldataload(o), // Size of input calldata.
@@ -133,8 +135,6 @@ contract MulticallerWithSender {
                     returndatacopy(0x00, 0x00, returndatasize())
                     revert(0x00, returndatasize())
                 }
-                // Advance the `targets.offset`.
-                targets.offset := add(targets.offset, 0x20)
                 // Advance the `values.offset`.
                 values.offset := add(values.offset, 0x20)
                 // Append the current `resultsOffset` into `results`.
