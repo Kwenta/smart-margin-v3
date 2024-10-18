@@ -14,6 +14,7 @@ import {IERC20} from "src/interfaces/tokens/IERC20.sol";
 import {IWETH} from "src/interfaces/tokens/IWETH.sol";
 import {MathLib} from "src/libraries/MathLib.sol";
 import {MulticallablePayable} from "src/utils/MulticallablePayable.sol";
+import {Multicaller} from "src/utils/Multicaller.sol";
 import {SignatureCheckerLib} from "src/libraries/SignatureCheckerLib.sol";
 import {Zap} from "src/utils/zap/Zap.sol";
 
@@ -29,7 +30,7 @@ contract Engine is
     IEngine,
     EIP712,
     EIP7412,
-    MulticallablePayable,
+    Multicaller,
     UUPSUpgradeable
 {
     using MathLib for int128;
