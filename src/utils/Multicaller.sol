@@ -23,9 +23,8 @@ contract Multicaller {
 
     /**
      * @dev Aggregates multiple calls in a single transaction.
-     * @param targets  An array of addresses to call.
-     * @param data     An array of calldata to forward to the targets.
-     * @param values   How much ETH to forward to each target.
+     * @param data     An array of calldata to forward to this contract.
+     * @param values   How much ETH to forward with each call.
      * @param refundTo The address to transfer any remaining ETH in the contract after the calls.
      *                 If `address(0)`, remaining ETH will NOT be refunded.
      *                 If `address(1)`, remaining ETH will be refunded to `msg.sender`.
@@ -33,18 +32,12 @@ contract Multicaller {
      * @return An array of the returndata from each call.
      */
     function aggregate(
-        address[] calldata targets,
         bytes[] calldata data,
         uint256[] calldata values,
         address refundTo
     ) external payable returns (bytes[] memory) {
         assembly {
-            if iszero(
-                and(
-                    eq(targets.length, data.length),
-                    eq(data.length, values.length)
-                )
-            ) {
+            if iszero(eq(data.length, values.length)) {
                 // Store the function selector of `ArrayLengthsMismatch()`.
                 mstore(returndatasize(), 0x3b800a46)
                 // Revert with (offset, size).
@@ -65,7 +58,6 @@ contract Multicaller {
                 let end := add(results, data.length)
                 // For deriving the calldata offsets from the `results` pointer.
                 let valuesOffsetDiff := sub(values.offset, results)
-                let targetsOffsetDiff := sub(targets.offset, results)
 
                 for {} 1 {} {
                     // The offset of the current bytes in the calldata.
@@ -80,7 +72,7 @@ contract Multicaller {
                     if iszero(
                         call(
                             gas(), // Remaining gas.
-                            calldataload(add(targetsOffsetDiff, results)), // Address to call.
+                            address(), // Address to call (this contract).
                             calldataload(add(valuesOffsetDiff, results)), // ETH to send.
                             memPtr, // Start of input calldata in memory.
                             calldataload(o), // Size of input calldata.
@@ -146,7 +138,7 @@ contract Multicaller {
             }
 
             mstore(0x00, 0x20) // Store the memory offset of the `results`.
-            mstore(0x20, targets.length) // Store `targets.length` into `results`.
+            mstore(0x20, shr(5, data.length)) // Store `data.length` into `results`.
             // Direct return.
             return(0x00, resultsSize)
         }
@@ -170,9 +162,9 @@ contract Multicaller {
     fallback() external payable {
         assembly {
             // If the calldata starts with the bitwise negation of
-            // `bytes4(keccak256("aggregate(address[],bytes[],uint256[],address)"))`.
+            // `bytes4(keccak256("aggregate(bytes[],uint256[],address)"))`.
             let s := calldataload(returndatasize())
-            if eq(shr(224, s), 0x66e0daa0) {
+            if eq(shr(224, s), 0x84522fae) {
                 mstore(returndatasize(), not(s))
                 let o := 4
                 for { let i := o } lt(i, calldatasize()) {} {
