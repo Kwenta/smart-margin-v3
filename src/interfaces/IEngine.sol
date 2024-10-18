@@ -124,6 +124,10 @@ interface IEngine {
     // as ETH with a positive amount
     error InvalidWithdrawalAmount();
 
+    /// @notice thrown when attempting to deposit ETH as Collateral
+    /// and msg.value is less than specified amount
+    error InsufficientETHDeposit(uint256 sent, uint256 required);
+
     /*//////////////////////////////////////////////////////////////
                                  EVENTS
     //////////////////////////////////////////////////////////////*/
@@ -328,10 +332,13 @@ interface IEngine {
 
     /// @notice Deposits ETH as collateral by first wrapping to WETH and then calling modifyCollateralWrap
     /// @param _accountId The ID of the account to modify collateral for
+    /// @param _amount The amount of ETH to deposit as collateral
     /// @param _tolerance The slippage tolerance for the wrap operation
-    function depositCollateralETH(uint128 _accountId, uint256 _tolerance)
-        external
-        payable;
+    function depositCollateralETH(
+        uint128 _accountId,
+        uint256 _amount,
+        uint256 _tolerance
+    ) external payable;
 
     /// @notice Withdraws collateral as ETH
     /// @param _accountId The ID of the account to withdraw collateral from

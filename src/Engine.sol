@@ -524,19 +524,23 @@ contract Engine is
     }
 
     /// @inheritdoc IEngine
-    function depositCollateralETH(uint128 _accountId, uint256 _tolerance)
-        external
-        payable
-        override
-    {
-        WETH.deposit{value: msg.value}();
+    function depositCollateralETH(
+        uint128 _accountId,
+        uint256 _amount,
+        uint256 _tolerance
+    ) external payable override {
+        if (_amount > msg.value) {
+            revert InsufficientETHDeposit(msg.value, _amount);
+        }
 
-        WETH.approve(address(zap), msg.value);
+        WETH.deposit{value: _amount}();
+
+        WETH.approve(address(zap), _amount);
 
         uint256 wrapped = zap.wrap(
             address(WETH),
             WETH_SYNTH_MARKET_ID,
-            msg.value,
+            _amount,
             _tolerance,
             address(this)
         );
