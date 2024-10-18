@@ -469,6 +469,8 @@ contract Engine is
         uint256 _swapTolerance,
         bytes memory _path
     ) external payable override {
+        if (!isAccountOwner(_accountId, msg.sender)) revert Unauthorized();
+
         /// @dev "PERPS_MODIFY_COLLATERAL" permission will be revoked after unwinding through zap
         PERPS_MARKET_PROXY.grantPermission(
             _accountId, PERPS_MODIFY_COLLATERAL_PERMISSION, address(zap)
@@ -497,6 +499,8 @@ contract Engine is
         uint256 _swapTolerance,
         bytes memory _path
     ) external payable override {
+        if (!isAccountOwner(_accountId, msg.sender)) revert Unauthorized();
+
         uint256 balanceBefore = WETH.balanceOf(address(this));
 
         /// @dev "PERPS_MODIFY_COLLATERAL" permission will be revoked after unwinding through zap
