@@ -4,6 +4,7 @@ pragma solidity 0.8.27;
 import {ERC1967Proxy as Proxy} from
     "lib/openzeppelin-contracts/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 import {Engine} from "src/Engine.sol";
+import {MulticallerWithSender} from "src/utils/MulticallerWithSender.sol";
 import {BaseParameters} from "script/utils/parameters/BaseParameters.sol";
 import {BaseSepoliaParameters} from
     "script/utils/parameters/BaseSepoliaParameters.sol";
@@ -84,6 +85,20 @@ contract DeployArbitrumSepolia is Setup, ArbitrumSepoliaParameters {
             usdc: USDC,
             weth: WETH
         });
+
+        vm.stopBroadcast();
+    }
+}
+
+/// @dev steps to deploy and verify on Arbitrum:
+/// (1) load the variables in the .env file via `source .env`
+/// (2) run `forge script script/Deploy.s.sol:DeployMulticallArbitrum --rpc-url $ARBITRUM_RPC_URL --etherscan-api-key $ARBISCAN_API_KEY --broadcast --verify -vvvv`
+contract DeployMulticallArbitrum is Setup, ArbitrumParameters {
+    function run() public {
+        uint256 privateKey = vm.envUint("PRIVATE_KEY");
+        vm.startBroadcast(privateKey);
+
+        new MulticallerWithSender();
 
         vm.stopBroadcast();
     }
