@@ -61,23 +61,16 @@ contract MulticallerWithSender {
      *      This method will set `sender` to the `msg.sender` temporarily
      *      for the span of its execution.
      *      This method does not support reentrancy.
-     * @param targets An array of addresses to call.
-     * @param data    An array of calldata to forward to the targets.
+     * @param data    An array of calldata to forward to the engine.
      * @param values  How much ETH to forward to each target.
      * @return An array of the returndata from each call.
      */
     function aggregateWithSender(
-        address[] calldata targets,
         bytes[] calldata data,
         uint256[] calldata values
     ) external payable returns (bytes[] memory) {
         assembly {
-            if iszero(
-                and(
-                    eq(targets.length, data.length),
-                    eq(data.length, values.length)
-                )
-            ) {
+            if iszero(eq(data.length, values.length)) {
                 // Store the function selector of `ArrayLengthsMismatch()`.
                 mstore(returndatasize(), 0x3b800a46)
                 // Revert with (offset, size).
