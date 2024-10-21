@@ -363,8 +363,8 @@ contract Engine is
     function modifyCollateralZap(
         uint128 _accountId,
         int256 _amount,
-        uint256 _swapTolerance,
-        uint256 _zapTolerance,
+        uint256 _swapAmountOutMinimum,
+        uint256 _zapMinAmountOut,
         IERC20 _collateral,
         bytes memory _path
     ) external payable override {
@@ -378,7 +378,7 @@ contract Engine is
                 _from: address(_collateral),
                 _path: _path,
                 _amount: uint256(_amount),
-                _tolerance: _swapTolerance,
+                _amountOutMinimum: _swapAmountOutMinimum,
                 _receiver: address(this)
             });
 
@@ -386,7 +386,7 @@ contract Engine is
 
             // zap $USDC -> $sUSD
             uint256 susdAmount =
-                zap.zapIn(received, _zapTolerance, address(this));
+                zap.zapIn(received, _zapMinAmountOut, address(this));
 
             SUSD.approve(address(PERPS_MARKET_PROXY), susdAmount);
 
@@ -404,7 +404,7 @@ contract Engine is
             /// @dev given the amount is negative,
             /// simply casting (int -> uint) is unsafe, thus we use .abs()
             SUSD.approve(address(zap), _amount.abs256());
-            zap.zapOut(_amount.abs256(), _zapTolerance, msg.sender);
+            zap.zapOut(_amount.abs256(), _zapMinAmountOut, msg.sender);
         }
     }
 
@@ -464,9 +464,9 @@ contract Engine is
         uint128 _collateralId,
         uint256 _collateralAmount,
         address _collateral,
-        uint256 _zapTolerance,
-        uint256 _unwrapTolerance,
-        uint256 _swapTolerance,
+        uint256 _zapMinAmountOut,
+        uint256 _unwrapMinAmountOut,
+        uint256 _swapMaxAmountIn,
         bytes memory _path
     ) external payable override {
         if (!isAccountOwner(_accountId, msg.sender)) revert Unauthorized();
@@ -482,9 +482,9 @@ contract Engine is
             _collateralAmount: _collateralAmount,
             _collateral: _collateral,
             _path: _path,
-            _zapTolerance: _zapTolerance,
-            _unwrapTolerance: _unwrapTolerance,
-            _swapTolerance: _swapTolerance,
+            _zapMinAmountOut: _zapMinAmountOut,
+            _unwrapMinAmountOut: _unwrapMinAmountOut,
+            _swapMaxAmountIn: _swapMaxAmountIn,
             _receiver: msg.sender
         });
     }
@@ -494,9 +494,9 @@ contract Engine is
         uint128 _accountId,
         uint256 _collateralAmount,
         address _collateral,
-        uint256 _zapTolerance,
-        uint256 _unwrapTolerance,
-        uint256 _swapTolerance,
+        uint256 _zapMinAmountOut,
+        uint256 _unwrapMinAmountOut,
+        uint256 _swapMaxAmountIn,
         bytes memory _path
     ) external payable override {
         if (!isAccountOwner(_accountId, msg.sender)) revert Unauthorized();
@@ -514,9 +514,9 @@ contract Engine is
             _collateralAmount: _collateralAmount,
             _collateral: _collateral,
             _path: _path,
-            _zapTolerance: _zapTolerance,
-            _unwrapTolerance: _unwrapTolerance,
-            _swapTolerance: _swapTolerance,
+            _zapMinAmountOut: _zapMinAmountOut,
+            _unwrapMinAmountOut: _unwrapMinAmountOut,
+            _swapMaxAmountIn: _swapMaxAmountIn,
             _receiver: address(this)
         });
 
@@ -729,7 +729,7 @@ contract Engine is
         uint128 _accountId,
         uint256 _amount,
         IERC20 _collateral,
-        uint256 _zapTolerance,
+        uint256 _amountOutMinimum,
         bytes memory _path
     ) external payable override {
         _collateral.transferFrom(msg.sender, address(this), _amount);
@@ -739,14 +739,14 @@ contract Engine is
             _from: address(_collateral),
             _path: _path,
             _amount: uint256(_amount),
-            _tolerance: _zapTolerance,
+            _amountOutMinimum: _amountOutMinimum,
             _receiver: address(this)
         });
 
         USDC.approve(address(zap), received);
 
         // zap $USDC -> $sUSD
-        uint256 susdAmount = zap.zapIn(received, _zapTolerance, address(this));
+        uint256 susdAmount = zap.zapIn(received, _amountOutMinimum, address(this));
 
         credit[_accountId] += susdAmount;
 

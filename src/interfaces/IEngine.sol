@@ -261,15 +261,16 @@ interface IEngine {
     /// @param _accountId the account to modify
     /// @param _amount the amount of collateral
     /// to add or remove
-    /// @param _swapTolerance the tolerance of the swap
-    /// @param _zapTolerance the tolerance of the zap
+    /// @param _swapAmountOutMinimum tolerable amount of USDC to receive (from zap)
+    /// specified with 6 decimals.
+    /// @param _zapMinAmountOut tolerable amount of sUSD to receive from zap $USDC -> $sUSD
     /// @param _collateral the collateral to zapIn
     /// @param _path uniswap swap path encoded in order
     function modifyCollateralZap(
         uint128 _accountId,
         int256 _amount,
-        uint256 _swapTolerance,
-        uint256 _zapTolerance,
+        uint256 _swapAmountOutMinimum,
+        uint256 _zapMinAmountOut,
         IERC20 _collateral,
         bytes memory _path
     ) external payable;
@@ -297,18 +298,18 @@ interface IEngine {
     /// @param _collateralId synthetix market id of collateral
     /// @param _collateralAmount amount of collateral to unwind
     /// @param _collateral address of collateral to unwind
-    /// @param _zapTolerance acceptable slippage for zapping
-    /// @param _unwrapTolerance acceptable slippage for unwrapping
-    /// @param _swapTolerance acceptable slippage for swapping
+    /// @param _zapMinAmountOut acceptable slippage for zapping
+    /// @param _unwrapMinAmountOut acceptable slippage for unwrapping
+    /// @param _swapMaxAmountIn acceptable slippage for swapping
     /// @param _path Uniswap swap path encoded in reverse order
     function unwindCollateral(
         uint128 _accountId,
         uint128 _collateralId,
         uint256 _collateralAmount,
         address _collateral,
-        uint256 _zapTolerance,
-        uint256 _unwrapTolerance,
-        uint256 _swapTolerance,
+        uint256 _zapMinAmountOut,
+        uint256 _unwrapMinAmountOut,
+        uint256 _swapMaxAmountIn,
         bytes memory _path
     ) external payable;
 
@@ -316,17 +317,17 @@ interface IEngine {
     /// @param _accountId synthetix perp market account id
     /// @param _collateralAmount amount of collateral to unwind
     /// @param _collateral address of collateral to unwind
-    /// @param _zapTolerance acceptable slippage for zapping
-    /// @param _unwrapTolerance acceptable slippage for unwrapping
-    /// @param _swapTolerance acceptable slippage for swapping
+    /// @param _zapMinAmountOut acceptable slippage for zapping
+    /// @param _unwrapMinAmountOut acceptable slippage for unwrapping
+    /// @param _swapMaxAmountIn acceptable slippage for swapping
     /// @param _path Uniswap swap path encoded in reverse order
     function unwindCollateralETH(
         uint128 _accountId,
         uint256 _collateralAmount,
         address _collateral,
-        uint256 _zapTolerance,
-        uint256 _unwrapTolerance,
-        uint256 _swapTolerance,
+        uint256 _zapMinAmountOut,
+        uint256 _unwrapMinAmountOut,
+        uint256 _swapMaxAmountIn,
         bytes memory _path
     ) external payable;
 
@@ -411,13 +412,14 @@ interface IEngine {
     /// @param _accountId the id of the account to credit
     /// @param _amount the amount of $collateral to transfer and zap
     /// @param _collateral the collateral to zap
-    /// @param _zapTolerance the tolerance of the zap
+    /// @param _amountOutMinimum tolerable amount of USDC to receive (from zap)
+    /// specified with 6 decimals.
     /// @param _path uniswap swap path encoded in order
     function creditAccountZap(
         uint128 _accountId,
         uint256 _amount,
         IERC20 _collateral,
-        uint256 _zapTolerance,
+        uint256 _amountOutMinimum,
         bytes memory _path
     ) external payable;
 
