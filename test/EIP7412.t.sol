@@ -110,3 +110,30 @@ contract MulticallFulfillOracleQuery is EIP7412Test {
         engine.multicall{value: AMOUNT}(data);
     }
 }
+
+contract FulfillOracleQueryDepositETH is EIP7412Test {
+    function test_fulfillOracleQuery_depositETH(
+        bytes calldata signedOffchainData
+    ) public {
+        uint256 ORACLE_AMOUNT = 10;
+
+        uint256 preBalance = address(this).balance;
+        uint256 preBalanceeip7412Mock = address(eip7412Mock).balance;
+
+        uint256 availableMargin =
+            uint256(perpsMarketProxy.getAvailableMargin(accountId));
+        assertEq(availableMargin, 0);
+
+        engine.updatePricesAndDepositCollateralETH{value: SMALLEST_AMOUNT + ORACLE_AMOUNT}(
+            payable(address(eip7412Mock)), signedOffchainData, accountId, 1, 10
+        );
+
+        assertLt(address(this).balance, preBalance);
+        assertEq(address(eip7412Mock).balance, preBalanceeip7412Mock + ORACLE_AMOUNT);
+
+        availableMargin =
+            uint256(perpsMarketProxy.getAvailableMargin(accountId));
+        uint256 expectedMargin = SMALLEST_AMOUNT * ETH_PRICE;
+        assertWithinTolerance(expectedMargin, availableMargin, 2);
+    }
+}
