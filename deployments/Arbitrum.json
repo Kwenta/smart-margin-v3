@@ -6,5 +6,9 @@
     "test": {
         "EngineImplementation": "0xCFe66Bdac2Ebc15705210326dC2e0F87Fa874400",
         "EngineProxy": "0x3eBAEAD525a11872B60A3B53E13F17E3351c24e7"
+    },
+    "updatePricesAndDepositCollateralETH": {
+        "EngineImplementation": "0xA81f64072F51faA52854911625e3295F11DBe8a7",
+        "EngineProxy": "0xdDCd4b7f8a7cBf11425F9CEeE520F89519103C91"
     }
 }
