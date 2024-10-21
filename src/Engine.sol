@@ -746,7 +746,8 @@ contract Engine is
         USDC.approve(address(zap), received);
 
         // zap $USDC -> $sUSD
-        uint256 susdAmount = zap.zapIn(received, _amountOutMinimum, address(this));
+        uint256 susdAmount =
+            zap.zapIn(received, _amountOutMinimum, address(this));
 
         credit[_accountId] += susdAmount;
 
