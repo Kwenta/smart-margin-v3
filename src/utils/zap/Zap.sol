@@ -20,6 +20,7 @@ import {SafeERC20} from "./utils/SafeTransferERC20.sol";
 /// @author @barrasso
 /// @author @moss-eth
 contract Zap is Reentrancy, Errors {
+
     /// @custom:circle
     address public immutable USDC;
 
@@ -98,51 +99,65 @@ contract Zap is Reentrancy, Errors {
     /// @notice zap USDC into USDx
     /// @dev caller must grant USDC allowance to this contract
     /// @param _amount amount of USDC to zap
-    /// @param _tolerance acceptable slippage for wrapping and selling
+    /// @param _minAmountOut acceptable slippage for wrapping and selling
     /// @param _receiver address to receive USDx
     /// @return zapped amount of USDx received
-    function zapIn(uint256 _amount, uint256 _tolerance, address _receiver)
+    function zapIn(
+        uint256 _amount,
+        uint256 _minAmountOut,
+        address _receiver
+    )
         external
         returns (uint256 zapped)
     {
         _pull(USDC, msg.sender, _amount);
-        zapped = _zapIn(_amount, _tolerance);
+        zapped = _zapIn(_amount, _minAmountOut);
         _push(USDX, _receiver, zapped);
     }
 
     /// @dev allowance is assumed
     /// @dev following execution, this contract will hold the zapped USDx
-    function _zapIn(uint256 _amount, uint256 _tolerance)
+    function _zapIn(
+        uint256 _amount,
+        uint256 _minAmountOut
+    )
         internal
         returns (uint256 zapped)
     {
-        zapped = _wrap(USDC, SUSDC_SPOT_ID, _amount, _tolerance);
-        zapped = _sell(SUSDC_SPOT_ID, zapped, _tolerance);
+        zapped = _wrap(USDC, SUSDC_SPOT_ID, _amount, _minAmountOut);
+        zapped = _sell(SUSDC_SPOT_ID, zapped, _minAmountOut);
     }
 
     /// @notice zap USDx into USDC
     /// @dev caller must grant USDx allowance to this contract
     /// @param _amount amount of USDx to zap
-    /// @param _tolerance acceptable slippage for buying and unwrapping
+    /// @param _minAmountOut acceptable slippage for buying and unwrapping
     /// @param _receiver address to receive USDC
     /// @return zapped amount of USDC received
-    function zapOut(uint256 _amount, uint256 _tolerance, address _receiver)
+    function zapOut(
+        uint256 _amount,
+        uint256 _minAmountOut,
+        address _receiver
+    )
         external
         returns (uint256 zapped)
     {
         _pull(USDX, msg.sender, _amount);
-        zapped = _zapOut(_amount, _tolerance);
+        zapped = _zapOut(_amount, _minAmountOut);
         _push(USDC, _receiver, zapped);
     }
 
     /// @dev allowance is assumed
     /// @dev following execution, this contract will hold the zapped USDC
-    function _zapOut(uint256 _amount, uint256 _tolerance)
+    function _zapOut(
+        uint256 _amount,
+        uint256 _minAmountOut
+    )
         internal
         returns (uint256 zapped)
     {
-        zapped = _buy(SUSDC_SPOT_ID, _amount, _tolerance);
-        zapped = _unwrap(SUSDC_SPOT_ID, zapped, _tolerance);
+        zapped = _buy(SUSDC_SPOT_ID, _amount, _minAmountOut);
+        zapped = _unwrap(SUSDC_SPOT_ID, zapped, _minAmountOut);
     }
 
     /*//////////////////////////////////////////////////////////////
@@ -155,18 +170,21 @@ contract Zap is Reentrancy, Errors {
     /// @param _token address of token to wrap
     /// @param _synthId synthetix market id of synth to wrap into
     /// @param _amount amount of token to wrap
-    /// @param _tolerance acceptable slippage for wrapping
+    /// @param _minAmountOut acceptable slippage for wrapping
     /// @param _receiver address to receive wrapped synth
     /// @return wrapped amount of synth received
     function wrap(
         address _token,
         uint128 _synthId,
         uint256 _amount,
-        uint256 _tolerance,
+        uint256 _minAmountOut,
         address _receiver
-    ) external returns (uint256 wrapped) {
+    )
+        external
+        returns (uint256 wrapped)
+    {
         _pull(_token, msg.sender, _amount);
-        wrapped = _wrap(_token, _synthId, _amount, _tolerance);
+        wrapped = _wrap(_token, _synthId, _amount, _minAmountOut);
         _push(ISpotMarket(SPOT_MARKET).getSynth(_synthId), _receiver, wrapped);
     }
 
@@ -176,13 +194,16 @@ contract Zap is Reentrancy, Errors {
         address _token,
         uint128 _synthId,
         uint256 _amount,
-        uint256 _tolerance
-    ) internal returns (uint256 wrapped) {
+        uint256 _minAmountOut
+    )
+        internal
+        returns (uint256 wrapped)
+    {
         IERC20(_token).approve(SPOT_MARKET, _amount);
         (wrapped,) = ISpotMarket(SPOT_MARKET).wrap({
             marketId: _synthId,
             wrapAmount: _amount,
-            minAmountReceived: _tolerance
+            minAmountReceived: _minAmountOut
         });
     }
 
@@ -192,25 +213,32 @@ contract Zap is Reentrancy, Errors {
     /// @param _token address of token to unwrap into
     /// @param _synthId synthetix market id of synth to unwrap
     /// @param _amount amount of synth to unwrap
-    /// @param _tolerance acceptable slippage for unwrapping
+    /// @param _minAmountOut acceptable slippage for unwrapping
     /// @param _receiver address to receive unwrapped token
     /// @return unwrapped amount of token received
     function unwrap(
         address _token,
         uint128 _synthId,
         uint256 _amount,
-        uint256 _tolerance,
+        uint256 _minAmountOut,
         address _receiver
-    ) external returns (uint256 unwrapped) {
+    )
+        external
+        returns (uint256 unwrapped)
+    {
         address synth = ISpotMarket(SPOT_MARKET).getSynth(_synthId);
         _pull(synth, msg.sender, _amount);
-        unwrapped = _unwrap(_synthId, _amount, _tolerance);
+        unwrapped = _unwrap(_synthId, _amount, _minAmountOut);
         _push(_token, _receiver, unwrapped);
     }
 
     /// @dev allowance is assumed
     /// @dev following execution, this contract will hold the unwrapped token
-    function _unwrap(uint128 _synthId, uint256 _amount, uint256 _tolerance)
+    function _unwrap(
+        uint128 _synthId,
+        uint256 _amount,
+        uint256 _minAmountOut
+    )
         private
         returns (uint256 unwrapped)
     {
@@ -219,7 +247,7 @@ contract Zap is Reentrancy, Errors {
         (unwrapped,) = ISpotMarket(SPOT_MARKET).unwrap({
             marketId: _synthId,
             unwrapAmount: _amount,
-            minAmountReceived: _tolerance
+            minAmountReceived: _minAmountOut
         });
     }
 
@@ -231,24 +259,31 @@ contract Zap is Reentrancy, Errors {
     /// @dev caller must grant USDX allowance to this contract
     /// @param _synthId synthetix market id of synth to buy
     /// @param _amount amount of USDX to spend
-    /// @param _tolerance acceptable slippage for buying
+    /// @param _minAmountOut acceptable slippage for buying
     /// @param _receiver address to receive synth
     /// @return received amount of synth
     function buy(
         uint128 _synthId,
         uint256 _amount,
-        uint256 _tolerance,
+        uint256 _minAmountOut,
         address _receiver
-    ) external returns (uint256 received, address synth) {
+    )
+        external
+        returns (uint256 received, address synth)
+    {
         synth = ISpotMarket(SPOT_MARKET).getSynth(_synthId);
         _pull(USDX, msg.sender, _amount);
-        received = _buy(_synthId, _amount, _tolerance);
+        received = _buy(_synthId, _amount, _minAmountOut);
         _push(synth, _receiver, received);
     }
 
     /// @dev allowance is assumed
     /// @dev following execution, this contract will hold the bought synth
-    function _buy(uint128 _synthId, uint256 _amount, uint256 _tolerance)
+    function _buy(
+        uint128 _synthId,
+        uint256 _amount,
+        uint256 _minAmountOut
+    )
         internal
         returns (uint256 received)
     {
@@ -256,7 +291,7 @@ contract Zap is Reentrancy, Errors {
         (received,) = ISpotMarket(SPOT_MARKET).buy({
             marketId: _synthId,
             usdAmount: _amount,
-            minAmountReceived: _tolerance,
+            minAmountReceived: _minAmountOut,
             referrer: REFERRER
         });
     }
@@ -265,24 +300,31 @@ contract Zap is Reentrancy, Errors {
     /// @dev caller must grant synth allowance to this contract
     /// @param _synthId synthetix market id of synth to sell
     /// @param _amount amount of synth to sell
-    /// @param _tolerance acceptable slippage for selling
+    /// @param _minAmountOut acceptable slippage for selling
     /// @param _receiver address to receive USDX
     /// @return received amount of USDX
     function sell(
         uint128 _synthId,
         uint256 _amount,
-        uint256 _tolerance,
+        uint256 _minAmountOut,
         address _receiver
-    ) external returns (uint256 received) {
+    )
+        external
+        returns (uint256 received)
+    {
         address synth = ISpotMarket(SPOT_MARKET).getSynth(_synthId);
         _pull(synth, msg.sender, _amount);
-        received = _sell(_synthId, _amount, _tolerance);
+        received = _sell(_synthId, _amount, _minAmountOut);
         _push(USDX, _receiver, received);
     }
 
     /// @dev allowance is assumed
     /// @dev following execution, this contract will hold the sold USDX
-    function _sell(uint128 _synthId, uint256 _amount, uint256 _tolerance)
+    function _sell(
+        uint128 _synthId,
+        uint256 _amount,
+        uint256 _minAmountOut
+    )
         internal
         returns (uint256 received)
     {
@@ -291,7 +333,7 @@ contract Zap is Reentrancy, Errors {
         (received,) = ISpotMarket(SPOT_MARKET).sell({
             marketId: _synthId,
             synthAmount: _amount,
-            minUsdAmount: _tolerance,
+            minUsdAmount: _minAmountOut,
             referrer: REFERRER
         });
     }
@@ -308,9 +350,9 @@ contract Zap is Reentrancy, Errors {
     /// @param _collateralAmount amount of collateral to unwind
     /// @param _collateral address of collateral to unwind
     /// @param _path Uniswap swap path encoded in reverse order
-    /// @param _zapTolerance acceptable slippage for zapping
-    /// @param _unwrapTolerance acceptable slippage for unwrapping
-    /// @param _swapTolerance acceptable slippage for swapping
+    /// @param _zapMinAmountOut acceptable slippage for zapping
+    /// @param _unwrapMinAmountOut acceptable slippage for unwrapping
+    /// @param _swapMaxAmountIn acceptable slippage for swapping
     /// @param _receiver address to receive unwound collateral
     function unwind(
         uint128 _accountId,
@@ -318,11 +360,15 @@ contract Zap is Reentrancy, Errors {
         uint256 _collateralAmount,
         address _collateral,
         bytes memory _path,
-        uint256 _zapTolerance,
-        uint256 _unwrapTolerance,
-        uint256 _swapTolerance,
+        uint256 _zapMinAmountOut,
+        uint256 _unwrapMinAmountOut,
+        uint256 _swapMaxAmountIn,
         address _receiver
-    ) external isAuthorized(_accountId) requireStage(Stage.UNSET) {
+    )
+        external
+        isAuthorized(_accountId)
+        requireStage(Stage.UNSET)
+    {
         stage = Stage.LEVEL1;
 
         bytes memory params = abi.encode(
@@ -331,9 +377,9 @@ contract Zap is Reentrancy, Errors {
             _collateralAmount,
             _collateral,
             _path,
-            _zapTolerance,
-            _unwrapTolerance,
-            _swapTolerance,
+            _zapMinAmountOut,
+            _unwrapMinAmountOut,
+            _swapMaxAmountIn,
             _receiver
         );
 
@@ -364,7 +410,12 @@ contract Zap is Reentrancy, Errors {
         uint256 _premium,
         address,
         bytes calldata _params
-    ) external onlyAave requireStage(Stage.LEVEL1) returns (bool) {
+    )
+        external
+        onlyAave
+        requireStage(Stage.LEVEL1)
+        returns (bool)
+    {
         stage = Stage.LEVEL2;
 
         (,,, address _collateral,,,,, address _receiver) = abi.decode(
@@ -398,7 +449,11 @@ contract Zap is Reentrancy, Errors {
         uint256 _flashloan,
         uint256 _premium,
         bytes calldata _params
-    ) internal requireStage(Stage.LEVEL2) returns (uint256 unwound) {
+    )
+        internal
+        requireStage(Stage.LEVEL2)
+        returns (uint256 unwound)
+    {
         {
             (
                 uint128 _accountId,
@@ -406,8 +461,8 @@ contract Zap is Reentrancy, Errors {
                 uint256 _collateralAmount,
                 ,
                 ,
-                uint256 _zapTolerance,
-                uint256 _unwrapTolerance,
+                uint256 _zapMinAmountOut,
+                uint256 _unwrapMinAmountOut,
                 ,
             ) = abi.decode(
                 _params,
@@ -426,7 +481,7 @@ contract Zap is Reentrancy, Errors {
 
             // zap USDC from flashloan into USDx;
             // ALL USDC flashloaned from Aave is zapped into USDx
-            uint256 usdxAmount = _zapIn(_flashloan, _zapTolerance);
+            uint256 usdxAmount = _zapIn(_flashloan, _zapMinAmountOut);
 
             // burn USDx to pay off synthetix perp position debt;
             // debt is denominated in USD and thus repaid with USDx
@@ -442,15 +497,23 @@ contract Zap is Reentrancy, Errors {
             // unwrap withdrawn synthetix perp position collateral;
             // i.e., sETH -> WETH, sUSDe -> USDe, sUSDC -> USDC (...)
             unwound =
-                _unwrap(_collateralId, _collateralAmount, _unwrapTolerance);
+                _unwrap(_collateralId, _collateralAmount, _unwrapMinAmountOut);
 
             // establish total debt now owed to Aave;
             // i.e., # of USDC
             _flashloan += _premium;
         }
 
-        (,,, address _collateral, bytes memory _path,,, uint256 _swapTolerance,)
-        = abi.decode(
+        (
+            ,
+            ,
+            ,
+            address _collateral,
+            bytes memory _path,
+            ,
+            ,
+            uint256 _swapMaxAmountIn,
+        ) = abi.decode(
             _params,
             (
                 uint128,
@@ -472,7 +535,7 @@ contract Zap is Reentrancy, Errors {
         // whatever collateral amount is remaining is returned to the caller
         unwound -= _collateral == USDC
             ? _flashloan
-            : _swapFor(_collateral, _path, _flashloan, _swapTolerance);
+            : _swapFor(_collateral, _path, _flashloan, _swapMaxAmountIn);
     }
 
     /// @notice approximate USDC needed to unwind synthetix perp position
@@ -511,7 +574,10 @@ contract Zap is Reentrancy, Errors {
     /// @param _amount amount of USDx to burn
     /// @param _accountId synthetix perp market account id
     /// @return remaining amount of USDx returned to the caller
-    function burn(uint256 _amount, uint128 _accountId)
+    function burn(
+        uint256 _amount,
+        uint128 _accountId
+    )
         external
         returns (uint256 remaining)
     {
@@ -544,7 +610,10 @@ contract Zap is Reentrancy, Errors {
         uint256 _amount,
         uint128 _accountId,
         address _receiver
-    ) external isAuthorized(_accountId) {
+    )
+        external
+        isAuthorized(_accountId)
+    {
         _withdraw(_synthId, _amount, _accountId);
         address synth = _synthId == USDX_ID
             ? USDX
@@ -555,7 +624,11 @@ contract Zap is Reentrancy, Errors {
     /// @custom:synthetix RBAC permission required: "PERPS_MODIFY_COLLATERAL"
     /// @dev following execution, this contract will hold the withdrawn
     /// collateral
-    function _withdraw(uint128 _synthId, uint256 _amount, uint128 _accountId)
+    function _withdraw(
+        uint128 _synthId,
+        uint256 _amount,
+        uint128 _accountId
+    )
         internal
     {
         IPerpsMarket market = IPerpsMarket(PERPS_MARKET);
@@ -579,7 +652,10 @@ contract Zap is Reentrancy, Errors {
     /// @param _path Uniswap swap path encoded in reverse order
     /// @param _amountOut is the desired output amount
     /// @return amountIn required as the input for the swap in order
-    function quoteSwapFor(bytes memory _path, uint256 _amountOut)
+    function quoteSwapFor(
+        bytes memory _path,
+        uint256 _amountOut
+    )
         external
         returns (
             uint256 amountIn,
@@ -599,7 +675,10 @@ contract Zap is Reentrancy, Errors {
     /// @param _path Uniswap swap path encoded in order
     /// @param _amountIn is the input amount to spendp
     /// @return amountOut received as the output for the swap in order
-    function quoteSwapWith(bytes memory _path, uint256 _amountIn)
+    function quoteSwapWith(
+        bytes memory _path,
+        uint256 _amountIn
+    )
         external
         returns (
             uint256 amountOut,
@@ -618,22 +697,25 @@ contract Zap is Reentrancy, Errors {
     /// @param _from address of token to swap
     /// @param _path uniswap swap path encoded in reverse order
     /// @param _amount amount of USDC to receive in return
-    /// @param _tolerance or tolerable amount of token to spend
+    /// @param _maxAmountIn max amount of token to spend
     /// @param _receiver address to receive USDC
     /// @return deducted amount of incoming token; i.e., amount spent
     function swapFor(
         address _from,
         bytes memory _path,
         uint256 _amount,
-        uint256 _tolerance,
+        uint256 _maxAmountIn,
         address _receiver
-    ) external returns (uint256 deducted) {
-        _pull(_from, msg.sender, _tolerance);
-        deducted = _swapFor(_from, _path, _amount, _tolerance);
+    )
+        external
+        returns (uint256 deducted)
+    {
+        _pull(_from, msg.sender, _maxAmountIn);
+        deducted = _swapFor(_from, _path, _amount, _maxAmountIn);
         _push(USDC, _receiver, _amount);
 
-        if (deducted < _tolerance) {
-            _push(_from, msg.sender, _tolerance - deducted);
+        if (deducted < _maxAmountIn) {
+            _push(_from, msg.sender, _maxAmountIn - deducted);
         }
     }
 
@@ -643,15 +725,18 @@ contract Zap is Reentrancy, Errors {
         address _from,
         bytes memory _path,
         uint256 _amount,
-        uint256 _tolerance
-    ) internal returns (uint256 deducted) {
-        IERC20(_from).approve(ROUTER, _tolerance);
+        uint256 _maxAmountIn
+    )
+        internal
+        returns (uint256 deducted)
+    {
+        IERC20(_from).approve(ROUTER, _maxAmountIn);
 
         IRouter.ExactOutputParams memory params = IRouter.ExactOutputParams({
             path: _path,
             recipient: address(this),
             amountOut: _amount,
-            amountInMaximum: _tolerance
+            amountInMaximum: _maxAmountIn
         });
 
         try IRouter(ROUTER).exactOutput(params) returns (uint256 amountIn) {
@@ -669,7 +754,8 @@ contract Zap is Reentrancy, Errors {
     /// @param _from address of token to swap
     /// @param _path uniswap swap path encoded in order
     /// @param _amount of token to swap
-    /// @param _tolerance tolerable amount of USDC to receive specified with 6
+    /// @param _amountOutMinimum tolerable amount of USDC to receive specified
+    /// with 6
     /// decimals
     /// @param _receiver address to receive USDC
     /// @return received amount of USDC
@@ -677,11 +763,14 @@ contract Zap is Reentrancy, Errors {
         address _from,
         bytes memory _path,
         uint256 _amount,
-        uint256 _tolerance,
+        uint256 _amountOutMinimum,
         address _receiver
-    ) external returns (uint256 received) {
+    )
+        external
+        returns (uint256 received)
+    {
         _pull(_from, msg.sender, _amount);
-        received = _swapWith(_from, _path, _amount, _tolerance);
+        received = _swapWith(_from, _path, _amount, _amountOutMinimum);
         _push(USDC, _receiver, received);
     }
 
@@ -691,15 +780,18 @@ contract Zap is Reentrancy, Errors {
         address _from,
         bytes memory _path,
         uint256 _amount,
-        uint256 _tolerance
-    ) internal returns (uint256 received) {
+        uint256 _amountOutMinimum
+    )
+        internal
+        returns (uint256 received)
+    {
         IERC20(_from).approve(ROUTER, _amount);
 
         IRouter.ExactInputParams memory params = IRouter.ExactInputParams({
             path: _path,
             recipient: address(this),
             amountIn: _amount,
-            amountOutMinimum: _tolerance
+            amountOutMinimum: _amountOutMinimum
         });
 
         try IRouter(ROUTER).exactInput(params) returns (uint256 amountOut) {
@@ -728,7 +820,11 @@ contract Zap is Reentrancy, Errors {
     /// @param _token address of token to push
     /// @param _receiver address of receiver
     /// @param _amount amount of token to push
-    function _push(address _token, address _receiver, uint256 _amount)
+    function _push(
+        address _token,
+        address _receiver,
+        uint256 _amount
+    )
         internal
     {
         require(_receiver != address(0), PushFailed("Zero Address"));
@@ -737,4 +833,5 @@ contract Zap is Reentrancy, Errors {
 
         SafeERC20.safeTransfer(token, _receiver, _amount);
     }
+
 }
