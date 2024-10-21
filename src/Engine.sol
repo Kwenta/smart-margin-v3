@@ -5,6 +5,7 @@ import {ConditionalOrderHashLib} from
     "src/libraries/ConditionalOrderHashLib.sol";
 import {EIP712} from "src/utils/EIP712.sol";
 import {EIP7412} from "src/utils/EIP7412.sol";
+import {IERC7412} from "src/interfaces/synthetix/IERC7412.sol";
 import {
     IEngine,
     IPerpsMarketProxy,
@@ -528,23 +529,33 @@ contract Engine is
     }
 
     /// @inheritdoc IEngine
-    function depositCollateralETH(
+    function updatePricesAndDepositCollateralETH(
+        address payable EIP7412Implementer,
+        bytes calldata signedOffchainData,
         uint128 _accountId,
-        uint256 _amount,
-        uint256 _tolerance
+        uint256 _tolerance,
+        uint256 _oracleCallValue
     ) external payable override {
-        if (_amount > msg.value) {
-            revert InsufficientETHDeposit(msg.value, _amount);
+        if (msg.value <= _oracleCallValue) {
+            revert InsufficientETHDeposit(msg.value, _oracleCallValue + 1);
         }
 
-        WETH.deposit{value: _amount}();
+        uint256 depositAmount = msg.value - _oracleCallValue;
 
-        WETH.approve(address(zap), _amount);
+        /// @dev given the EIP7412Implementer address is specified in the call,
+        /// there exists the possibility of arbitrary code execution
+        IERC7412(EIP7412Implementer).fulfillOracleQuery{value: _oracleCallValue}(
+            signedOffchainData
+        );
+
+        WETH.deposit{value: depositAmount}();
+
+        WETH.approve(address(zap), depositAmount);
 
         uint256 wrapped = zap.wrap(
             address(WETH),
             WETH_SYNTH_MARKET_ID,
-            _amount,
+            depositAmount,
             _tolerance,
             address(this)
         );

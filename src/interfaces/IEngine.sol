@@ -330,14 +330,18 @@ interface IEngine {
         bytes memory _path
     ) external payable;
 
-    /// @notice Deposits ETH as collateral by first wrapping to WETH and then calling modifyCollateralWrap
+    /// @notice Fulfill an EIP-7412 oracle query and deposits ETH as collateral by first wrapping to WETH and then calling modifyCollateralWrap
+    /// @param EIP7412Implementer The address of the EIP-7412 implementer
+    /// @param signedOffchainData The data that was returned
     /// @param _accountId The ID of the account to modify collateral for
-    /// @param _amount The amount of ETH to deposit as collateral
     /// @param _tolerance The slippage tolerance for the wrap operation
-    function depositCollateralETH(
+    /// @param _oracleCallValue The value to send with the oracle call
+    function updatePricesAndDepositCollateralETH(
+        address payable EIP7412Implementer,
+        bytes calldata signedOffchainData,
         uint128 _accountId,
-        uint256 _amount,
-        uint256 _tolerance
+        uint256 _tolerance,
+        uint256 _oracleCallValue
     ) external payable;
 
     /// @notice Withdraws collateral as ETH
