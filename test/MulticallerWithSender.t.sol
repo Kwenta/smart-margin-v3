@@ -12,12 +12,15 @@ contract MulticallerWithSenderTest is Bootstrap {
     EIP7412Mock eip7412Mock;
     address constant DEPLOYED_ENGINE =
         0x3eBAEAD525a11872B60A3B53E13F17E3351c24e7;
+    address payable constant DEPLOYED_MWS =
+        payable(0x5f5b1c1b21E493EA646cd76FDd6a56A247DA3957);
+    uint256 constant ARBITRUM_BLOCK_NUMBER_MWS = 266_214_702;
 
     function setUp() public {
-        vm.rollFork(266_214_702);
+        vm.rollFork(ARBITRUM_BLOCK_NUMBER_MWS);
         initializeArbitrum();
 
-        mws = MWS(payable(0x5f5b1c1b21E493EA646cd76FDd6a56A247DA3957));
+        mws = MWS(DEPLOYED_MWS);
         eip7412Mock = new EIP7412Mock();
 
         /// @dev this is needed because MWS hardcodes the live Engine contract address
@@ -34,6 +37,10 @@ contract MulticallerWithSenderTest is Bootstrap {
 
 contract MulticallerWithSenderEngine is MulticallerWithSenderTest {
     function test_multicall_engine_depositCollateralETH() public {
+        uint256 availableMargin =
+            uint256(perpsMarketProxy.getAvailableMargin(accountId));
+        assertEq(availableMargin, 0);
+
         vm.deal(ACTOR, 2 ether);
 
         bytes[] memory data = new bytes[](2);
@@ -54,11 +61,20 @@ contract MulticallerWithSenderEngine is MulticallerWithSenderTest {
         vm.startPrank(ACTOR);
         mws.aggregateWithSender{value: values[0] + values[1]}(data, values);
         vm.stopPrank();
+
+        availableMargin =
+            uint256(perpsMarketProxy.getAvailableMargin(accountId));
+        uint256 expectedMargin = 2 ether * ETH_PRICE;
+        assertWithinTolerance(expectedMargin, availableMargin, 2);
     }
 
     function test_multicall_engine_fulfillOracleQuery_depositCollateralETH()
         public
     {
+        uint256 availableMargin =
+            uint256(perpsMarketProxy.getAvailableMargin(accountId));
+        assertEq(availableMargin, 0);
+
         vm.deal(ACTOR, 5 + 1 ether);
 
         bytes[] memory data = new bytes[](2);
@@ -82,5 +98,10 @@ contract MulticallerWithSenderEngine is MulticallerWithSenderTest {
         vm.startPrank(ACTOR);
         mws.aggregateWithSender{value: values[0] + values[1]}(data, values);
         vm.stopPrank();
+
+        availableMargin =
+            uint256(perpsMarketProxy.getAvailableMargin(accountId));
+        uint256 expectedMargin = 1 ether * ETH_PRICE;
+        assertWithinTolerance(expectedMargin, availableMargin, 2);
     }
 }
