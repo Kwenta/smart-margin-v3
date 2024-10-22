@@ -6,6 +6,8 @@ import {IERC20} from "./interfaces/IERC20.sol";
 import {IPerpsMarket, ISpotMarket} from "./interfaces/ISynthetix.sol";
 import {IQuoter, IRouter} from "./interfaces/IUniswap.sol";
 import {Errors} from "./utils/Errors.sol";
+
+import {Flush} from "./utils/Flush.sol";
 import {Reentrancy} from "./utils/Reentrancy.sol";
 import {SafeERC20} from "./utils/SafeTransferERC20.sol";
 
@@ -19,7 +21,7 @@ import {SafeERC20} from "./utils/SafeTransferERC20.sol";
 /// @author @flocqst
 /// @author @barrasso
 /// @author @moss-eth
-contract Zap is Reentrancy, Errors {
+contract Zap is Reentrancy, Errors, Flush(msg.sender) {
     /// @custom:circle
     address public immutable USDC;
 
@@ -399,64 +401,14 @@ contract Zap is Reentrancy, Errors {
         uint256 _premium,
         bytes calldata _params
     ) internal requireStage(Stage.LEVEL2) returns (uint256 unwound) {
-        {
-            (
-                uint128 _accountId,
-                uint128 _collateralId,
-                uint256 _collateralAmount,
-                ,
-                ,
-                uint256 _zapMinAmountOut,
-                uint256 _unwrapMinAmountOut,
-                ,
-            ) = abi.decode(
-                _params,
-                (
-                    uint128,
-                    uint128,
-                    uint256,
-                    address,
-                    bytes,
-                    uint256,
-                    uint256,
-                    uint256,
-                    address
-                )
-            );
-
-            // zap USDC from flashloan into USDx;
-            // ALL USDC flashloaned from Aave is zapped into USDx
-            uint256 usdxAmount = _zapIn(_flashloan, _zapMinAmountOut);
-
-            // burn USDx to pay off synthetix perp position debt;
-            // debt is denominated in USD and thus repaid with USDx
-            _burn(usdxAmount, _accountId);
-
-            /// @dev given the USDC buffer, an amount of USDx
-            /// necessarily less than the buffer will remain (<$1);
-            /// this amount is captured by the protocol
-            // withdraw synthetix perp position collateral to this contract;
-            // i.e., # of sETH, # of sUSDe, # of sUSDC (...)
-            _withdraw(_collateralId, _collateralAmount, _accountId);
-
-            // unwrap withdrawn synthetix perp position collateral;
-            // i.e., sETH -> WETH, sUSDe -> USDe, sUSDC -> USDC (...)
-            unwound =
-                _unwrap(_collateralId, _collateralAmount, _unwrapMinAmountOut);
-
-            // establish total debt now owed to Aave;
-            // i.e., # of USDC
-            _flashloan += _premium;
-        }
-
         (
-            ,
-            ,
-            ,
+            uint128 _accountId,
+            uint128 _collateralId,
+            uint256 _collateralAmount,
             address _collateral,
             bytes memory _path,
-            ,
-            ,
+            uint256 _zapMinAmountOut,
+            uint256 _unwrapMinAmountOut,
             uint256 _swapMaxAmountIn,
         ) = abi.decode(
             _params,
@@ -473,6 +425,29 @@ contract Zap is Reentrancy, Errors {
             )
         );
 
+        // zap USDC from flashloan into USDx;
+        // ALL USDC flashloaned from Aave is zapped into USDx
+        uint256 usdxAmount = _zapIn(_flashloan, _zapMinAmountOut);
+
+        // burn USDx to pay off synthetix perp position debt;
+        // debt is denominated in USD and thus repaid with USDx
+        _burn(usdxAmount, _accountId);
+
+        /// @dev given the USDC buffer, an amount of USDx
+        /// necessarily less than the buffer will remain (<$1);
+        /// this amount is captured by the protocol
+        // withdraw synthetix perp position collateral to this contract;
+        // i.e., # of sETH, # of sUSDe, # of sUSDC (...)
+        _withdraw(_collateralId, _collateralAmount, _accountId);
+
+        // unwrap withdrawn synthetix perp position collateral;
+        // i.e., sETH -> WETH, sUSDe -> USDe, sUSDC -> USDC (...)
+        unwound = _unwrap(_collateralId, _collateralAmount, _unwrapMinAmountOut);
+
+        // establish total debt now owed to Aave;
+        // i.e., # of USDC
+        _flashloan += _premium;
+
         // swap as much (or little) as necessary to repay Aave flashloan;
         // i.e., WETH -(swap)-> USDC -(repay)-> Aave
         // i.e., USDe -(swap)-> USDC -(repay)-> Aave
@@ -481,6 +456,14 @@ contract Zap is Reentrancy, Errors {
         unwound -= _collateral == USDC
             ? _flashloan
             : _swapFor(_collateral, _path, _flashloan, _swapMaxAmountIn);
+
+        /// @notice the path and max amount in must take into consideration:
+        ///     (1) Aave flashloan amount
+        ///     (2) premium owed to Aave for flashloan
+        ///     (3) USDC buffer added to the approximate loan needed
+        ///
+        /// @dev (1) is a function of (3); buffer added to loan requested
+        /// @dev (2) is a function of (1); premium is a percentage of loan
     }
 
     /// @notice approximate USDC needed to unwind synthetix perp position
@@ -518,15 +501,20 @@ contract Zap is Reentrancy, Errors {
     /// @dev excess USDx will be returned to the caller
     /// @param _amount amount of USDx to burn
     /// @param _accountId synthetix perp market account id
-    /// @return remaining amount of USDx returned to the caller
+    /// @return excess amount of USDx returned to the caller
     function burn(uint256 _amount, uint128 _accountId)
         external
-        returns (uint256 remaining)
+        returns (uint256 excess)
     {
+        excess = IERC20(USDX).balanceOf(address(this));
+
+        // pull and burn
         _pull(USDX, msg.sender, _amount);
         _burn(_amount, _accountId);
-        remaining = IERC20(USDX).balanceOf(address(this));
-        if (remaining > 0) _push(USDX, msg.sender, remaining);
+
+        excess = IERC20(USDX).balanceOf(address(this)) - excess;
+
+        if (excess > 0) _push(USDX, msg.sender, excess);
     }
 
     /// @dev allowance is assumed
