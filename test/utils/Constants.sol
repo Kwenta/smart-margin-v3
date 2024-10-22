@@ -4,7 +4,7 @@ pragma solidity 0.8.27;
 /// @title Contract for defining constants used in testing
 /// @author JaredBorders (jaredborders@pm.me)
 contract Constants {
-    uint256 public constant ARBITRUM_BLOCK_NUMBER = 264_441_861;
+    uint256 public constant ARBITRUM_BLOCK_NUMBER = 266_500_856;
 
     address internal constant OWNER = address(0x01);
 
@@ -53,8 +53,8 @@ contract Constants {
 
     uint128 constant SETH_PERPS_MARKET_ID = 100;
 
-    /// @dev this is the ETH price in USD at the block number 264_441_861
-    uint256 internal constant ETH_PRICE = 2600;
+    /// @dev this is the ETH price in USD at the block number 266_500_856
+    uint256 internal constant ETH_PRICE = 2625;
 
     uint256 internal constant AMOUNT = 10_000 ether;
 
