@@ -8,7 +8,7 @@ import {Conditions} from "test/utils/Conditions.sol";
 import {Constants} from "test/utils/Constants.sol";
 import {SynthetixV3Errors} from "test/utils/errors/SynthetixV3Errors.sol";
 import {EngineExposed} from "test/utils/exposed/EngineExposed.sol";
-import {Engine, BaseParameters, Setup} from "script/Deploy.s.sol";
+import {Engine, Setup} from "script/Deploy.s.sol";
 import {IERC20} from "src/interfaces/tokens/IERC20.sol";
 import {IPerpsMarketProxy} from "test/utils/interfaces/IPerpsMarketProxy.sol";
 import {ISpotMarketProxy} from "src/interfaces/synthetix/ISpotMarketProxy.sol";
