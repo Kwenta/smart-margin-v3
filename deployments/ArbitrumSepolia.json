@@ -1,4 +1,6 @@
 {
     "EngineImplementation": "0xA81f64072F51faA52854911625e3295F11DBe8a7",
-    "EngineProxy": "0xdDCd4b7f8a7cBf11425F9CEeE520F89519103C91"
+    "EngineProxy": "0xdDCd4b7f8a7cBf11425F9CEeE520F89519103C91",
+    "MulticallerWithSender": "",
+    "Zap": "0x3426B137D2b6a182EbEd358C6334D27D4CdCB363"
 }
