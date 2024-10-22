@@ -2,7 +2,7 @@
 pragma solidity 0.8.27;
 
 contract ArbitrumParameters {
-    address public constant PDAO = 0x88d40a3f2870e835005A3F1CFd28D94b12aD5483;
+    address public constant PDAO = 0x1813505eDB82a5c0Fc39DDB13213aC530Eb5DB6e;
 
     address public constant PERPS_MARKET_PROXY =
         0xd762960c31210Cf1bDf75b06A5192d395EEDC659;
