@@ -6,20 +6,20 @@ import {IEngine} from "src/interfaces/IEngine.sol";
 
 contract PayDebtTest is Bootstrap {
     address public constant DEBT_ACTOR =
-        address(0x325cd6b3CD80EDB102ac78848f5B127eB6DB13f3);
+        address(0x72A8EA777f5Aa58a1E5a405931e2ccb455B60088);
     uint128 public constant ACCOUNT_ID =
-        170_141_183_460_469_231_731_687_303_715_884_105_729;
-    uint256 public constant INITIAL_DEBT = 9_709_051_981_579_806_842;
+        170_141_183_460_469_231_731_687_303_715_884_105_766;
+    uint256 public constant INITIAL_DEBT = 1_216_469_669_641_984_045;
 
     function setUp() public {
-        vm.rollFork(264_552_063);
+        vm.rollFork(266_832_048);
         initializeArbitrum();
 
         synthMinter.mint_sUSD(DEBT_ACTOR, AMOUNT);
     }
 
     function test_payDebt() public {
-        /// @dev on this block (264_552_063), ACCOUNT_ID has a debt value of INITIAL_DEBT
+        /// @dev on this block (266_832_048), ACCOUNT_ID has a debt value of INITIAL_DEBT
         uint256 initialAccountDebt = perpsMarketProxy.debt(ACCOUNT_ID);
         assertEq(initialAccountDebt, INITIAL_DEBT);
 
