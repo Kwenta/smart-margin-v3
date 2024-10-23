@@ -11,20 +11,19 @@ contract MulticallerWithSenderTest is Bootstrap {
     MWS mws;
     EIP7412Mock eip7412Mock;
     address constant DEPLOYED_ENGINE =
-        0x3eBAEAD525a11872B60A3B53E13F17E3351c24e7;
+        0x480381d10Ffb87359364308f2b160d06532e3a01;
     address payable constant DEPLOYED_MWS =
-        payable(0x5f5b1c1b21E493EA646cd76FDd6a56A247DA3957);
-    uint256 constant ARBITRUM_BLOCK_NUMBER_MWS = 266_214_702;
+        payable(0xFCf78b0583c712a6B7ea6280e3aD72E508dA3a80);
 
     function setUp() public {
-        vm.rollFork(ARBITRUM_BLOCK_NUMBER_MWS);
+        vm.rollFork(ARBITRUM_BLOCK_NUMBER);
         initializeArbitrum();
 
         mws = MWS(DEPLOYED_MWS);
         eip7412Mock = new EIP7412Mock();
 
         /// @dev this is needed because MWS hardcodes the live Engine contract address
-        /// therefore we cannot use our boostrap test state, we must fork
+        /// therefore we cannot use our boostrap test state and must reprovide permission
         vm.startPrank(ACTOR);
         perpsMarketProxy.grantPermission({
             accountId: accountId,
