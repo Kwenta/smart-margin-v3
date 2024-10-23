@@ -14,13 +14,13 @@ contract UnwindTest is Bootstrap {
         address(0x72A8EA777f5Aa58a1E5a405931e2ccb455B60088);
     uint128 public constant ACCOUNT_ID =
         170_141_183_460_469_231_731_687_303_715_884_105_766;
-    uint256 public constant INITIAL_DEBT = 8381435606953380465;
+    uint256 public constant INITIAL_DEBT = 8_381_435_606_953_380_465;
 
     address constant USDC_ADDR = 0xaf88d065e77c8cC2239327C5EDb3A432268e5831;
     address constant WETH_ADDR = 0x82aF49447D8a07e3bd95BD0d56f35241523fBab1;
 
     function setUp() public {
-        vm.rollFork(266847904);
+        vm.rollFork(266_847_904);
         initializeArbitrum();
 
         synthMinter.mint_sUSD(DEBT_ACTOR, AMOUNT);
