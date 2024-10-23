@@ -1,13 +1,14 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-pragma solidity 0.8.20;
+pragma solidity 0.8.27;
 
+import {ArbGasInfoMock} from "test/utils/mocks/ArbGasInfoMock.sol";
 import {console2} from "lib/forge-std/src/console2.sol";
 import {Test} from "lib/forge-std/src/Test.sol";
 import {Conditions} from "test/utils/Conditions.sol";
 import {Constants} from "test/utils/Constants.sol";
 import {SynthetixV3Errors} from "test/utils/errors/SynthetixV3Errors.sol";
 import {EngineExposed} from "test/utils/exposed/EngineExposed.sol";
-import {Engine, BaseParameters, Setup} from "script/Deploy.s.sol";
+import {Engine, Setup} from "script/Deploy.s.sol";
 import {IERC20} from "src/interfaces/tokens/IERC20.sol";
 import {IPerpsMarketProxy} from "test/utils/interfaces/IPerpsMarketProxy.sol";
 import {ISpotMarketProxy} from "src/interfaces/synthetix/ISpotMarketProxy.sol";
@@ -16,6 +17,7 @@ import {ArbitrumParameters} from
     "script/utils/parameters/ArbitrumParameters.sol";
 import {ArbitrumSepoliaParameters} from
     "script/utils/parameters/ArbitrumSepoliaParameters.sol";
+import {TestHelpers} from "test/utils/TestHelpers.sol";
 
 /// @title Contract for bootstrapping the SMv3 system for testing purposes
 /// @dev it deploys the SMv3 Engine and EngineExposed, and defines
@@ -34,7 +36,13 @@ import {ArbitrumSepoliaParameters} from
 /// and effectively tests the deploy script as well
 ///
 /// @author JaredBorders (jaredborders@pm.me)
-contract Bootstrap is Test, Constants, Conditions, SynthetixV3Errors {
+contract Bootstrap is
+    Test,
+    Constants,
+    Conditions,
+    SynthetixV3Errors,
+    TestHelpers
+{
     // lets any test contract that inherits from this contract
     // use the console.log()
     using console2 for *;
@@ -50,8 +58,16 @@ contract Bootstrap is Test, Constants, Conditions, SynthetixV3Errors {
     // defined contracts
     IPerpsMarketProxy public perpsMarketProxy;
     ISpotMarketProxy public spotMarketProxy;
+    ArbGasInfoMock public arbGasInfoMock;
     IERC20 public sUSD;
     IERC20 public USDC;
+    IERC20 public WETH;
+    IERC20 public USDT;
+    IERC20 public tBTC;
+    IERC20 public USDe;
+    address public zap;
+    address public usdc;
+    address public weth;
 
     // Synthetix v3 Andromeda Spot Market ID for $sUSDC
     uint128 public sUSDCId;
@@ -59,8 +75,8 @@ contract Bootstrap is Test, Constants, Conditions, SynthetixV3Errors {
     // ACTOR's account id in the Synthetix v3 perps market
     uint128 public accountId;
 
-    function initializeBase() public {
-        BootstrapBase bootstrap = new BootstrapBase();
+    function initializeArbitrum() public {
+        BootstrapArbitrum bootstrap = new BootstrapArbitrum();
         (
             address _engineAddress,
             address _engineExposedAddress,
@@ -68,8 +84,12 @@ contract Bootstrap is Test, Constants, Conditions, SynthetixV3Errors {
             address _spotMarketProxyAddress,
             address _sUSDAddress,
             address _pDAOAddress,
-            address _usdc,
-            uint128 _sUSDCId
+            address _zapAddress,
+            address _usdcAddress,
+            address _wethAddress,
+            address _usdtAddress,
+            address _tBTCAddress,
+            address _usdeAddress
         ) = bootstrap.init();
 
         engine = Engine(_engineAddress);
@@ -77,10 +97,16 @@ contract Bootstrap is Test, Constants, Conditions, SynthetixV3Errors {
         perpsMarketProxy = IPerpsMarketProxy(_perpsMarketProxyAddress);
         spotMarketProxy = ISpotMarketProxy(_spotMarketProxyAddress);
         sUSD = IERC20(_sUSDAddress);
+        USDC = IERC20(_usdcAddress);
+        WETH = IERC20(_wethAddress);
+        USDT = IERC20(_usdtAddress);
+        tBTC = IERC20(_tBTCAddress);
+        USDe = IERC20(_usdeAddress);
         synthMinter = new SynthMinter(_sUSDAddress, _spotMarketProxyAddress);
         pDAO = _pDAOAddress;
-        USDC = IERC20(_usdc);
-        sUSDCId = _sUSDCId;
+        zap = _zapAddress;
+        usdc = _usdcAddress;
+        weth = _wethAddress;
 
         vm.startPrank(ACTOR);
         accountId = perpsMarketProxy.createAccount();
@@ -92,10 +118,16 @@ contract Bootstrap is Test, Constants, Conditions, SynthetixV3Errors {
         vm.stopPrank();
 
         synthMinter.mint_sUSD(ACTOR, AMOUNT);
+
+        arbGasInfoMock = new ArbGasInfoMock();
+        vm.etch(
+            0x000000000000000000000000000000000000006C,
+            address(arbGasInfoMock).code
+        );
     }
 }
 
-contract BootstrapBase is Setup, BaseParameters {
+contract BootstrapArbitrum is Setup, ArbitrumParameters {
     function init()
         public
         returns (
@@ -106,36 +138,46 @@ contract BootstrapBase is Setup, BaseParameters {
             address,
             address,
             address,
-            uint128
+            address,
+            address,
+            address,
+            address,
+            address
         )
     {
         (Engine engine) = Setup.deploySystem({
-            perpsMarketProxy: PERPS_MARKET_PROXY_ANDROMEDA,
-            spotMarketProxy: SPOT_MARKET_PROXY_ANDROMEDA,
-            sUSDProxy: USD_PROXY_ANDROMEDA,
+            perpsMarketProxy: PERPS_MARKET_PROXY,
+            spotMarketProxy: SPOT_MARKET_PROXY,
+            sUSDProxy: USD_PROXY,
             pDAO: PDAO,
+            zap: ZAP,
             usdc: USDC,
-            sUSDCId: SUSDC_SPOT_MARKET_ID
+            weth: WETH
         });
 
         EngineExposed engineExposed = new EngineExposed({
-            _perpsMarketProxy: PERPS_MARKET_PROXY_ANDROMEDA,
-            _spotMarketProxy: SPOT_MARKET_PROXY_ANDROMEDA,
-            _sUSDProxy: USD_PROXY_ANDROMEDA,
+            _perpsMarketProxy: PERPS_MARKET_PROXY,
+            _spotMarketProxy: SPOT_MARKET_PROXY,
+            _sUSDProxy: USD_PROXY,
             _pDAO: PDAO,
+            _zap: ZAP,
             _usdc: USDC,
-            _sUSDCId: SUSDC_SPOT_MARKET_ID
+            _weth: WETH
         });
 
         return (
             address(engine),
             address(engineExposed),
-            PERPS_MARKET_PROXY_ANDROMEDA,
-            SPOT_MARKET_PROXY_ANDROMEDA,
-            USD_PROXY_ANDROMEDA,
+            PERPS_MARKET_PROXY,
+            SPOT_MARKET_PROXY,
+            USD_PROXY,
             PDAO,
+            ZAP,
             USDC,
-            SUSDC_SPOT_MARKET_ID
+            WETH,
+            USDT,
+            TBTC,
+            USDE
         );
     }
 }

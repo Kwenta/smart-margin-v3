@@ -1,9 +1,10 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-pragma solidity 0.8.20;
+pragma solidity 0.8.27;
 
 import {ERC1967Proxy as Proxy} from
     "lib/openzeppelin-contracts/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 import {Engine} from "src/Engine.sol";
+import {MulticallerWithSender} from "src/utils/MulticallerWithSender.sol";
 import {BaseParameters} from "script/utils/parameters/BaseParameters.sol";
 import {BaseSepoliaParameters} from
     "script/utils/parameters/BaseSepoliaParameters.sol";
@@ -23,16 +24,18 @@ contract Setup is Script {
         address spotMarketProxy,
         address sUSDProxy,
         address pDAO,
+        address zap,
         address usdc,
-        uint128 sUSDCId
+        address weth
     ) public returns (Engine engine) {
         engine = new Engine({
             _perpsMarketProxy: perpsMarketProxy,
             _spotMarketProxy: spotMarketProxy,
             _sUSDProxy: sUSDProxy,
             _pDAO: pDAO,
+            _zap: zap,
             _usdc: usdc,
-            _sUSDCId: sUSDCId
+            _weth: weth
         });
 
         // deploy ERC1967 proxy and set implementation to engine
@@ -40,48 +43,6 @@ contract Setup is Script {
 
         // "wrap" proxy in IEngine interface
         engine = Engine(address(proxy));
-    }
-}
-
-/// @dev steps to deploy and verify on Base:
-/// (1) load the variables in the .env file via `source .env`
-/// (2) run `forge script script/Deploy.s.sol:DeployBase_Andromeda --rpc-url $BASE_RPC_URL --etherscan-api-key $BASESCAN_API_KEY --broadcast --verify -vvvv`
-contract DeployBase_Andromeda is Setup, BaseParameters {
-    function run() public {
-        uint256 privateKey = vm.envUint("PRIVATE_KEY");
-        vm.startBroadcast(privateKey);
-
-        Setup.deploySystem({
-            perpsMarketProxy: PERPS_MARKET_PROXY_ANDROMEDA,
-            spotMarketProxy: SPOT_MARKET_PROXY_ANDROMEDA,
-            sUSDProxy: USD_PROXY_ANDROMEDA,
-            pDAO: PDAO,
-            usdc: USDC,
-            sUSDCId: SUSDC_SPOT_MARKET_ID
-        });
-
-        vm.stopBroadcast();
-    }
-}
-
-/// @dev steps to deploy and verify on Base Goerli:
-/// (1) load the variables in the .env file via `source .env`
-/// (2) run `forge script script/Deploy.s.sol:DeployBaseSepolia_Andromeda --rpc-url $BASE_SEPOLIA_RPC_URL --etherscan-api-key $BASESCAN_API_KEY --broadcast --verify -vvvv`
-contract DeployBaseSepolia_Andromeda is Setup, BaseSepoliaParameters {
-    function run() public {
-        uint256 privateKey = vm.envUint("PRIVATE_KEY");
-        vm.startBroadcast(privateKey);
-
-        Setup.deploySystem({
-            perpsMarketProxy: PERPS_MARKET_PROXY_ANDROMEDA,
-            spotMarketProxy: SPOT_MARKET_PROXY_ANDROMEDA,
-            sUSDProxy: USD_PROXY_ANDROMEDA,
-            pDAO: PDAO,
-            usdc: USDC,
-            sUSDCId: SUSDC_SPOT_MARKET_ID
-        });
-
-        vm.stopBroadcast();
     }
 }
 
@@ -98,8 +59,9 @@ contract DeployArbitrum is Setup, ArbitrumParameters {
             spotMarketProxy: SPOT_MARKET_PROXY,
             sUSDProxy: USD_PROXY,
             pDAO: PDAO,
+            zap: ZAP,
             usdc: USDC,
-            sUSDCId: SUSDC_SPOT_MARKET_ID
+            weth: WETH
         });
 
         vm.stopBroadcast();
@@ -108,7 +70,7 @@ contract DeployArbitrum is Setup, ArbitrumParameters {
 
 /// @dev steps to deploy and verify on Arbitrum Sepolia:
 /// (1) load the variables in the .env file via `source .env`
-/// (2) run `forge script script/Deploy.s.sol:DeployArbitrumSepolia --rpc-url $ARBITRUM_SEPOLIA_RPL_URL --etherscan-api-key $ARBISCAN_API_KEY --broadcast --verify -vvvv`
+/// (2) run `forge script script/Deploy.s.sol:DeployArbitrumSepolia --rpc-url $ARBITRUM_SEPOLIA_RPC_URL --etherscan-api-key $ARBISCAN_API_KEY --broadcast --verify -vvvv`
 contract DeployArbitrumSepolia is Setup, ArbitrumSepoliaParameters {
     function run() public {
         uint256 privateKey = vm.envUint("PRIVATE_KEY");
@@ -119,9 +81,24 @@ contract DeployArbitrumSepolia is Setup, ArbitrumSepoliaParameters {
             spotMarketProxy: SPOT_MARKET_PROXY,
             sUSDProxy: USD_PROXY,
             pDAO: PDAO,
+            zap: ZAP,
             usdc: USDC,
-            sUSDCId: SUSDC_SPOT_MARKET_ID
+            weth: WETH
         });
+
+        vm.stopBroadcast();
+    }
+}
+
+/// @dev steps to deploy and verify on Arbitrum:
+/// (1) load the variables in the .env file via `source .env`
+/// (2) run `forge script script/Deploy.s.sol:DeployMulticallArbitrum --rpc-url $ARBITRUM_RPC_URL --etherscan-api-key $ARBISCAN_API_KEY --broadcast --verify -vvvv`
+contract DeployMulticallArbitrum is Setup, ArbitrumParameters {
+    function run() public {
+        uint256 privateKey = vm.envUint("PRIVATE_KEY");
+        vm.startBroadcast(privateKey);
+
+        new MulticallerWithSender();
 
         vm.stopBroadcast();
     }
