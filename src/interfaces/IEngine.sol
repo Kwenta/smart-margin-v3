@@ -1,7 +1,10 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-pragma solidity 0.8.20;
+pragma solidity 0.8.27;
 
 import {IPerpsMarketProxy} from "src/interfaces/synthetix/IPerpsMarketProxy.sol";
+import {ISpotMarketProxy} from "src/interfaces/synthetix/ISpotMarketProxy.sol";
+import {IERC20} from "src/interfaces/tokens/IERC20.sol";
+import {Zap} from "src/utils/zap/Zap.sol";
 
 /// @title Kwenta Smart Margin v3: Engine Interface
 /// @notice Conditional Order -> "co"
@@ -117,6 +120,14 @@ interface IEngine {
     // an unsupported function
     error NotSupported();
 
+    /// @notice thrown when attempting to withdraw Collateral
+    // as ETH with a positive amount
+    error InvalidWithdrawalAmount();
+
+    /// @notice thrown when attempting to deposit ETH as Collateral
+    /// and msg.value is less than specified amount
+    error InsufficientETHDeposit(uint256 sent, uint256 required);
+
     /*//////////////////////////////////////////////////////////////
                                  EVENTS
     //////////////////////////////////////////////////////////////*/
@@ -150,6 +161,11 @@ interface IEngine {
     event ConditionalOrderExecuted(
         IPerpsMarketProxy.Data order, uint256 synthetixFees, uint256 executorFee
     );
+
+    /// @notice Emitted when USDx is burned for an account
+    /// @param accountId The ID of the account for which USDx was burned
+    /// @param amount The amount of USDx that was burned
+    event Burned(uint128 indexed accountId, uint256 amount);
 
     /*//////////////////////////////////////////////////////////////
                              AUTHENTICATION
@@ -230,12 +246,13 @@ interface IEngine {
 
     /// @notice modify the collateral of an
     /// account identified by the accountId
-    /// via a zap of $USDC into/out of $sUSD
-    /// @dev when _amount is positive ->
-    ///     (1) transfers $USDC into the contract
+    /// via a zap of $collateral into/out of $sUSD
+    /// @dev when amount > 0 ->
+    ///     (1) transfers $collateral into the contract
+    ///     (2) swaps $collateral into $USDC
     ///     (2) zaps $USDC into $sUSD
     ///     (3) adds the $sUSD to the account's collateral
-    /// @dev when _amount is negative ->
+    /// @dev when amount < 0 ->
     ///     (1) removes the $sUSD from the account's collateral
     ///     (2) zaps $sUSD into $USDC
     ///     (3) transfers $USDC to the caller
@@ -243,10 +260,101 @@ interface IEngine {
     /// will throw an error
     /// @param _accountId the account to modify
     /// @param _amount the amount of collateral
-    /// to add or remove (negative to remove)
-    function modifyCollateralZap(uint128 _accountId, int256 _amount)
-        external
-        payable;
+    /// to add or remove
+    /// @param _swapAmountOutMinimum tolerable amount of USDC to receive (from zap)
+    /// specified with 6 decimals.
+    /// @param _zapMinAmountOut tolerable amount of sUSD to receive from zap $USDC -> $sUSD
+    /// @param _collateral the collateral to zapIn
+    /// @param _path uniswap swap path encoded in order
+    function modifyCollateralZap(
+        uint128 _accountId,
+        int256 _amount,
+        uint256 _swapAmountOutMinimum,
+        uint256 _zapMinAmountOut,
+        IERC20 _collateral,
+        bytes memory _path
+    ) external payable;
+
+    /// @notice modify the collateral of an
+    /// account identified by the accountId
+    /// via a zap of $collateral into/out of its synth
+    /// @dev This function handles both wrapping and unwrapping of collateral,
+    /// as well as modifying it in the perps market
+    /// @param _accountId the account to modify collateral for
+    /// @param _amount The amount of collateral to wrap/unwrap and modify
+    /// @param _tolerance The tolerance of the wrap/unwrap
+    /// @param _collateral the collateral to zap
+    /// @param _synthMarketId Id of the synth market
+    function modifyCollateralWrap(
+        uint128 _accountId,
+        int256 _amount,
+        uint256 _tolerance,
+        IERC20 _collateral,
+        uint128 _synthMarketId
+    ) external payable;
+
+    /// @notice unwind synthetix perp position collateral
+    /// @param _accountId synthetix perp market account id
+    /// @param _collateralId synthetix market id of collateral
+    /// @param _collateralAmount amount of collateral to unwind
+    /// @param _collateral address of collateral to unwind
+    /// @param _zapMinAmountOut acceptable slippage for zapping
+    /// @param _unwrapMinAmountOut acceptable slippage for unwrapping
+    /// @param _swapMaxAmountIn acceptable slippage for swapping
+    /// @param _path Uniswap swap path encoded in reverse order
+    function unwindCollateral(
+        uint128 _accountId,
+        uint128 _collateralId,
+        uint256 _collateralAmount,
+        address _collateral,
+        uint256 _zapMinAmountOut,
+        uint256 _unwrapMinAmountOut,
+        uint256 _swapMaxAmountIn,
+        bytes memory _path
+    ) external payable;
+
+    /// @notice unwind synthetix perp WETH_SYNTH_MARKET_ID position collateral and withdraw as ETH
+    /// @param _accountId synthetix perp market account id
+    /// @param _collateralAmount amount of collateral to unwind
+    /// @param _collateral address of collateral to unwind
+    /// @param _zapMinAmountOut acceptable slippage for zapping
+    /// @param _unwrapMinAmountOut acceptable slippage for unwrapping
+    /// @param _swapMaxAmountIn acceptable slippage for swapping
+    /// @param _path Uniswap swap path encoded in reverse order
+    function unwindCollateralETH(
+        uint128 _accountId,
+        uint256 _collateralAmount,
+        address _collateral,
+        uint256 _zapMinAmountOut,
+        uint256 _unwrapMinAmountOut,
+        uint256 _swapMaxAmountIn,
+        bytes memory _path
+    ) external payable;
+
+    /// @notice Deposits ETH as collateral by first wrapping to WETH and then calling modifyCollateralWrap
+    /// @param _accountId The ID of the account to modify collateral for
+    /// @param _amount The amount of ETH to deposit as collateral
+    /// @param _tolerance The slippage tolerance for the wrap operation
+    function depositCollateralETH(
+        uint128 _accountId,
+        uint256 _amount,
+        uint256 _tolerance
+    ) external payable;
+
+    /// @notice Withdraws collateral as ETH
+    /// @param _accountId The ID of the account to withdraw collateral from
+    /// @param _amount The amount of collateral to withdraw
+    /// @param _tolerance The slippage tolerance for the unwrap operation
+    function withdrawCollateralETH(
+        uint128 _accountId,
+        int256 _amount,
+        uint256 _tolerance
+    ) external payable;
+
+    /// @notice Pays off debt for a specified account using USDx
+    /// @param _accountId The ID of the account to pay debt for
+    /// @param _amount The amount of USDx to use for paying the debt
+    function payDebt(uint128 _accountId, uint256 _amount) external payable;
 
     /*//////////////////////////////////////////////////////////////
                          ASYNC ORDER MANAGEMENT
@@ -294,18 +402,26 @@ interface IEngine {
         external
         payable;
 
-    /// @notice transfer $USDC into the engine,
+    /// @notice transfer $collateral into the engine,
     /// zap it into $sUSD, and then credit the account
     /// identified by the accountId
-    /// @dev _amount of $USDC transferred into the
+    /// @dev _amount of $collateral transferred into the
     /// engine may differ from the amount credited
     /// to the account due to precision differences
     /// (i.e. ERC-20 decimal discrepancies)
     /// @param _accountId the id of the account to credit
-    /// @param _amount the amount of $USDC to transfer and zap
-    function creditAccountZap(uint128 _accountId, uint256 _amount)
-        external
-        payable;
+    /// @param _amount the amount of $collateral to transfer and zap
+    /// @param _collateral the collateral to zap
+    /// @param _amountOutMinimum tolerable amount of USDC to receive (from zap)
+    /// specified with 6 decimals.
+    /// @param _path uniswap swap path encoded in order
+    function creditAccountZap(
+        uint128 _accountId,
+        uint256 _amount,
+        IERC20 _collateral,
+        uint256 _amountOutMinimum,
+        bytes memory _path
+    ) external payable;
 
     /// @notice withdraw $sUSD from the engine and
     /// debit the account identified by the accountId
@@ -324,9 +440,13 @@ interface IEngine {
     /// (i.e. ERC-20 decimal discrepancies)
     /// @param _accountId the id of the account to debit
     /// @param _amount the amount of $sUSD to debit
-    function debitAccountZap(uint128 _accountId, uint256 _amount)
-        external
-        payable;
+    /// @param _zapTolerance the tolerance of the zap
+    /// expected to receive, otherwise the transaction will revert.
+    function debitAccountZap(
+        uint128 _accountId,
+        uint256 _amount,
+        uint256 _zapTolerance
+    ) external payable;
 
     /*//////////////////////////////////////////////////////////////
                       CONDITIONAL ORDER MANAGEMENT

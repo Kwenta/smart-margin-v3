@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-pragma solidity 0.8.20;
+pragma solidity 0.8.27;
 
 import {EIP7412} from "src/utils/EIP7412.sol";
 import {
@@ -15,8 +15,8 @@ contract EIP7412Test is Bootstrap {
     EIP7412MockRevert eip7412MockRevert;
 
     function setUp() public {
-        vm.rollFork(BASE_BLOCK_NUMBER);
-        initializeBase();
+        vm.rollFork(ARBITRUM_BLOCK_NUMBER);
+        initializeArbitrum();
 
         eip7412Mock = new EIP7412Mock();
         eip7412MockRefund = new EIP7412MockRefund();

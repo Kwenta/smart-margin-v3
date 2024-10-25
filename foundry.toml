@@ -3,9 +3,11 @@ src = 'src'
 test = 'test/'
 out = 'out'
 libs = ['lib']
-solc_version = "0.8.20"
+solc_version = "0.8.27"
 optimizer = true
-optimizer_runs = 1_000_000
+optimizer_runs = 1_000
+via-ir = true
+evm_version = "cancun"
 
 [fmt]
 line_length = 80
@@ -14,7 +16,7 @@ number_underscore = "thousands"
 [rpc_endpoints]
 mainnet = "${MAINNET_RPC_URL}" 
 optimism = "${OPTIMISM_RPC_URL}"
-base = "${BASE_RPC_URL}"
+arbitrum = "${ARBITRUM_RPC_URL}"
 goerli = "${GOERLI_RPC_URL}"
 optimismGoerli = "${OPTIMISM_GOERLI_RPC_URL}"
 baseGoerli = "${BASE_GOERLI_RPC_URL}"
@@ -22,7 +24,7 @@ baseGoerli = "${BASE_GOERLI_RPC_URL}"
 [etherscan]
 mainnet = { key = "${ETHERSCAN_API_KEY}" }
 optimism = { key = "${OPTIMISM_ETHERSCAN_API_KEY}" }
-base = { key = "${BASESCAN_API_KEY}" }
+arbitrum = { key = "${ARBISCAN_API_KEY}" }
 goerli = { key = "${ETHERSCAN_API_KEY}" }
 optimismGoerli = { key = "${OPTIMISM_ETHERSCAN_API_KEY}" }
 baseGoerli = { key = "${BASESCAN_API_KEY}" }

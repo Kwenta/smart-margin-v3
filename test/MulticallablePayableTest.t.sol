@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-pragma solidity 0.8.20;
+pragma solidity 0.8.27;
 
 import {Bootstrap} from "test/utils/Bootstrap.sol";
 import {MockMulticallablePayable as MP} from
@@ -14,8 +14,8 @@ contract MulticallablePayableTest is Bootstrap {
     EIP7412Mock eip7412Mock;
 
     function setUp() public {
-        vm.rollFork(BASE_BLOCK_NUMBER);
-        initializeBase();
+        vm.rollFork(ARBITRUM_BLOCK_NUMBER);
+        initializeArbitrum();
 
         mp = new MP();
         eip7412Mock = new EIP7412Mock();
@@ -140,6 +140,7 @@ contract MulticallableEngine is MulticallablePayableTest {
     {
         bytes[] memory data = new bytes[](2);
 
+        vm.deal(ACTOR, AMOUNT);
         vm.startPrank(ACTOR);
 
         sUSD.approve(address(engine), type(uint256).max);

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-pragma solidity 0.8.20;
+pragma solidity 0.8.27;
 
 /// @title Contract(s) used to mock EIP-7412 Oracle functionality for testing purposes
 /// @author JaredBorders (jaredborders@pm.me)

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-pragma solidity 0.8.20;
+pragma solidity 0.8.27;
 
 import {IPerpsMarketProxy} from "test/utils/interfaces/IPerpsMarketProxy.sol";
 import {Test} from "lib/forge-std/src/Test.sol";
@@ -23,12 +23,12 @@ contract SynthetixMock is Test {
     }
 
     function mock_getMaxMarketSize(
-        address marketConfigurationModule,
+        address perpsMarketProxy,
         uint128 marketId,
         uint256 maxMarketSize
     ) public {
         vm.mockCall(
-            marketConfigurationModule,
+            perpsMarketProxy,
             abi.encodeWithSelector(
                 IPerpsMarketProxy.getMaxMarketSize.selector, marketId
             ),

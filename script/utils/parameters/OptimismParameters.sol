@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-pragma solidity 0.8.20;
+pragma solidity 0.8.27;
 
 contract OptimismParameters {
     address public constant PDAO = 0xe826d43961a87fBE71C91d9B73F7ef9b16721C07;
