@@ -582,7 +582,8 @@ contract Engine is
         );
 
         // Convert WETH to ETH and send to user
-        WETH.withdrawTo(msg.sender, unwrappedWETH);
+        WETH.withdraw(unwrappedWETH);
+        msg.sender.call{value: unwrappedWETH}("");
     }
 
     function _depositCollateral(
