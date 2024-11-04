@@ -2,8 +2,8 @@
 pragma solidity 0.8.27;
 
 contract BaseParameters {
-    // https://app.safe.global/home?safe=base:0x2f4004Bc32cc5D18a62fE26E35A0881d5397c549
-    address public constant PDAO = 0x2f4004Bc32cc5D18a62fE26E35A0881d5397c549;
+    // Deployer base
+    address public constant PDAO = 0x88d40a3f2870e835005A3F1CFd28D94b12aD5483;
 
     address public constant PERPS_MARKET_PROXY = address(0);
 
@@ -26,6 +26,10 @@ contract BaseParameters {
     // https://basescan.org/token/0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913
     address public constant USDC = 0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913;
 
+    address public constant WETH = 0x4200000000000000000000000000000000000006;
+
     // https://usecannon.com/packages/synthetix-spot-market/3.3.5/84531-andromeda
     uint128 public constant SUSDC_SPOT_MARKET_ID = 1;
+
+    address public constant ZAP = 0xC9aF789Ae606F69cF8Ed073A04eC92f2354b027d;
 }

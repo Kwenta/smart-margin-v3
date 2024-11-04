@@ -3,7 +3,7 @@ pragma solidity 0.8.27;
 
 contract BaseSepoliaParameters {
     /// @dev this is an EOA used on testnet only
-    address public constant PDAO = 0x12d970154Ac171293323f20757130d5731850deB;
+    address public constant PDAO = 0x88d40a3f2870e835005A3F1CFd28D94b12aD5483;
 
     address public constant PERPS_MARKET_PROXY = address(0);
 
@@ -26,6 +26,10 @@ contract BaseSepoliaParameters {
     // https://base-sepolia.blockscout.com/address/0x69980C3296416820623b3e3b30703A74e2320bC8
     address public constant USDC = 0x69980C3296416820623b3e3b30703A74e2320bC8;
 
+    address public constant WETH = 0x4200000000000000000000000000000000000006;
+
     // https://usecannon.com/packages/synthetix-spot-market/3.3.5/84531-andromeda
     uint128 public constant SUSDC_SPOT_MARKET_ID = 1;
+
+    address public constant ZAP = 0xC9aF789Ae606F69cF8Ed073A04eC92f2354b027d;
 }
