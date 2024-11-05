@@ -21,8 +21,7 @@ contract Errors {
     error SellFailed(string reason);
 
     /// @notice thrown when a swap operation fails
-    /// @param reason string for the failure
-    error SwapFailed(string reason);
+    error SwapFailed();
 
     /// @notice thrown when operation is not permitted
     error NotPermitted();
