@@ -261,15 +261,12 @@ interface IEngine {
     /// @param _accountId the account to modify
     /// @param _amount the amount of collateral
     /// to add or remove
-    /// @param _swapAmountOutMinimum tolerable amount of USDC to receive (from zap)
-    /// specified with 6 decimals.
     /// @param _zapMinAmountOut tolerable amount of sUSD to receive from zap $USDC -> $sUSD
     /// @param _collateral the collateral to zapIn
     /// @param _path uniswap swap path encoded in order
     function modifyCollateralZap(
         uint128 _accountId,
         int256 _amount,
-        uint256 _swapAmountOutMinimum,
         uint256 _zapMinAmountOut,
         IERC20 _collateral,
         bytes memory _path
@@ -300,7 +297,7 @@ interface IEngine {
     /// @param _collateral address of collateral to unwind
     /// @param _zapMinAmountOut acceptable slippage for zapping
     /// @param _unwrapMinAmountOut acceptable slippage for unwrapping
-    /// @param _swapMaxAmountIn acceptable slippage for swapping
+    /// @param _swapAmountIn acceptable slippage for swapping
     /// @param _path Uniswap swap path encoded in reverse order
     function unwindCollateral(
         uint128 _accountId,
@@ -309,7 +306,7 @@ interface IEngine {
         address _collateral,
         uint256 _zapMinAmountOut,
         uint256 _unwrapMinAmountOut,
-        uint256 _swapMaxAmountIn,
+        uint256 _swapAmountIn,
         bytes memory _path
     ) external payable;
 
@@ -319,7 +316,7 @@ interface IEngine {
     /// @param _collateral address of collateral to unwind
     /// @param _zapMinAmountOut acceptable slippage for zapping
     /// @param _unwrapMinAmountOut acceptable slippage for unwrapping
-    /// @param _swapMaxAmountIn acceptable slippage for swapping
+    /// @param _swapAmountIn acceptable slippage for swapping
     /// @param _path Uniswap swap path encoded in reverse order
     function unwindCollateralETH(
         uint128 _accountId,
@@ -327,7 +324,7 @@ interface IEngine {
         address _collateral,
         uint256 _zapMinAmountOut,
         uint256 _unwrapMinAmountOut,
-        uint256 _swapMaxAmountIn,
+        uint256 _swapAmountIn,
         bytes memory _path
     ) external payable;
 

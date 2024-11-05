@@ -363,7 +363,6 @@ contract Engine is
     function modifyCollateralZap(
         uint128 _accountId,
         int256 _amount,
-        uint256 _swapAmountOutMinimum,
         uint256 _zapMinAmountOut,
         IERC20 _collateral,
         bytes memory _path
@@ -374,11 +373,10 @@ contract Engine is
             );
             _collateral.approve(address(zap), uint256(_amount));
 
-            uint256 received = zap.swapWith({
+            uint256 received = zap.swapFrom({
                 _from: address(_collateral),
                 _path: _path,
-                _amount: uint256(_amount),
-                _amountOutMinimum: _swapAmountOutMinimum,
+                _amountIn: uint256(_amount),
                 _receiver: address(this)
             });
 
@@ -466,7 +464,7 @@ contract Engine is
         address _collateral,
         uint256 _zapMinAmountOut,
         uint256 _unwrapMinAmountOut,
-        uint256 _swapMaxAmountIn,
+        uint256 _swapAmountIn,
         bytes memory _path
     ) external payable override {
         if (!isAccountOwner(_accountId, msg.sender)) revert Unauthorized();
@@ -484,7 +482,7 @@ contract Engine is
             _path: _path,
             _zapMinAmountOut: _zapMinAmountOut,
             _unwrapMinAmountOut: _unwrapMinAmountOut,
-            _swapMaxAmountIn: _swapMaxAmountIn,
+            _swapAmountIn: _swapAmountIn,
             _receiver: msg.sender
         });
     }
@@ -496,7 +494,7 @@ contract Engine is
         address _collateral,
         uint256 _zapMinAmountOut,
         uint256 _unwrapMinAmountOut,
-        uint256 _swapMaxAmountIn,
+        uint256 _swapAmountIn,
         bytes memory _path
     ) external payable override {
         if (!isAccountOwner(_accountId, msg.sender)) revert Unauthorized();
@@ -516,7 +514,7 @@ contract Engine is
             _path: _path,
             _zapMinAmountOut: _zapMinAmountOut,
             _unwrapMinAmountOut: _unwrapMinAmountOut,
-            _swapMaxAmountIn: _swapMaxAmountIn,
+            _swapAmountIn: _swapAmountIn,
             _receiver: address(this)
         });
 
@@ -736,11 +734,10 @@ contract Engine is
         _collateral.transferFrom(msg.sender, address(this), _amount);
         _collateral.approve(address(zap), _amount);
 
-        uint256 received = zap.swapWith({
+        uint256 received = zap.swapFrom({
             _from: address(_collateral),
             _path: _path,
-            _amount: uint256(_amount),
-            _amountOutMinimum: _amountOutMinimum,
+            _amountIn: uint256(_amount),
             _receiver: address(this)
         });
 
