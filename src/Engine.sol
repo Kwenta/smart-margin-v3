@@ -363,28 +363,16 @@ contract Engine is
     function modifyCollateralZap(
         uint128 _accountId,
         int256 _amount,
-        uint256 _zapMinAmountOut,
-        IERC20 _collateral,
-        bytes memory _path
+        uint256 _zapMinAmountOut
     ) external payable override {
         if (_amount > 0) {
-            _collateral.transferFrom(
-                msg.sender, address(this), uint256(_amount)
-            );
-            _collateral.approve(address(zap), uint256(_amount));
+            USDC.transferFrom(msg.sender, address(this), uint256(_amount));
 
-            uint256 received = zap.swapFrom({
-                _from: address(_collateral),
-                _path: _path,
-                _amountIn: uint256(_amount),
-                _receiver: address(this)
-            });
-
-            USDC.approve(address(zap), received);
+            USDC.approve(address(zap), _amount.abs256());
 
             // zap $USDC -> $sUSD
             uint256 susdAmount =
-                zap.zapIn(received, _zapMinAmountOut, address(this));
+                zap.zapIn(_amount.abs256(), _zapMinAmountOut, address(this));
 
             SUSD.approve(address(PERPS_MARKET_PROXY), susdAmount);
 
@@ -727,25 +715,15 @@ contract Engine is
     function creditAccountZap(
         uint128 _accountId,
         uint256 _amount,
-        IERC20 _collateral,
-        uint256 _amountOutMinimum,
-        bytes memory _path
+        uint256 _amountOutMinimum
     ) external payable override {
-        _collateral.transferFrom(msg.sender, address(this), _amount);
-        _collateral.approve(address(zap), _amount);
+        USDC.transferFrom(msg.sender, address(this), _amount);
 
-        uint256 received = zap.swapFrom({
-            _from: address(_collateral),
-            _path: _path,
-            _amountIn: uint256(_amount),
-            _receiver: address(this)
-        });
-
-        USDC.approve(address(zap), received);
+        USDC.approve(address(zap), _amount);
 
         // zap $USDC -> $sUSD
         uint256 susdAmount =
-            zap.zapIn(received, _amountOutMinimum, address(this));
+            zap.zapIn(_amount, _amountOutMinimum, address(this));
 
         credit[_accountId] += susdAmount;
 

@@ -246,13 +246,12 @@ interface IEngine {
 
     /// @notice modify the collateral of an
     /// account identified by the accountId
-    /// via a zap of $collateral into/out of $sUSD
-    /// @dev when amount > 0 ->
-    ///     (1) transfers $collateral into the contract
-    ///     (2) swaps $collateral into $USDC
+    /// via a zap of $USDC into/out of $sUSD
+    /// @dev when _amount is positive ->
+    ///     (1) transfers $USDC into the contract
     ///     (2) zaps $USDC into $sUSD
     ///     (3) adds the $sUSD to the account's collateral
-    /// @dev when amount < 0 ->
+    /// @dev when _amount is negative ->
     ///     (1) removes the $sUSD from the account's collateral
     ///     (2) zaps $sUSD into $USDC
     ///     (3) transfers $USDC to the caller
@@ -260,16 +259,12 @@ interface IEngine {
     /// will throw an error
     /// @param _accountId the account to modify
     /// @param _amount the amount of collateral
-    /// to add or remove
+    /// to add or remove (negative to remove)
     /// @param _zapMinAmountOut tolerable amount of sUSD to receive from zap $USDC -> $sUSD
-    /// @param _collateral the collateral to zapIn
-    /// @param _path uniswap swap path encoded in order
     function modifyCollateralZap(
         uint128 _accountId,
         int256 _amount,
-        uint256 _zapMinAmountOut,
-        IERC20 _collateral,
-        bytes memory _path
+        uint256 _zapMinAmountOut
     ) external payable;
 
     /// @notice modify the collateral of an
@@ -399,25 +394,20 @@ interface IEngine {
         external
         payable;
 
-    /// @notice transfer $collateral into the engine,
+    /// @notice transfer $USDC into the engine,
     /// zap it into $sUSD, and then credit the account
     /// identified by the accountId
-    /// @dev _amount of $collateral transferred into the
+    /// @dev _amount of $USDC transferred into the
     /// engine may differ from the amount credited
     /// to the account due to precision differences
     /// (i.e. ERC-20 decimal discrepancies)
     /// @param _accountId the id of the account to credit
-    /// @param _amount the amount of $collateral to transfer and zap
-    /// @param _collateral the collateral to zap
+    /// @param _amount the amount of $USDC to transfer and zap
     /// @param _amountOutMinimum tolerable amount of USDC to receive (from zap)
-    /// specified with 6 decimals.
-    /// @param _path uniswap swap path encoded in order
     function creditAccountZap(
         uint128 _accountId,
         uint256 _amount,
-        IERC20 _collateral,
-        uint256 _amountOutMinimum,
-        bytes memory _path
+        uint256 _amountOutMinimum
     ) external payable;
 
     /// @notice withdraw $sUSD from the engine and
