@@ -4,9 +4,9 @@
         "EngineProxy": "0xe331a7eeC851Ba702aA8BF43070a178451d6D28E"
     },
     "test": {
-        "EngineImplementation": "0x51f25391bd458B898D6e9156c9C90e423746310A",
-        "EngineProxy": "0x0983aB04A9711E5Daa7AC0a21Cd823473f99F648",
-        "MulticallerWithSender": "0x5139d3f368bE37F8269a02653CDb1D5e1Ed094b4",
-        "Zap": "0xd6236Fc63f9FC7956DFf966463BeC3bDF02c68aB"
+        "EngineImplementation": "0x83a6Fbba9BC62041781c0b19fD6c8116f8439C0c",
+        "EngineProxy": "0xCFe66Bdac2Ebc15705210326dC2e0F87Fa874400",
+        "MulticallerWithSender": "0x3eBAEAD525a11872B60A3B53E13F17E3351c24e7",
+        "Zap": "0xaEd5977ed65d340b4B8e58Ec3EC3b04b19308f21"
     }
 }
