@@ -93,7 +93,7 @@ contract DeployBaseSepolia is Setup, BaseSepoliaParameters {
 /// @dev steps to deploy and verify on Arbitrum:
 /// (1) load the variables in the .env file via `source .env`
 /// (2) run `forge script script/Deploy.s.sol:DeployMulticallBase --rpc-url $BASE_RPC_URL --etherscan-api-key $BASESCAN_API_KEY --broadcast --verify -vvvv`
-contract DeployMulticallBase is Setup, ArbitrumParameters {
+contract DeployMulticallBase is Setup, BaseParameters {
     function run() public {
         uint256 privateKey = vm.envUint("PRIVATE_KEY");
         vm.startBroadcast(privateKey);
