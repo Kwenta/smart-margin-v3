@@ -58,8 +58,8 @@ contract Engine is
     /// for a conditional order
     uint256 internal constant MAX_CONDITIONS = 8;
 
-    /// @notice "1" synthMarketId represents $WETH in Synthetix v3
-    uint128 public constant WETH_SYNTH_MARKET_ID = 4;
+    /// @notice "6" synthMarketId represents $WETH in Synthetix v3
+    uint128 public constant WETH_SYNTH_MARKET_ID = 6;
 
     /*//////////////////////////////////////////////////////////////
                                IMMUTABLES
