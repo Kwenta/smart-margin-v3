@@ -78,8 +78,8 @@ contract Bootstrap is
     function initializeArbitrum() public {
         BootstrapArbitrum bootstrap = new BootstrapArbitrum();
         (
-            address _engineAddress,
-            address _engineExposedAddress,
+            address payable _engineAddress,
+            address payable _engineExposedAddress,
             address _perpsMarketProxyAddress,
             address _spotMarketProxyAddress,
             address _sUSDAddress,
@@ -131,8 +131,8 @@ contract BootstrapArbitrum is Setup, ArbitrumParameters {
     function init()
         public
         returns (
-            address,
-            address,
+            address payable,
+            address payable,
             address,
             address,
             address,
@@ -166,8 +166,8 @@ contract BootstrapArbitrum is Setup, ArbitrumParameters {
         });
 
         return (
-            address(engine),
-            address(engineExposed),
+            payable(address(engine)),
+            payable(address(engineExposed)),
             PERPS_MARKET_PROXY,
             SPOT_MARKET_PROXY,
             USD_PROXY,
