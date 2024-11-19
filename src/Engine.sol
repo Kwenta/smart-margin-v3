@@ -155,6 +155,9 @@ contract Engine is
         pDAO = _pDAO;
     }
 
+    /// @notice Allows the contract to receive ETH when unwrapping WETH
+    receive() external payable {}
+
     /*//////////////////////////////////////////////////////////////
                            UPGRADE MANAGEMENT
     //////////////////////////////////////////////////////////////*/
