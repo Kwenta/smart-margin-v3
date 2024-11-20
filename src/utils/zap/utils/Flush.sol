@@ -2,7 +2,6 @@
 pragma solidity 0.8.27;
 
 import {IERC20} from "../interfaces/IERC20.sol";
-import {ERC2771Context} from "./ERC2771Context.sol";
 
 /// @title token flushing utility
 /// @author @jaredborders
@@ -24,10 +23,10 @@ contract Flush {
     /// @custom:plumber is the only authorized caller
     /// @param _token address of token to flush
     function flush(address _token) external {
-        require(ERC2771Context._msgSender() == PLUMBER, OnlyPlumber());
+        require(msg.sender == PLUMBER, OnlyPlumber());
         IERC20 token = IERC20(_token);
         uint256 balance = token.balanceOf(address(this));
-        if (balance > 0) token.transfer(ERC2771Context._msgSender(), balance);
+        if (balance > 0) token.transfer(msg.sender, balance);
     }
 
     /// @notice designate a new plumber
@@ -35,7 +34,7 @@ contract Flush {
     /// @dev zero address can be used to remove flush capability
     /// @param _newPlumber address of new plumber
     function designatePlumber(address _newPlumber) external {
-        require(ERC2771Context._msgSender() == PLUMBER, OnlyPlumber());
+        require(msg.sender == PLUMBER, OnlyPlumber());
         PLUMBER = _newPlumber;
         emit PlumberDesignated(_newPlumber);
     }

@@ -6,7 +6,6 @@ import {IERC20} from "./interfaces/IERC20.sol";
 import {IPerpsMarket, ISpotMarket} from "./interfaces/ISynthetix.sol";
 import {Errors} from "./utils/Errors.sol";
 
-import {ERC2771Context} from "./utils/ERC2771Context.sol";
 import {Flush} from "./utils/Flush.sol";
 import {Reentrancy} from "./utils/Reentrancy.sol";
 import {SafeERC20} from "./utils/SafeTransferERC20.sol";
@@ -21,7 +20,7 @@ import {SafeERC20} from "./utils/SafeTransferERC20.sol";
 /// @author @flocqst
 /// @author @barrasso
 /// @author @moss-eth
-contract Zap is Reentrancy, Errors, Flush(ERC2771Context._msgSender()) {
+contract Zap is Reentrancy, Errors, Flush(msg.sender) {
     /// @custom:circle
     address public immutable USDC;
 
@@ -77,7 +76,7 @@ contract Zap is Reentrancy, Errors, Flush(ERC2771Context._msgSender()) {
     /// @param _accountId synthetix perp market account id
     modifier isAuthorized(uint128 _accountId) {
         bool authorized = IPerpsMarket(PERPS_MARKET).isAuthorized(
-            _accountId, MODIFY_PERMISSION, ERC2771Context._msgSender()
+            _accountId, MODIFY_PERMISSION, msg.sender
         );
         require(authorized, NotPermitted());
         _;
@@ -85,10 +84,7 @@ contract Zap is Reentrancy, Errors, Flush(ERC2771Context._msgSender()) {
 
     /// @notice validate caller is Aave lending pool
     modifier onlyAave() {
-        require(
-            ERC2771Context._msgSender() == AAVE,
-            OnlyAave(ERC2771Context._msgSender())
-        );
+        require(msg.sender == AAVE, OnlyAave(msg.sender));
         _;
     }
 
@@ -106,7 +102,7 @@ contract Zap is Reentrancy, Errors, Flush(ERC2771Context._msgSender()) {
         external
         returns (uint256 zapped)
     {
-        _pull(USDC, ERC2771Context._msgSender(), _amount);
+        _pull(USDC, msg.sender, _amount);
         zapped = _zapIn(_amount, _minAmountOut);
         _push(USDX, _receiver, zapped);
     }
@@ -131,7 +127,7 @@ contract Zap is Reentrancy, Errors, Flush(ERC2771Context._msgSender()) {
         external
         returns (uint256 zapped)
     {
-        _pull(USDX, ERC2771Context._msgSender(), _amount);
+        _pull(USDX, msg.sender, _amount);
         zapped = _zapOut(_amount, _minAmountOut);
         _push(USDC, _receiver, zapped);
     }
@@ -167,7 +163,7 @@ contract Zap is Reentrancy, Errors, Flush(ERC2771Context._msgSender()) {
         uint256 _minAmountOut,
         address _receiver
     ) external returns (uint256 wrapped) {
-        _pull(_token, ERC2771Context._msgSender(), _amount);
+        _pull(_token, msg.sender, _amount);
         wrapped = _wrap(_token, _synthId, _amount, _minAmountOut);
         _push(ISpotMarket(SPOT_MARKET).getSynth(_synthId), _receiver, wrapped);
     }
@@ -206,7 +202,7 @@ contract Zap is Reentrancy, Errors, Flush(ERC2771Context._msgSender()) {
         address _receiver
     ) external returns (uint256 unwrapped) {
         address synth = ISpotMarket(SPOT_MARKET).getSynth(_synthId);
-        _pull(synth, ERC2771Context._msgSender(), _amount);
+        _pull(synth, msg.sender, _amount);
         unwrapped = _unwrap(_synthId, _amount, _minAmountOut);
         _push(_token, _receiver, unwrapped);
     }
@@ -244,7 +240,7 @@ contract Zap is Reentrancy, Errors, Flush(ERC2771Context._msgSender()) {
         address _receiver
     ) external returns (uint256 received, address synth) {
         synth = ISpotMarket(SPOT_MARKET).getSynth(_synthId);
-        _pull(USDX, ERC2771Context._msgSender(), _amount);
+        _pull(USDX, msg.sender, _amount);
         received = _buy(_synthId, _amount, _minAmountOut);
         _push(synth, _receiver, received);
     }
@@ -278,7 +274,7 @@ contract Zap is Reentrancy, Errors, Flush(ERC2771Context._msgSender()) {
         address _receiver
     ) external returns (uint256 received) {
         address synth = ISpotMarket(SPOT_MARKET).getSynth(_synthId);
-        _pull(synth, ERC2771Context._msgSender(), _amount);
+        _pull(synth, msg.sender, _amount);
         received = _sell(_synthId, _amount, _minAmountOut);
         _push(USDX, _receiver, received);
     }
@@ -522,12 +518,12 @@ contract Zap is Reentrancy, Errors, Flush(ERC2771Context._msgSender()) {
         excess = IERC20(USDX).balanceOf(address(this));
 
         // pull and burn
-        _pull(USDX, ERC2771Context._msgSender(), _amount);
+        _pull(USDX, msg.sender, _amount);
         _burn(_amount, _accountId);
 
         excess = IERC20(USDX).balanceOf(address(this)) - excess;
 
-        if (excess > 0) _push(USDX, ERC2771Context._msgSender(), excess);
+        if (excess > 0) _push(USDX, msg.sender, excess);
     }
 
     /// @dev allowance is assumed
@@ -595,7 +591,7 @@ contract Zap is Reentrancy, Errors, Flush(ERC2771Context._msgSender()) {
         uint256 _amountIn,
         address _receiver
     ) external returns (uint256 amountOut) {
-        _pull(_from, ERC2771Context._msgSender(), _amountIn);
+        _pull(_from, msg.sender, _amountIn);
         amountOut = odosSwap(_from, _amountIn, _path);
         _push(USDC, _receiver, amountOut);
     }
