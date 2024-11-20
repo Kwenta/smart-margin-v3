@@ -9,10 +9,10 @@
         "MulticallerWithSender": "0x45316C04257bA9bd8CA00587Fe74eCD74938C3a2",
         "Zap": "0xaEd5977ed65d340b4B8e58Ec3EC3b04b19308f21"
     },
-    "UnwindUSDC+ERC2771": {
-        "EngineImplementation": "0x4D97559Bd6081dAB7ccE9Bc6d2Cc4af3a9fcd0E0",
-        "EngineProxy": "0x0069Bc6D0D26BC072546f24551A052AC007BBA88",
-        "MulticallerWithSender": "0x223444342bDAECC2339FD046407de2d60Ef37365",
-        "Zap": "0xab62e32C01d2b38152FC23a912218aad6997a71A"
+    "UnwindUSDC Fix": {
+        "EngineImplementation": "0x6fA284f37e69B2A94bF1f774511413f6e480f02E",
+        "EngineProxy": "0x80A19BeBb0F8C1aBd149c75e9705916545A89642",
+        "MulticallerWithSender": "0xAC3B62339c7841b78C5146fCCA757cC56F84eB1f",
+        "Zap": "0xDE5858409c1776e03291242f2430413839Aaa35C"
     }
 }
