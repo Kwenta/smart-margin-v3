@@ -42,7 +42,7 @@ contract Setup is Script {
         Proxy proxy = new Proxy(address(engine), "");
 
         // "wrap" proxy in IEngine interface
-        engine = Engine(address(proxy));
+        engine = Engine(payable(address(proxy)));
     }
 }
 
