@@ -438,7 +438,7 @@ contract Zap is Reentrancy, Errors, Flush(msg.sender) {
         _withdraw(_collateralId, _collateralAmount, _accountId);
 
         if (_collateral == USDC) {
-            unwound = _zapOut(_collateralAmount, _collateralAmount);
+            unwound = _zapOut(_collateralAmount, _collateralAmount / 1e12);
         } else {
             // unwrap withdrawn synthetix perp position collateral;
             // i.e., sETH -> WETH, sUSDe -> USDe, sUSDC -> USDC (...)

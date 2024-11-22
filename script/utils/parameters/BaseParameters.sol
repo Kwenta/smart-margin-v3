@@ -31,5 +31,5 @@ contract BaseParameters {
     // https://usecannon.com/packages/synthetix-spot-market/3.3.5/84531-andromeda
     uint128 public constant SUSDC_SPOT_MARKET_ID = 1;
 
-    address public constant ZAP = 0x74D3dD7736fc57975B1b921286872ad5CD5e1715;
+    address public constant ZAP = 0x64b6Ae998Fbba6d24dD7a2469842119A014835CD;
 }
