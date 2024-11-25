@@ -348,6 +348,16 @@ interface IEngine {
     /// @param _amount The amount of USDx to use for paying the debt
     function payDebt(uint128 _accountId, uint256 _amount) external payable;
 
+    /// @notice Pays off debt for a specified account using USDC
+    /// @param _accountId The ID of the account to pay debt for
+    /// @param _amount The amount of USDx to use for paying the debt
+    /// @param _zapMinAmountOut tolerable amount of sUSD to receive from zap $USDC -> $USDx
+    function payDebtWithUSDC(
+        uint128 _accountId,
+        uint256 _amount,
+        uint256 _zapMinAmountOut
+    ) external payable;
+
     /*//////////////////////////////////////////////////////////////
                          ASYNC ORDER MANAGEMENT
     //////////////////////////////////////////////////////////////*/

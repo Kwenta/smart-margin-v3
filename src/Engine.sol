@@ -638,6 +638,27 @@ contract Engine is
         emit Burned(_accountId, _amount - remaining);
     }
 
+    /// @inheritdoc IEngine
+    function payDebtWithUSDC(
+        uint128 _accountId,
+        uint256 _amount,
+        uint256 _zapMinAmountOut
+    ) external payable override {
+        if (!isAccountOwner(_accountId, msg.sender)) revert Unauthorized();
+
+        USDC.transferFrom(msg.sender, address(this), _amount);
+
+        USDC.approve(address(zap), _amount);
+        uint256 usdxAmount = zap.zapIn(_amount, _zapMinAmountOut, address(this));
+
+        SUSD.approve(address(zap), usdxAmount);
+        uint256 remaining = zap.burn(usdxAmount, _accountId);
+
+        if (remaining > 0) SUSD.transfer(msg.sender, remaining);
+
+        emit Burned(_accountId, usdxAmount - remaining);
+    }
+
     /*//////////////////////////////////////////////////////////////
                          ASYNC ORDER MANAGEMENT
     //////////////////////////////////////////////////////////////*/
