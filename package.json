@@ -5,13 +5,13 @@
   "homepage": "https://github.com/Kwenta/smart-margin-v3#readme",
   "scripts": {
     "compile": "forge build",
-    "test": "forge test --fork-url $(grep ARBITRUM_RPC_URL .env | cut -d '=' -f2) --etherscan-api-key $(grep ARBISCAN_API_KEY .env | cut -d '=' -f2) --gas-report -vvv",
+    "test": "forge test --fork-url $(grep BASE_RPC_URL .env | cut -d '=' -f2) --etherscan-api-key $(grep BASESCAN_API_KEY .env | cut -d '=' -f2) --gas-report -vvv",
     "test:hh": "npx hardhat test",
     "format": "forge fmt",
-    "coverage": "forge coverage --fork-url $(grep ARBITRUM_RPC_URL .env | cut -d '=' -f2) --ir-minimum",
-    "coverage:generate-lcov": "forge coverage --fork-url $(grep ARBITRUM_RPC_URL .env | cut -d '=' -f2) --report lcov --ir-minimum",
+    "coverage": "forge coverage --fork-url $(grep BASE_RPC_URL .env | cut -d '=' -f2) --ir-minimum",
+    "coverage:generate-lcov": "forge coverage --fork-url $(grep BASE_RPC_URL .env | cut -d '=' -f2) --report lcov --ir-minimum",
     "analysis:slither": "slither .",
-    "gas-snapshot": "forge snapshot --fork-url $(grep ARBITRUM_RPC_URL .env | cut -d '=' -f2)",
+    "gas-snapshot": "forge snapshot --fork-url $(grep BASE_RPC_URL .env | cut -d '=' -f2)",
     "decode-custom-error": "npx @usecannon/cli decode synthetix-perps-market"
   },
   "repository": {

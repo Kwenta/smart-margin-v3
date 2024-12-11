@@ -13,7 +13,7 @@ contract PayDebtTest is Bootstrap {
 
     function setUp() public {
         vm.rollFork(266_832_048);
-        initializeArbitrum();
+        initializeBase();
 
         synthMinter.mint_sUSD(DEBT_ACTOR, AMOUNT);
     }

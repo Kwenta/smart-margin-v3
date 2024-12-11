@@ -21,7 +21,7 @@ contract UnwindTest is Bootstrap {
 
     function setUp() public {
         vm.rollFork(266_847_904);
-        initializeArbitrum();
+        initializeBase();
 
         synthMinter.mint_sUSD(DEBT_ACTOR, AMOUNT);
 

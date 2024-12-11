@@ -19,8 +19,8 @@ contract ConditionalOrderTest is
     uint256 bad_signerPrivateKey;
 
     function setUp() public {
-        vm.rollFork(ARBITRUM_BLOCK_NUMBER);
-        initializeArbitrum();
+        vm.rollFork(BASE_BLOCK_NUMBER);
+        initializeBase();
 
         signerPrivateKey = 0x12341234;
         signer = vm.addr(signerPrivateKey);

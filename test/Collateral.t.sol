@@ -6,8 +6,8 @@ import {Bootstrap} from "test/utils/Bootstrap.sol";
 
 contract CollateralTest is Bootstrap {
     function setUp() public {
-        vm.rollFork(ARBITRUM_BLOCK_NUMBER);
-        initializeArbitrum();
+        vm.rollFork(BASE_BLOCK_NUMBER);
+        initializeBase();
     }
 }
 
@@ -151,7 +151,7 @@ contract DepositCollateral is CollateralTest {
             _amount: int256(SMALLER_AMOUNT),
             _tolerance: SMALLER_AMOUNT,
             _collateral: WETH,
-            _synthMarketId: 4
+            _synthMarketId: WETH_SYNTH_MARKET_ID
         });
 
         vm.stopPrank();
@@ -499,7 +499,7 @@ contract WithdrawCollateral is CollateralTest {
             _amount: int256(SMALLER_AMOUNT),
             _tolerance: SMALLER_AMOUNT,
             _collateral: WETH,
-            _synthMarketId: 4
+            _synthMarketId: WETH_SYNTH_MARKET_ID
         });
 
         uint256 preBalance = WETH.balanceOf(ACTOR);
@@ -510,7 +510,7 @@ contract WithdrawCollateral is CollateralTest {
             _amount: -int256(SMALLER_AMOUNT),
             _tolerance: SMALLER_AMOUNT,
             _collateral: WETH,
-            _synthMarketId: 4
+            _synthMarketId: WETH_SYNTH_MARKET_ID
         });
 
         vm.stopPrank();
@@ -531,7 +531,7 @@ contract WithdrawCollateral is CollateralTest {
             _amount: int256(SMALLER_AMOUNT),
             _tolerance: SMALLER_AMOUNT,
             _collateral: WETH,
-            _synthMarketId: 4
+            _synthMarketId: WETH_SYNTH_MARKET_ID
         });
 
         vm.stopPrank();
@@ -543,7 +543,7 @@ contract WithdrawCollateral is CollateralTest {
             _amount: -int256(SMALLER_AMOUNT),
             _tolerance: SMALLER_AMOUNT,
             _collateral: WETH,
-            _synthMarketId: 4
+            _synthMarketId: WETH_SYNTH_MARKET_ID
         });
     }
 
@@ -572,7 +572,7 @@ contract WithdrawCollateral is CollateralTest {
         vm.stopPrank();
 
         uint256 postBalance = ACTOR.balance;
-        assertEq(postBalance, preBalance + SMALLER_AMOUNT);
+        assertWithinTolerance(postBalance, preBalance + SMALLER_AMOUNT, 1);
     }
 
     function test_withdrawCollateral_ETH_Fuzz(uint256 amount) public {

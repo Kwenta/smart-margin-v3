@@ -14,8 +14,8 @@ contract MulticallablePayableTest is Bootstrap {
     EIP7412Mock eip7412Mock;
 
     function setUp() public {
-        vm.rollFork(ARBITRUM_BLOCK_NUMBER);
-        initializeArbitrum();
+        vm.rollFork(BASE_BLOCK_NUMBER);
+        initializeBase();
 
         mp = new MP();
         eip7412Mock = new EIP7412Mock();

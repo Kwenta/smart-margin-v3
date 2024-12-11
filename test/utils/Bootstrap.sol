@@ -13,10 +13,8 @@ import {IERC20} from "src/interfaces/tokens/IERC20.sol";
 import {IPerpsMarketProxy} from "test/utils/interfaces/IPerpsMarketProxy.sol";
 import {ISpotMarketProxy} from "src/interfaces/synthetix/ISpotMarketProxy.sol";
 import {SynthMinter} from "test/utils/SynthMinter.sol";
-import {ArbitrumParameters} from
-    "script/utils/parameters/ArbitrumParameters.sol";
-import {ArbitrumSepoliaParameters} from
-    "script/utils/parameters/ArbitrumSepoliaParameters.sol";
+import {BaseParameters} from
+    "script/utils/parameters/BaseParameters.sol";
 import {TestHelpers} from "test/utils/TestHelpers.sol";
 
 /// @title Contract for bootstrapping the SMv3 system for testing purposes
@@ -75,8 +73,8 @@ contract Bootstrap is
     // ACTOR's account id in the Synthetix v3 perps market
     uint128 public accountId;
 
-    function initializeArbitrum() public {
-        BootstrapArbitrum bootstrap = new BootstrapArbitrum();
+    function initializeBase() public {
+        BootstrapBase bootstrap = new BootstrapBase();
         (
             address payable _engineAddress,
             address payable _engineExposedAddress,
@@ -127,7 +125,7 @@ contract Bootstrap is
     }
 }
 
-contract BootstrapArbitrum is Setup, ArbitrumParameters {
+contract BootstrapBase is Setup, BaseParameters {
     function init()
         public
         returns (
@@ -146,9 +144,9 @@ contract BootstrapArbitrum is Setup, ArbitrumParameters {
         )
     {
         (Engine engine) = Setup.deploySystem({
-            perpsMarketProxy: PERPS_MARKET_PROXY,
-            spotMarketProxy: SPOT_MARKET_PROXY,
-            sUSDProxy: USD_PROXY,
+            perpsMarketProxy: PERPS_MARKET_PROXY_ANDROMEDA,
+            spotMarketProxy: SPOT_MARKET_PROXY_ANDROMEDA,
+            sUSDProxy: USD_PROXY_ANDROMEDA,
             pDAO: PDAO,
             zap: ZAP,
             usdc: USDC,
@@ -156,9 +154,9 @@ contract BootstrapArbitrum is Setup, ArbitrumParameters {
         });
 
         EngineExposed engineExposed = new EngineExposed({
-            _perpsMarketProxy: PERPS_MARKET_PROXY,
-            _spotMarketProxy: SPOT_MARKET_PROXY,
-            _sUSDProxy: USD_PROXY,
+            _perpsMarketProxy: PERPS_MARKET_PROXY_ANDROMEDA,
+            _spotMarketProxy: SPOT_MARKET_PROXY_ANDROMEDA,
+            _sUSDProxy: USD_PROXY_ANDROMEDA,
             _pDAO: PDAO,
             _zap: ZAP,
             _usdc: USDC,
@@ -168,9 +166,9 @@ contract BootstrapArbitrum is Setup, ArbitrumParameters {
         return (
             payable(address(engine)),
             payable(address(engineExposed)),
-            PERPS_MARKET_PROXY,
-            SPOT_MARKET_PROXY,
-            USD_PROXY,
+            PERPS_MARKET_PROXY_ANDROMEDA,
+            SPOT_MARKET_PROXY_ANDROMEDA,
+            USD_PROXY_ANDROMEDA,
             PDAO,
             ZAP,
             USDC,
