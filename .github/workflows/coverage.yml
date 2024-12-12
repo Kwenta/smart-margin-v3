@@ -23,7 +23,7 @@ jobs:
 
             - name: Report Coverage
               run: |
-                forge coverage --fork-url ${{ secrets.ARBITRUM_RPC_URL }} --etherscan-api-key ${{ secrets.ARBISCAN_API_KEY }} --report lcov --ir-minimum
+                forge coverage --fork-url ${{ secrets.BASE_RPC_URL }} --etherscan-api-key ${{ secrets.BASESCAN_API_KEY }} --report lcov --ir-minimum
 
             - name: Upload Coverage Report
               uses: codecov/codecov-action@v3

@@ -29,5 +29,5 @@ jobs:
 
             - name: Test Project
               run: |
-                forge test --fork-url ${{ secrets.ARBITRUM_RPC_URL }} --etherscan-api-key ${{ secrets.ARBISCAN_API_KEY }} -vvv
+                forge test --fork-url ${{ secrets.BASE_RPC_URL }} --etherscan-api-key ${{ secrets.BASESCAN_API_KEY }} -vvv
               id: test
