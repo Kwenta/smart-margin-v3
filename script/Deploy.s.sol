@@ -8,10 +8,6 @@ import {MulticallerWithSender} from "src/utils/MulticallerWithSender.sol";
 import {BaseParameters} from "script/utils/parameters/BaseParameters.sol";
 import {BaseSepoliaParameters} from
     "script/utils/parameters/BaseSepoliaParameters.sol";
-import {ArbitrumParameters} from
-    "script/utils/parameters/ArbitrumParameters.sol";
-import {ArbitrumSepoliaParameters} from
-    "script/utils/parameters/ArbitrumSepoliaParameters.sol";
 
 // forge utils
 import {Script} from "lib/forge-std/src/Script.sol";
@@ -46,7 +42,7 @@ contract Setup is Script {
     }
 }
 
-/// @dev steps to deploy and verify on Arbitrum:
+/// @dev steps to deploy and verify on Base:
 /// (1) load the variables in the .env file via `source .env`
 /// (2) run `forge script script/Deploy.s.sol:DeployBase --rpc-url $BASE_RPC_URL --etherscan-api-key $BASESCAN_API_KEY --broadcast --verify -vvvv`
 contract DeployBase is Setup, BaseParameters {
@@ -68,7 +64,7 @@ contract DeployBase is Setup, BaseParameters {
     }
 }
 
-/// @dev steps to deploy and verify on Arbitrum Sepolia:
+/// @dev steps to deploy and verify on Base Sepolia:
 /// (1) load the variables in the .env file via `source .env`
 /// (2) run `forge script script/Deploy.s.sol:DeployBaseSepolia --rpc-url $BASE_SEPOLIA_RPC_URL --etherscan-api-key $BASESCAN_API_KEY --broadcast --verify -vvvv`
 contract DeployBaseSepolia is Setup, BaseSepoliaParameters {
@@ -90,7 +86,7 @@ contract DeployBaseSepolia is Setup, BaseSepoliaParameters {
     }
 }
 
-/// @dev steps to deploy and verify on Arbitrum:
+/// @dev steps to deploy and verify on Base:
 /// (1) load the variables in the .env file via `source .env`
 /// (2) run `forge script script/Deploy.s.sol:DeployMulticallBase --rpc-url $BASE_RPC_URL --etherscan-api-key $BASESCAN_API_KEY --broadcast --verify -vvvv`
 contract DeployMulticallBase is Setup, BaseParameters {
