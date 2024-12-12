@@ -128,6 +128,9 @@ interface IEngine {
     /// and msg.value is less than specified amount
     error InsufficientETHDeposit(uint256 sent, uint256 required);
 
+    /// @notice thrown when a call to transfer eth fails
+    error ETHTransferFailed();
+
     /*//////////////////////////////////////////////////////////////
                                  EVENTS
     //////////////////////////////////////////////////////////////*/
