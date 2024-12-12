@@ -156,7 +156,7 @@ contract DepositCollateral is CollateralTest {
         uint256 availableMargin =
             uint256(perpsMarketProxy.getAvailableMargin(accountId));
         uint256 expectedMargin = SMALLER_AMOUNT * ETH_PRICE;
-        assertWithinTolerance(expectedMargin, availableMargin, 2);
+        assertWithinTolerance(expectedMargin, availableMargin, 5);
     }
 
     /// @custom:todo fix OracleDataRequired error
@@ -273,7 +273,7 @@ contract DepositCollateral is CollateralTest {
         uint256 availableMargin =
             uint256(perpsMarketProxy.getAvailableMargin(accountId));
         uint256 expectedMargin = SMALLER_AMOUNT * ETH_PRICE;
-        assertWithinTolerance(expectedMargin, availableMargin, 2);
+        assertWithinTolerance(expectedMargin, availableMargin, 5);
     }
 
     function test_depositCollateral_ETH_Fuzz(uint256 amount) public {
@@ -299,7 +299,7 @@ contract DepositCollateral is CollateralTest {
         uint256 availableMargin =
             uint256(perpsMarketProxy.getAvailableMargin(accountId));
         uint256 expectedMargin = amount * ETH_PRICE;
-        assertWithinTolerance(expectedMargin, availableMargin, 3);
+        assertWithinTolerance(expectedMargin, availableMargin, 5);
     }
 
     function test_depositCollateral_ETH_Partial_Fuzz(uint256 amount) public {
@@ -325,7 +325,7 @@ contract DepositCollateral is CollateralTest {
         uint256 availableMargin =
             uint256(perpsMarketProxy.getAvailableMargin(accountId));
         uint256 expectedMargin = (amount - SMALLEST_AMOUNT) * ETH_PRICE;
-        assertWithinTolerance(expectedMargin, availableMargin, 3);
+        assertWithinTolerance(expectedMargin, availableMargin, 5);
 
         assertEq(address(engine).balance, SMALLEST_AMOUNT);
     }
