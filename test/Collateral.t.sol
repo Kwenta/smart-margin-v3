@@ -114,9 +114,9 @@ contract DepositCollateral is CollateralTest {
 
         USDC.approve(address(engine), type(uint256).max);
 
-    uint256 availableMarginBefore =
-        uint256(perpsMarketProxy.getAvailableMargin(accountId));
-    assertEq(availableMarginBefore, 0);
+        uint256 availableMarginBefore =
+            uint256(perpsMarketProxy.getAvailableMargin(accountId));
+        assertEq(availableMarginBefore, 0);
 
         engine.modifyCollateralZap({
             _accountId: accountId,
@@ -636,9 +636,9 @@ contract WithdrawCollateral is CollateralTest {
             _tolerance: SMALLER_AMOUNT
         });
 
-       
-
-        vm.expectRevert(abi.encodeWithSelector(IEngine.ETHTransferFailed.selector));
+        vm.expectRevert(
+            abi.encodeWithSelector(IEngine.ETHTransferFailed.selector)
+        );
 
         engine.withdrawCollateralETH({
             _accountId: accountId,
@@ -655,12 +655,11 @@ contract MaliciousReceiver {
         revert("I reject ETH");
     }
 
-    function onERC721Received(
-        address,
-        address,
-        uint256,
-        bytes calldata
-    ) external pure returns (bytes4) {
+    function onERC721Received(address, address, uint256, bytes calldata)
+        external
+        pure
+        returns (bytes4)
+    {
         return 0x150b7a02;
     }
 }
