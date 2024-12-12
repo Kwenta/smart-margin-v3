@@ -614,4 +614,53 @@ contract WithdrawCollateral is CollateralTest {
             _tolerance: SMALLER_AMOUNT
         });
     }
+
+    function test_withdrawCollateral_ETH_transferFailed() public {
+        // Create a contract that rejects ETH
+        MaliciousReceiver maliciousContract = new MaliciousReceiver();
+
+        vm.deal(address(maliciousContract), SMALLER_AMOUNT);
+
+        vm.startPrank(address(maliciousContract));
+
+        accountId = perpsMarketProxy.createAccount();
+        perpsMarketProxy.grantPermission({
+            accountId: accountId,
+            permission: ADMIN_PERMISSION,
+            user: address(engine)
+        });
+
+        engine.depositCollateralETH{value: SMALLER_AMOUNT}({
+            _accountId: accountId,
+            _amount: SMALLER_AMOUNT,
+            _tolerance: SMALLER_AMOUNT
+        });
+
+       
+
+        vm.expectRevert(abi.encodeWithSelector(IEngine.ETHTransferFailed.selector));
+
+        engine.withdrawCollateralETH({
+            _accountId: accountId,
+            _amount: int256(SMALLER_AMOUNT),
+            _tolerance: SMALLER_AMOUNT
+        });
+        vm.stopPrank();
+    }
+}
+
+// Helper contract that rejects ETH transfers
+contract MaliciousReceiver {
+    receive() external payable {
+        revert("I reject ETH");
+    }
+
+    function onERC721Received(
+        address,
+        address,
+        uint256,
+        bytes calldata
+    ) external pure returns (bytes4) {
+        return 0x150b7a02;
+    }
 }
