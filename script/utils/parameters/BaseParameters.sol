@@ -35,7 +35,7 @@ contract BaseParameters {
 
     address public constant USDT = address(0);
 
-    address public constant TBTC = address(0);
+    address public constant CBBTC = 0xcbB7C0000aB88B473b1f5aFd9ef808440eed33Bf;
 
     address public constant USDE = address(0);
 }

@@ -105,35 +105,32 @@ contract DepositCollateral is CollateralTest {
         vm.stopPrank();
     }
 
-    /// @custom:todo fix OracleDataRequired error
-    // function test_depositCollateral_zap() public {
-    //     uint256 decimalsFactor = 10 ** (18 - USDT.decimals());
+    function test_depositCollateral_zap() public {
+        uint256 decimalsFactor = 10 ** (18 - USDC.decimals());
 
-    //     deal(address(USDT), ACTOR, SMALLEST_AMOUNT);
+        deal(address(USDC), ACTOR, SMALLEST_AMOUNT);
 
-    //     vm.startPrank(ACTOR);
+        vm.startPrank(ACTOR);
 
-    //     USDT.approve(address(engine), type(uint256).max);
+        USDC.approve(address(engine), type(uint256).max);
 
-    // uint256 availableMarginBefore =
-    //     uint256(perpsMarketProxy.getAvailableMargin(accountId));
-    // assertEq(availableMarginBefore, 0);
+    uint256 availableMarginBefore =
+        uint256(perpsMarketProxy.getAvailableMargin(accountId));
+    assertEq(availableMarginBefore, 0);
 
-    //     engine.modifyCollateralZap({
-    //         _accountId: accountId,
-    //         _amount: int256(SMALLEST_AMOUNT),
-    //         _swapTolerance: SMALLEST_AMOUNT - 3,
-    //         _zapTolerance: SMALLEST_AMOUNT - 3,
-    //         _collateral: USDT
-    //     });
+        engine.modifyCollateralZap({
+            _accountId: accountId,
+            _amount: int256(SMALLEST_AMOUNT),
+            _zapMinAmountOut: SMALLEST_AMOUNT - 3
+        });
 
-    //     vm.stopPrank();
+        vm.stopPrank();
 
-    //     uint256 availableMargin =
-    //         uint256(perpsMarketProxy.getAvailableMargin(accountId));
-    //     uint256 expectedMargin = SMALLEST_AMOUNT * decimalsFactor;
-    //     assertWithinTolerance(expectedMargin, availableMargin, 3);
-    // }
+        uint256 availableMargin =
+            uint256(perpsMarketProxy.getAvailableMargin(accountId));
+        uint256 expectedMargin = SMALLEST_AMOUNT * decimalsFactor;
+        assertWithinTolerance(expectedMargin, availableMargin, 3);
+    }
 
     function test_depositCollateral_wrap() public {
         deal(address(WETH), ACTOR, SMALLER_AMOUNT);
@@ -162,13 +159,12 @@ contract DepositCollateral is CollateralTest {
         assertWithinTolerance(expectedMargin, availableMargin, 2);
     }
 
-    /// @custom:todo fix OracleDataRequired error
-    // function test_depositCollateral_wrapTBTC() public {
-    //     deal(address(tBTC), ACTOR, 1);
+    // function test_depositCollateral_wrapCBBTC() public {
+    //     deal(address(cbBTC), ACTOR, 1);
 
     //     vm.startPrank(ACTOR);
 
-    //     tBTC.approve(address(engine), type(uint256).max);
+    //     cbBTC.approve(address(engine), type(uint256).max);
 
     // uint256 availableMarginBefore =
     //     uint256(perpsMarketProxy.getAvailableMargin(accountId));
@@ -178,8 +174,8 @@ contract DepositCollateral is CollateralTest {
     //         _accountId: accountId,
     //         _amount: int256(1),
     //         _tolerance: 1,
-    //         _collateral: tBTC,
-    //         _synthMarketId: 3
+    //         _collateral: cbBTC,
+    //         _synthMarketId: CBBTC_SYNTH_MARKET_ID
     //     });
 
     //     vm.stopPrank();
@@ -189,15 +185,16 @@ contract DepositCollateral is CollateralTest {
     //     // assertWithinTolerance(expectedMargin, availableMargin, 2);
     // }
 
-    /// @custom:todo fix OracleDataRequired error
-    // function test_depositCollateral_wrapUSDE() public {
-    //     uint256 decimalsFactor = 10 ** (18 - USDe.decimals());
+    // function test_depositCollateral_wrapUSDC() public {
+    //     uint256 decimalsFactor = 10 ** (18 - USDC.decimals());
 
-    //     deal(address(USDe), ACTOR, SMALLER_AMOUNT);
+    //     uint256 amount = 1 * decimalsFactor;
+
+    //     deal(address(USDC), ACTOR, amount);
 
     //     vm.startPrank(ACTOR);
 
-    //     USDe.approve(address(engine), type(uint256).max);
+    //     USDC.approve(address(engine), type(uint256).max);
 
     // uint256 availableMarginBefore =
     //     uint256(perpsMarketProxy.getAvailableMargin(accountId));
@@ -205,10 +202,10 @@ contract DepositCollateral is CollateralTest {
 
     //     engine.modifyCollateralWrap({
     //         _accountId: accountId,
-    //         _amount: int256(SMALLER_AMOUNT),
-    //         _tolerance: SMALLER_AMOUNT,
-    //         _collateral: USDe,
-    //         _synthMarketId: 5
+    //         _amount: int256(amount),
+    //         _tolerance: amount,
+    //         _collateral: USDC,
+    //         _synthMarketId: USDC_SYNTH_MARKET_ID
     //     });
 
     //     vm.stopPrank();
@@ -415,77 +412,67 @@ contract WithdrawCollateral is CollateralTest {
         vm.stopPrank();
     }
 
-    /// @custom:todo fix OracleDataRequired error
-    // function test_withdrawCollateral_zap() public {
-    //     uint256 decimalsFactor = 10 ** (18 - USDT.decimals());
+    function test_withdrawCollateral_zap() public {
+        uint256 decimalsFactor = 10 ** (18 - USDC.decimals());
 
-    //     deal(address(USDT), ACTOR, SMALLER_AMOUNT);
+        deal(address(USDC), ACTOR, SMALLEST_AMOUNT);
 
-    //     vm.startPrank(ACTOR);
+        vm.startPrank(ACTOR);
 
-    //     USDT.approve(address(engine), type(uint256).max);
+        USDC.approve(address(engine), type(uint256).max);
 
-    //     // add the collateral
-    //     engine.modifyCollateralZap({
-    //         _accountId: accountId,
-    //         _amount: int256(SMALLER_AMOUNT),
-    //         _swapTolerance: 1,
-    //         _zapTolerance: 1,
-    //         _collateral: USDT
-    //     });
+        // add the collateral
+        engine.modifyCollateralZap({
+            _accountId: accountId,
+            _amount: int256(SMALLEST_AMOUNT),
+            _zapMinAmountOut: SMALLEST_AMOUNT - 3
+        });
 
-    //     uint256 postBalanceUSDT = USDT.balanceOf(ACTOR);
-    //     assertEq(postBalanceUSDT, 0);
+        uint256 postBalanceUSDT = USDC.balanceOf(ACTOR);
+        assertEq(postBalanceUSDT, 0);
 
-    //     uint256 preBalanceUSDC = USDC.balanceOf(ACTOR);
-    //     assertEq(preBalanceUSDC, 0);
+        uint256 preBalanceUSDC = USDC.balanceOf(ACTOR);
+        assertEq(preBalanceUSDC, 0);
 
-    //     uint256 availableMargin =
-    //         uint256(perpsMarketProxy.getAvailableMargin(accountId)); // 78_133551009252750000
+        uint256 availableMargin =
+            uint256(perpsMarketProxy.getAvailableMargin(accountId));
 
-    //     // remove the collateral
-    //     engine.modifyCollateralZap({
-    //         _accountId: accountId,
-    //         _amount: -int256(availableMargin),
-    //         _swapTolerance: 1,
-    //         _zapTolerance: 1,
-    //         _collateral: USDT
-    //     });
+        // remove the collateral
+        engine.modifyCollateralZap({
+            _accountId: accountId,
+            _amount: -int256(availableMargin),
+            _zapMinAmountOut: SMALLEST_AMOUNT - 3
+        });
 
-    //     vm.stopPrank();
-    //     uint256 postBalanceUSDC = USDC.balanceOf(ACTOR);
-    //     uint256 expectedBalance = postBalanceUSDC * decimalsFactor;
-    //     assertWithinTolerance(expectedBalance, availableMargin, 30);
-    // }
+        vm.stopPrank();
+        uint256 postBalanceUSDC = USDC.balanceOf(ACTOR);
+        uint256 expectedBalance = postBalanceUSDC * decimalsFactor;
+        assertWithinTolerance(expectedBalance, availableMargin, 3);
+    }
 
-    /// @custom:todo fix OracleDataRequired error
-    // function test_withdrawCollateral_zap_Unauthorized() public {
-    //     deal(address(USDT), ACTOR, SMALLER_AMOUNT);
+    function test_withdrawCollateral_zap_Unauthorized() public {
+        deal(address(USDC), ACTOR, SMALLEST_AMOUNT);
 
-    //     vm.startPrank(ACTOR);
+        vm.startPrank(ACTOR);
 
-    //     USDT.approve(address(engine), type(uint256).max);
+        USDC.approve(address(engine), type(uint256).max);
 
-    //     engine.modifyCollateralZap({
-    //         _accountId: accountId,
-    //         _amount: int256(SMALLER_AMOUNT),
-    //         _swapTolerance: 1,
-    //         _zapTolerance: 1,
-    //         _collateral: USDT
-    //     });
+        engine.modifyCollateralZap({
+            _accountId: accountId,
+            _amount: int256(SMALLEST_AMOUNT),
+            _zapMinAmountOut: 1
+        });
 
-    //     vm.stopPrank();
+        vm.stopPrank();
 
-    //     vm.expectRevert(abi.encodeWithSelector(IEngine.Unauthorized.selector));
+        vm.expectRevert(abi.encodeWithSelector(IEngine.Unauthorized.selector));
 
-    //     engine.modifyCollateralZap({
-    //         _accountId: accountId,
-    //         _amount: -int256(1),
-    //         _swapTolerance: 1,
-    //         _zapTolerance: 1,
-    //         _collateral: USDT
-    //     });
-    // }
+        engine.modifyCollateralZap({
+            _accountId: accountId,
+            _amount: -int256(1),
+            _zapMinAmountOut: 1
+        });
+    }
 
     function test_withdrawCollateral_wrap() public {
         deal(address(WETH), ACTOR, SMALLER_AMOUNT);
