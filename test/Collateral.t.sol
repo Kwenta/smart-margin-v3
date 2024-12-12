@@ -159,6 +159,7 @@ contract DepositCollateral is CollateralTest {
         assertWithinTolerance(expectedMargin, availableMargin, 2);
     }
 
+    /// @custom:todo fix OracleDataRequired error
     // function test_depositCollateral_wrapCBBTC() public {
     //     deal(address(cbBTC), ACTOR, 1);
 
@@ -185,6 +186,7 @@ contract DepositCollateral is CollateralTest {
     //     // assertWithinTolerance(expectedMargin, availableMargin, 2);
     // }
 
+    /// @custom:todo fix OracleDataRequired error
     // function test_depositCollateral_wrapUSDC() public {
     //     uint256 decimalsFactor = 10 ** (18 - USDC.decimals());
 
