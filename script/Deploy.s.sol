@@ -107,7 +107,7 @@ contract DeployMulticallBase is Setup, BaseParameters {
 
 /// @dev steps to deploy and verify on Base:
 /// (1) load the variables in the .env file via `source .env`
-/// (2) run `forge script script/Deploy.s.sol:DeployPay --rpc-url $BASE_RPC_URL --etherscan-api-key $BASESCAN_API_KEY --broadcast --verify -vvvv`
+/// (2) run `forge script script/Deploy.s.sol:DeployPayBase --rpc-url $BASE_RPC_URL --etherscan-api-key $BASESCAN_API_KEY --broadcast --verify -vvvv`
 contract DeployPayBase is Setup, BaseParameters {
     function run() public {
         uint256 privateKey = vm.envUint("PRIVATE_KEY");
