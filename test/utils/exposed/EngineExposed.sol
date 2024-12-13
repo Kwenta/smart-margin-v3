@@ -12,6 +12,7 @@ contract EngineExposed is Engine {
         address _sUSDProxy,
         address _pDAO,
         address _zap,
+        address payable _pay,
         address _usdc,
         address _weth
     )
@@ -21,6 +22,7 @@ contract EngineExposed is Engine {
             _sUSDProxy,
             _pDAO,
             _zap,
+            _pay,
             _usdc,
             _weth
         )

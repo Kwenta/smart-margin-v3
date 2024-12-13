@@ -4,10 +4,8 @@ pragma solidity 0.8.27;
 /// @title Contract for defining constants used in testing
 /// @author JaredBorders (jaredborders@pm.me)
 contract Constants {
-    // /// @dev Dec-10-2024 09:34:19 PM +UTC
-    // uint256 public constant BASE_BLOCK_NUMBER = 23_538_556;
-    //
-    uint256 public constant BASE_BLOCK_NUMBER = 23_579_166;
+    /// @dev Dec-13-2024 02:32:19 AM +UTC
+    uint256 public constant BASE_BLOCK_NUMBER = 23_633_896;
 
     address internal constant OWNER = address(0x01);
 
@@ -60,8 +58,8 @@ contract Constants {
 
     uint128 constant CBBTC_SYNTH_MARKET_ID = 4;
 
-    /// @dev this is the ETH price in USD at the block number 23_538_556
-    uint256 internal constant ETH_PRICE = 3630;
+    /// @dev this is the ETH price in USD at the block number 23_633_896
+    uint256 internal constant ETH_PRICE = 3880;
 
     uint256 internal constant AMOUNT = 10_000 ether;
 

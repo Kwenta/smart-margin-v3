@@ -22,6 +22,7 @@ contract Setup is Script {
         address sUSDProxy,
         address pDAO,
         address zap,
+        address payable pay,
         address usdc,
         address weth
     ) public returns (Engine engine) {
@@ -31,6 +32,7 @@ contract Setup is Script {
             _sUSDProxy: sUSDProxy,
             _pDAO: pDAO,
             _zap: zap,
+            _pay: pay,
             _usdc: usdc,
             _weth: weth
         });
@@ -51,6 +53,7 @@ contract DeployBase is Setup, BaseParameters {
             sUSDProxy: USD_PROXY_ANDROMEDA,
             pDAO: PDAO,
             zap: ZAP,
+            pay: PAY,
             usdc: USDC,
             weth: WETH
         });
@@ -73,6 +76,7 @@ contract DeployBaseSepolia is Setup, BaseSepoliaParameters {
             sUSDProxy: USD_PROXY_ANDROMEDA,
             pDAO: PDAO,
             zap: ZAP,
+            pay: PAY,
             usdc: USDC,
             weth: WETH
         });

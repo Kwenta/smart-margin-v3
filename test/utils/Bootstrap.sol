@@ -63,6 +63,7 @@ contract Bootstrap is
     IERC20 public cbBTC;
     IERC20 public USDe;
     address public zap;
+    address payable public pay;
     address public usdc;
     address public weth;
 
@@ -75,13 +76,14 @@ contract Bootstrap is
     function initializeBase() public {
         BootstrapBase bootstrap = new BootstrapBase();
         (
-            address payable _engineAddress,
-            address payable _engineExposedAddress,
+            address _engineAddress,
+            address _engineExposedAddress,
             address _perpsMarketProxyAddress,
             address _spotMarketProxyAddress,
             address _sUSDAddress,
             address _pDAOAddress,
             address _zapAddress,
+            address payable _payAddress,
             address _usdcAddress,
             address _wethAddress,
             address _usdtAddress,
@@ -102,6 +104,7 @@ contract Bootstrap is
         synthMinter = new SynthMinter(_sUSDAddress, _spotMarketProxyAddress);
         pDAO = _pDAOAddress;
         zap = _zapAddress;
+        pay = _payAddress;
         usdc = _usdcAddress;
         weth = _wethAddress;
 
@@ -128,13 +131,14 @@ contract BootstrapBase is Setup, BaseParameters {
     function init()
         public
         returns (
+            address,
+            address,
+            address,
+            address,
+            address,
+            address,
+            address,
             address payable,
-            address payable,
-            address,
-            address,
-            address,
-            address,
-            address,
             address,
             address,
             address,
@@ -148,6 +152,7 @@ contract BootstrapBase is Setup, BaseParameters {
             sUSDProxy: USD_PROXY_ANDROMEDA,
             pDAO: PDAO,
             zap: ZAP,
+            pay: PAY,
             usdc: USDC,
             weth: WETH
         });
@@ -158,18 +163,20 @@ contract BootstrapBase is Setup, BaseParameters {
             _sUSDProxy: USD_PROXY_ANDROMEDA,
             _pDAO: PDAO,
             _zap: ZAP,
+            _pay: PAY,
             _usdc: USDC,
             _weth: WETH
         });
 
         return (
-            payable(address(engine)),
-            payable(address(engineExposed)),
+            address(engine),
+            address(engineExposed),
             PERPS_MARKET_PROXY_ANDROMEDA,
             SPOT_MARKET_PROXY_ANDROMEDA,
             USD_PROXY_ANDROMEDA,
             PDAO,
             ZAP,
+            PAY,
             USDC,
             WETH,
             USDT,
