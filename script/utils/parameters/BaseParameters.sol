@@ -36,13 +36,9 @@ contract BaseParameters {
     address payable public constant PAY =
         payable(0x127Fb7602bF3De092d351f922791cF9a149A4837);
 
-    address public constant USDT = address(0);
-
     address public constant CBBTC = 0xcbB7C0000aB88B473b1f5aFd9ef808440eed33Bf;
 
     address public constant CBETH = 0x2Ae3F1Ec7F1F5012CFEab0185bfc7aa3cf0DEc22;
 
     address public constant WSTETH = 0xc1CBa3fCea344f92D9239c08C0568f6F2F0ee452;
-
-    address public constant USDE = address(0);
 }

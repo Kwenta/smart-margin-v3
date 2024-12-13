@@ -457,9 +457,6 @@ contract WithdrawCollateral is CollateralTest {
             _zapMinAmountOut: SMALLEST_AMOUNT - 3
         });
 
-        uint256 postBalanceUSDT = USDC.balanceOf(ACTOR);
-        assertEq(postBalanceUSDT, 0);
-
         uint256 preBalanceUSDC = USDC.balanceOf(ACTOR);
         assertEq(preBalanceUSDC, 0);
 
