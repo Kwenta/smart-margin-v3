@@ -32,4 +32,6 @@ contract BaseSepoliaParameters {
     uint128 public constant SUSDC_SPOT_MARKET_ID = 1;
 
     address public constant ZAP = 0xC9aF789Ae606F69cF8Ed073A04eC92f2354b027d;
+
+    address payable public constant PAY = payable(address(0));
 }

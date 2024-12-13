@@ -33,6 +33,9 @@ contract BaseParameters {
 
     address public constant ZAP = 0x84f531d85fAA7Be42f8a248B87e40f760e558F7C;
 
+    address payable public constant PAY =
+        payable(0x127Fb7602bF3De092d351f922791cF9a149A4837);
+
     address public constant USDT = address(0);
 
     address public constant CBBTC = 0xcbB7C0000aB88B473b1f5aFd9ef808440eed33Bf;

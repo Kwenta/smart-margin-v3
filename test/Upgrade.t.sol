@@ -41,6 +41,7 @@ contract MockUpgrade is UpgradeTest {
             address(sUSD),
             address(pDAO),
             address(zap),
+            payable(address(pay)),
             address(USDC),
             address(WETH)
         );
@@ -158,6 +159,7 @@ contract RemoveUpgradability is UpgradeTest {
             address(sUSD),
             address(0), // set pDAO to zero address to effectively remove upgradability
             address(zap),
+            payable(address(pay)),
             address(USDC),
             address(WETH)
         );

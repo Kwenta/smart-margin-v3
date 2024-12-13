@@ -14,6 +14,7 @@ import {IERC20} from "src/interfaces/tokens/IERC20.sol";
 import {IWETH} from "src/interfaces/tokens/IWETH.sol";
 import {MathLib} from "src/libraries/MathLib.sol";
 import {MulticallablePayable} from "src/utils/MulticallablePayable.sol";
+import {Pay} from "src/utils/Pay.sol";
 import {SignatureCheckerLib} from "src/libraries/SignatureCheckerLib.sol";
 import {Zap} from "src/utils/zap/Zap.sol";
 
@@ -85,6 +86,9 @@ contract Engine is
     /// @notice Zap contract
     Zap internal immutable zap;
 
+    /// @notice Pay contract
+    Pay internal immutable pay;
+
     IWETH public immutable WETH;
 
     IERC20 public immutable USDC;
@@ -133,13 +137,14 @@ contract Engine is
         address _sUSDProxy,
         address _pDAO,
         address _zap,
+        address payable _pay,
         address _usdc,
         address _weth
     ) {
         if (
             _perpsMarketProxy == address(0) || _spotMarketProxy == address(0)
                 || _sUSDProxy == address(0) || _zap == address(0)
-                || _usdc == address(0) || _weth == address(0)
+                || _pay == address(0) || _usdc == address(0) || _weth == address(0)
         ) revert ZeroAddress();
 
         PERPS_MARKET_PROXY = IPerpsMarketProxy(_perpsMarketProxy);
@@ -147,6 +152,7 @@ contract Engine is
 
         SUSD = IERC20(_sUSDProxy);
         zap = Zap(_zap);
+        pay = Pay(_pay);
         USDC = IERC20(_usdc);
         WETH = IWETH(_weth);
 
@@ -154,9 +160,6 @@ contract Engine is
         /// make the Engine non-upgradeable
         pDAO = _pDAO;
     }
-
-    /// @notice Allows the contract to receive ETH when unwrapping WETH
-    receive() external payable {}
 
     /*//////////////////////////////////////////////////////////////
                            UPGRADE MANAGEMENT
@@ -570,10 +573,8 @@ contract Engine is
             address(this)
         );
 
-        // Convert WETH to ETH and send to user
-        WETH.withdraw(unwrappedWETH);
-        (bool result,) = msg.sender.call{value: unwrappedWETH}("");
-        if (result != true) revert ETHTransferFailed();
+        WETH.approve(address(pay), unwrappedWETH);
+        pay.unwrapAndPay(unwrappedWETH, msg.sender);
     }
 
     function _depositCollateral(

@@ -44,12 +44,14 @@ contract FulfillOracleQuery is EIP7412Test {
     {
         uint256 preBalance = address(this).balance;
 
+        // refunds are not supported
+        vm.expectRevert("EIP7412MockRefund");
+
         engine.fulfillOracleQuery{value: AMOUNT}(
             payable(address(eip7412MockRefund)), signedOffchainData
         );
 
-        assert(address(this).balance == preBalance - AMOUNT);
-        assert(address(engine).balance == AMOUNT);
+        assert(address(this).balance == preBalance);
     }
 
     function test_fulfillOracleQuery_revert(bytes calldata signedOffchainData)
