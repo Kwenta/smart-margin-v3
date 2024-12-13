@@ -161,32 +161,34 @@ contract DepositCollateral is CollateralTest {
         assertWithinTolerance(expectedMargin, availableMargin, 5);
     }
 
-    /// @custom:todo fix OracleDataRequired error
-    // function test_depositCollateral_wrapCBBTC() public {
-    //     deal(address(cbBTC), ACTOR, 1);
+    function test_depositCollateral_wrapCBBTC() public {
+        uint256 decimalsFactor = 10 ** (18 - cbBTC.decimals());
 
-    //     vm.startPrank(ACTOR);
+        deal(address(cbBTC), ACTOR, 1);
 
-    //     cbBTC.approve(address(engine), type(uint256).max);
+        vm.startPrank(ACTOR);
 
-    // uint256 availableMarginBefore =
-    //     uint256(perpsMarketProxy.getAvailableMargin(accountId));
-    // assertEq(availableMarginBefore, 0);
+        cbBTC.approve(address(engine), type(uint256).max);
 
-    //     engine.modifyCollateralWrap({
-    //         _accountId: accountId,
-    //         _amount: int256(1),
-    //         _tolerance: 1,
-    //         _collateral: cbBTC,
-    //         _synthMarketId: CBBTC_SYNTH_MARKET_ID
-    //     });
+        uint256 availableMarginBefore =
+            uint256(perpsMarketProxy.getAvailableMargin(accountId));
+        assertEq(availableMarginBefore, 0);
 
-    //     vm.stopPrank();
+        engine.modifyCollateralWrap({
+            _accountId: accountId,
+            _amount: int256(1),
+            _tolerance: 1,
+            _collateral: cbBTC,
+            _synthMarketId: CBBTC_SYNTH_MARKET_ID
+        });
 
-    //     // uint256 availableMargin = uint256(perpsMarketProxy.getAvailableMargin(accountId));
-    //     // uint256 expectedMargin = BTC_PRICE; // todo add BTC_PRICE to constants
-    //     // assertWithinTolerance(expectedMargin, availableMargin, 2);
-    // }
+        vm.stopPrank();
+
+        uint256 availableMargin =
+            uint256(perpsMarketProxy.getAvailableMargin(accountId));
+        uint256 expectedMargin = BTC_PRICE * decimalsFactor;
+        assertWithinTolerance(expectedMargin, availableMargin, 2);
+    }
 
     /// @custom:todo fix OracleDataRequired error
     // function test_depositCollateral_wrapUSDC() public {
