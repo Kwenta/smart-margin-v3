@@ -89,8 +89,10 @@ contract Engine is
     /// @notice Pay contract
     Pay internal immutable pay;
 
+    /// @notice WETH contract
     IWETH public immutable WETH;
 
+    /// @notice USDC contract
     IERC20 public immutable USDC;
 
     /*//////////////////////////////////////////////////////////////
