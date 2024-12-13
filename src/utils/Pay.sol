@@ -7,7 +7,7 @@ import {IWETH} from "src/interfaces/tokens/IWETH.sol";
 /// @author cmontecoding
 contract Pay {
     /// @notice WETH contract
-    IWETH public WETH;
+    IWETH public immutable WETH;
 
     /// @notice thrown when a call to transfer eth fails
     error ETHTransferFailed();
