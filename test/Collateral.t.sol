@@ -217,37 +217,6 @@ contract DepositCollateral is CollateralTest {
         assertWithinTolerance(expectedMargin, availableMargin, 5);
     }
 
-    /// @custom:todo fix OracleDataRequired error
-    // function test_depositCollateral_wrapUSDC() public {
-    //     uint256 decimalsFactor = 10 ** (18 - USDC.decimals());
-
-    //     uint256 amount = 1 * decimalsFactor;
-
-    //     deal(address(USDC), ACTOR, amount);
-
-    //     vm.startPrank(ACTOR);
-
-    //     USDC.approve(address(engine), type(uint256).max);
-
-    // uint256 availableMarginBefore =
-    //     uint256(perpsMarketProxy.getAvailableMargin(accountId));
-    // assertEq(availableMarginBefore, 0);
-
-    //     engine.modifyCollateralWrap({
-    //         _accountId: accountId,
-    //         _amount: int256(amount),
-    //         _tolerance: amount,
-    //         _collateral: USDC,
-    //         _synthMarketId: USDC_SYNTH_MARKET_ID
-    //     });
-
-    //     vm.stopPrank();
-
-    //     // uint256 availableMargin = uint256(perpsMarketProxy.getAvailableMargin(accountId));
-    //     // uint256 expectedMargin = SMALLEST_AMOUNT * decimalsFactor;
-    //     // assertWithinTolerance(expectedMargin, availableMargin, 2);
-    // }
-
     /// @notice This test is expected to fail because sUSD is not a supported collateral
     function test_depositCollateral_wrapfail_sUSD() public {
         deal(address(sUSD), ACTOR, SMALLER_AMOUNT);
