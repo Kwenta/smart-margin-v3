@@ -217,6 +217,33 @@ contract DepositCollateral is CollateralTest {
         assertWithinTolerance(expectedMargin, availableMargin, 5);
     }
 
+    function test_depositCollateral_wrap_wstETH() public {
+        deal(address(wstETH), ACTOR, SMALLER_AMOUNT);
+
+        vm.startPrank(ACTOR);
+
+        wstETH.approve(address(engine), type(uint256).max);
+
+        uint256 availableMarginBefore =
+            uint256(perpsMarketProxy.getAvailableMargin(accountId));
+        assertEq(availableMarginBefore, 0);
+
+        engine.modifyCollateralWrap({
+            _accountId: accountId,
+            _amount: int256(SMALLER_AMOUNT),
+            _tolerance: SMALLER_AMOUNT,
+            _collateral: wstETH,
+            _synthMarketId: WSTETH_SYNTH_MARKET_ID
+        });
+
+        vm.stopPrank();
+
+        uint256 availableMargin =
+            uint256(perpsMarketProxy.getAvailableMargin(accountId));
+        uint256 expectedMargin = SMALLER_AMOUNT * WSTETH_PRICE;
+        assertWithinTolerance(expectedMargin, availableMargin, 5);
+    }
+
     /// @notice This test is expected to fail because sUSD is not a supported collateral
     function test_depositCollateral_wrapfail_sUSD() public {
         deal(address(sUSD), ACTOR, SMALLER_AMOUNT);

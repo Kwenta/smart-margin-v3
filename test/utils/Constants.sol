@@ -54,11 +54,13 @@ contract Constants {
 
     uint128 constant SETH_PERPS_MARKET_ID = 100;
 
-    uint128 constant WETH_SYNTH_MARKET_ID = 6;
-
     uint128 constant CBBTC_SYNTH_MARKET_ID = 4;
 
     uint128 constant CBETH_SYNTH_MARKET_ID = 5;
+
+    uint128 constant WETH_SYNTH_MARKET_ID = 6;
+
+    uint128 constant WSTETH_SYNTH_MARKET_ID = 7;
 
     /// @dev this is the ETH price in USD at the block number 23_664_540
     uint256 internal constant ETH_PRICE = 3918;
@@ -66,6 +68,8 @@ contract Constants {
     uint256 internal constant BTC_PRICE = 101_000;
 
     uint256 internal constant CBETH_PRICE = 4200;
+
+    uint256 internal constant WSTETH_PRICE = 4600;
 
     uint256 internal constant AMOUNT = 10_000 ether;
 

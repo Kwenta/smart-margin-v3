@@ -42,5 +42,7 @@ contract BaseParameters {
 
     address public constant CBETH = 0x2Ae3F1Ec7F1F5012CFEab0185bfc7aa3cf0DEc22;
 
+    address public constant WSTETH = 0xc1CBa3fCea344f92D9239c08C0568f6F2F0ee452;
+
     address public constant USDE = address(0);
 }
