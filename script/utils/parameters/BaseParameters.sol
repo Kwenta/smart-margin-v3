@@ -40,5 +40,7 @@ contract BaseParameters {
 
     address public constant CBBTC = 0xcbB7C0000aB88B473b1f5aFd9ef808440eed33Bf;
 
+    address public constant CBETH = 0x2Ae3F1Ec7F1F5012CFEab0185bfc7aa3cf0DEc22;
+
     address public constant USDE = address(0);
 }

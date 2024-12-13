@@ -161,7 +161,7 @@ contract DepositCollateral is CollateralTest {
         assertWithinTolerance(expectedMargin, availableMargin, 5);
     }
 
-    function test_depositCollateral_wrapCBBTC() public {
+    function test_depositCollateral_wrap_CBBTC() public {
         uint256 decimalsFactor = 10 ** (18 - cbBTC.decimals());
 
         deal(address(cbBTC), ACTOR, 1);
@@ -188,6 +188,33 @@ contract DepositCollateral is CollateralTest {
             uint256(perpsMarketProxy.getAvailableMargin(accountId));
         uint256 expectedMargin = BTC_PRICE * decimalsFactor;
         assertWithinTolerance(expectedMargin, availableMargin, 2);
+    }
+
+    function test_depositCollateral_wrap_CBETH() public {
+        deal(address(cbETH), ACTOR, SMALLER_AMOUNT);
+
+        vm.startPrank(ACTOR);
+
+        cbETH.approve(address(engine), type(uint256).max);
+
+        uint256 availableMarginBefore =
+            uint256(perpsMarketProxy.getAvailableMargin(accountId));
+        assertEq(availableMarginBefore, 0);
+
+        engine.modifyCollateralWrap({
+            _accountId: accountId,
+            _amount: int256(SMALLER_AMOUNT),
+            _tolerance: SMALLER_AMOUNT,
+            _collateral: cbETH,
+            _synthMarketId: CBETH_SYNTH_MARKET_ID
+        });
+
+        vm.stopPrank();
+
+        uint256 availableMargin =
+            uint256(perpsMarketProxy.getAvailableMargin(accountId));
+        uint256 expectedMargin = SMALLER_AMOUNT * CBETH_PRICE;
+        assertWithinTolerance(expectedMargin, availableMargin, 5);
     }
 
     /// @custom:todo fix OracleDataRequired error

@@ -59,6 +59,7 @@ contract Bootstrap is
     IERC20 public WETH;
     IERC20 public USDT;
     IERC20 public cbBTC;
+    IERC20 public cbETH;
     IERC20 public USDe;
     address public zap;
     address payable public pay;
@@ -86,6 +87,7 @@ contract Bootstrap is
             address _wethAddress,
             address _usdtAddress,
             address _cbBTCAddress,
+            address _cbETHAddress,
             address _usdeAddress
         ) = bootstrap.init();
 
@@ -98,6 +100,7 @@ contract Bootstrap is
         WETH = IERC20(_wethAddress);
         USDT = IERC20(_usdtAddress);
         cbBTC = IERC20(_cbBTCAddress);
+        cbETH = IERC20(_cbETHAddress);
         USDe = IERC20(_usdeAddress);
         synthMinter = new SynthMinter(_sUSDAddress, _spotMarketProxyAddress);
         pDAO = _pDAOAddress;
@@ -134,6 +137,7 @@ contract BootstrapBase is Setup, BaseParameters {
             address,
             address,
             address payable,
+            address,
             address,
             address,
             address,
@@ -176,6 +180,7 @@ contract BootstrapBase is Setup, BaseParameters {
             WETH,
             USDT,
             CBBTC,
+            CBETH,
             USDE
         );
     }
