@@ -6,7 +6,6 @@ import {IWETH} from "src/interfaces/tokens/IWETH.sol";
 /// @notice Pay contract for unwrapping WETH and sending it to a recipient
 /// @author cmontecoding
 contract Pay {
-    
     /// @notice WETH contract
     IWETH public WETH;
 
@@ -20,15 +19,14 @@ contract Pay {
     /// @notice unwrap WETH and send it to a recipient
     /// @param amount amount of WETH to unwrap
     /// @param to recipient address
-    function unwrapAndPay(uint amount, address to) public {
+    function unwrapAndPay(uint256 amount, address to) public {
         WETH.transferFrom(msg.sender, address(this), amount);
         WETH.withdraw(amount);
-        (bool success, ) = to.call{value: amount}("");
+        (bool success,) = to.call{value: amount}("");
         if (success != true) {
             revert ETHTransferFailed();
         }
     }
 
     receive() external payable {}
-
 }

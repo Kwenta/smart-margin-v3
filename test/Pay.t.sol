@@ -6,7 +6,6 @@ import {Pay} from "src/utils/Pay.sol";
 import {IWETH} from "src/interfaces/tokens/IWETH.sol";
 
 contract PayTest is Bootstrap {
-
     Pay payLocal;
     Pay payFork;
     IWETH wethWrapped;
@@ -21,7 +20,7 @@ contract PayTest is Bootstrap {
     }
 
     function test_unwrapAndPay_local() public {
-        uint amount = 100;
+        uint256 amount = 100;
         address to = address(1);
         uint256 balanceBefore = to.balance;
 
@@ -50,7 +49,7 @@ contract PayTest is Bootstrap {
     }
 
     function test_unwrapAndPay_withMaliciousReceiver() public {
-        uint amount = 100;
+        uint256 amount = 100;
         MaliciousReceiver maliciousReceiver = new MaliciousReceiver();
         address to = address(maliciousReceiver);
 
@@ -65,7 +64,7 @@ contract PayTest is Bootstrap {
     }
 
     function test_unwrapAndPay_fork() public {
-        uint amount = 100;
+        uint256 amount = 100;
         address to = address(1);
         uint256 balanceBefore = to.balance;
 
@@ -92,7 +91,6 @@ contract PayTest is Bootstrap {
         payFork.unwrapAndPay(amount, to);
         assertEq(to.balance, balanceBefore + amount);
     }
-
 }
 
 // Helper contract that rejects ETH transfers

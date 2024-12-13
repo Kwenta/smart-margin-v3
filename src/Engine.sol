@@ -143,8 +143,8 @@ contract Engine is
     ) {
         if (
             _perpsMarketProxy == address(0) || _spotMarketProxy == address(0)
-                || _sUSDProxy == address(0) || _zap == address(0) || _pay == address(0)
-                || _usdc == address(0) || _weth == address(0)
+                || _sUSDProxy == address(0) || _zap == address(0)
+                || _pay == address(0) || _usdc == address(0) || _weth == address(0)
         ) revert ZeroAddress();
 
         PERPS_MARKET_PROXY = IPerpsMarketProxy(_perpsMarketProxy);
