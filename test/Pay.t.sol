@@ -2,6 +2,7 @@
 pragma solidity 0.8.27;
 
 import {Bootstrap} from "test/utils/Bootstrap.sol";
+import {MaliciousReceiver} from "test/utils/MaliciousReceiver.sol";
 import {Pay} from "src/utils/Pay.sol";
 import {IWETH} from "src/interfaces/tokens/IWETH.sol";
 
@@ -90,20 +91,5 @@ contract PayTest is Bootstrap {
         // unwrap
         payFork.unwrapAndPay(amount, to);
         assertEq(to.balance, balanceBefore + amount);
-    }
-}
-
-// Helper contract that rejects ETH transfers
-contract MaliciousReceiver {
-    receive() external payable {
-        revert();
-    }
-
-    function onERC721Received(address, address, uint256, bytes calldata)
-        external
-        pure
-        returns (bytes4)
-    {
-        return 0x150b7a02;
     }
 }

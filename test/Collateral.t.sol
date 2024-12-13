@@ -4,6 +4,7 @@ pragma solidity 0.8.27;
 import {IEngine} from "src/interfaces/IEngine.sol";
 import {Bootstrap} from "test/utils/Bootstrap.sol";
 import {Pay} from "src/utils/Pay.sol";
+import {MaliciousReceiver} from "test/utils/MaliciousReceiver.sol";
 
 contract CollateralTest is Bootstrap {
     function setUp() public {
@@ -647,20 +648,5 @@ contract WithdrawCollateral is CollateralTest {
             _tolerance: SMALLER_AMOUNT
         });
         vm.stopPrank();
-    }
-}
-
-// Helper contract that rejects ETH transfers
-contract MaliciousReceiver {
-    receive() external payable {
-        revert();
-    }
-
-    function onERC721Received(address, address, uint256, bytes calldata)
-        external
-        pure
-        returns (bytes4)
-    {
-        return 0x150b7a02;
     }
 }
