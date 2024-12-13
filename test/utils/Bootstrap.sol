@@ -116,6 +116,9 @@ contract Bootstrap is
         vm.stopPrank();
 
         synthMinter.mint_sUSD(ACTOR, AMOUNT);
+
+        /// @dev this cures OracleDataRequired errors
+        vm.etch(address(0x1234123412341234123412341234123412341234), "FORK");
     }
 }
 
