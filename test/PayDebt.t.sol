@@ -12,56 +12,10 @@ contract PayDebtTest is Bootstrap {
     uint256 public constant INITIAL_DEBT = 1_216_469_669_641_984_045;
 
     function setUp() public {
-        vm.rollFork(266_832_048);
+        vm.rollFork(BASE_BLOCK_NUMBER);
         initializeBase();
 
         synthMinter.mint_sUSD(DEBT_ACTOR, AMOUNT);
-    }
-
-    function test_payDebt() public {
-        /// @dev on this block (266_832_048), ACCOUNT_ID has a debt value of INITIAL_DEBT
-        uint256 initialAccountDebt = perpsMarketProxy.debt(ACCOUNT_ID);
-        assertEq(initialAccountDebt, INITIAL_DEBT);
-
-        uint256 initialSUSD = sUSD.balanceOf(DEBT_ACTOR);
-
-        vm.startPrank(DEBT_ACTOR);
-
-        sUSD.approve(address(engine), INITIAL_DEBT);
-
-        engine.payDebt({_accountId: ACCOUNT_ID, _amount: INITIAL_DEBT});
-        vm.stopPrank();
-
-        uint256 finalAccountDebt = perpsMarketProxy.debt(ACCOUNT_ID);
-        assertEq(finalAccountDebt, 0);
-
-        uint256 finalSUSD = sUSD.balanceOf(DEBT_ACTOR);
-        assertEq(finalSUSD, initialSUSD - INITIAL_DEBT);
-    }
-
-    /// @notice asserts that if amount passed is greater than debt, excess sUSD is sent back to the user after paying off the debt
-    function test_payDebt_overpay() public {
-        /// @dev on this block (ARBITRUM_BLOCK_NUMBER), ACCOUNT_ID has a debt value of INITIAL_DEBT
-        uint256 initialAccountDebt = perpsMarketProxy.debt(ACCOUNT_ID);
-        assertEq(initialAccountDebt, INITIAL_DEBT);
-
-        uint256 initialSUSD = sUSD.balanceOf(DEBT_ACTOR);
-
-        vm.startPrank(DEBT_ACTOR);
-
-        sUSD.approve(address(engine), INITIAL_DEBT + SMALLEST_AMOUNT);
-
-        engine.payDebt({
-            _accountId: ACCOUNT_ID,
-            _amount: INITIAL_DEBT + SMALLEST_AMOUNT
-        });
-        vm.stopPrank();
-
-        uint256 finalAccountDebt = perpsMarketProxy.debt(ACCOUNT_ID);
-        assertEq(finalAccountDebt, 0);
-
-        uint256 finalSUSD = sUSD.balanceOf(DEBT_ACTOR);
-        assertEq(finalSUSD, initialSUSD - INITIAL_DEBT);
     }
 
     function test_payDebt_Unauthorized() public {
@@ -74,35 +28,82 @@ contract PayDebtTest is Bootstrap {
         engine.payDebt({_accountId: ACCOUNT_ID, _amount: INITIAL_DEBT});
     }
 
-    function test_payDebt_Fuzz(uint256 amount) public {
-        vm.assume(amount < AMOUNT);
-        vm.assume(amount > SMALLEST_AMOUNT);
+    /// @custom:todo Get a debt position on Base to fork
+    // function test_payDebt() public {
+    //     /// @dev on this block (266_832_048), ACCOUNT_ID has a debt value of INITIAL_DEBT
+    //     uint256 initialAccountDebt = perpsMarketProxy.debt(ACCOUNT_ID);
+    //     assertEq(initialAccountDebt, INITIAL_DEBT);
 
-        uint256 initialAccountDebt = perpsMarketProxy.debt(ACCOUNT_ID);
-        assertEq(initialAccountDebt, INITIAL_DEBT);
+    //     uint256 initialSUSD = sUSD.balanceOf(DEBT_ACTOR);
 
-        uint256 initialSUSD = sUSD.balanceOf(DEBT_ACTOR);
+    //     vm.startPrank(DEBT_ACTOR);
 
-        vm.startPrank(DEBT_ACTOR);
+    //     sUSD.approve(address(engine), INITIAL_DEBT);
 
-        sUSD.approve(address(engine), amount);
+    //     engine.payDebt({_accountId: ACCOUNT_ID, _amount: INITIAL_DEBT});
+    //     vm.stopPrank();
 
-        engine.payDebt({_accountId: ACCOUNT_ID, _amount: amount});
+    //     uint256 finalAccountDebt = perpsMarketProxy.debt(ACCOUNT_ID);
+    //     assertEq(finalAccountDebt, 0);
 
-        vm.stopPrank();
+    //     uint256 finalSUSD = sUSD.balanceOf(DEBT_ACTOR);
+    //     assertEq(finalSUSD, initialSUSD - INITIAL_DEBT);
+    // }
 
-        uint256 finalAccountDebt = perpsMarketProxy.debt(ACCOUNT_ID);
-        uint256 finalSUSD = sUSD.balanceOf(DEBT_ACTOR);
+    // /// @notice asserts that if amount passed is greater than debt, excess sUSD is sent back to the user after paying off the debt
+    // function test_payDebt_overpay() public {
+    //     /// @dev on this block (ARBITRUM_BLOCK_NUMBER), ACCOUNT_ID has a debt value of INITIAL_DEBT
+    //     uint256 initialAccountDebt = perpsMarketProxy.debt(ACCOUNT_ID);
+    //     assertEq(initialAccountDebt, INITIAL_DEBT);
 
-        if (amount > INITIAL_DEBT) {
-            // If amount is greater than the initial debt, the debt should be fully paid
-            // and excess sUSD should be sent back to the user
-            assertEq(finalAccountDebt, 0);
-            assertEq(finalSUSD, initialSUSD - INITIAL_DEBT);
-        } else {
-            // If amount is less or equal than the initial debt, only part of the debt is paid
-            assertEq(finalAccountDebt, INITIAL_DEBT - amount);
-            assertEq(finalSUSD, initialSUSD - amount);
-        }
-    }
+    //     uint256 initialSUSD = sUSD.balanceOf(DEBT_ACTOR);
+
+    //     vm.startPrank(DEBT_ACTOR);
+
+    //     sUSD.approve(address(engine), INITIAL_DEBT + SMALLEST_AMOUNT);
+
+    //     engine.payDebt({
+    //         _accountId: ACCOUNT_ID,
+    //         _amount: INITIAL_DEBT + SMALLEST_AMOUNT
+    //     });
+    //     vm.stopPrank();
+
+    //     uint256 finalAccountDebt = perpsMarketProxy.debt(ACCOUNT_ID);
+    //     assertEq(finalAccountDebt, 0);
+
+    //     uint256 finalSUSD = sUSD.balanceOf(DEBT_ACTOR);
+    //     assertEq(finalSUSD, initialSUSD - INITIAL_DEBT);
+    // }
+
+    // function test_payDebt_Fuzz(uint256 amount) public {
+    //     vm.assume(amount < AMOUNT);
+    //     vm.assume(amount > SMALLEST_AMOUNT);
+
+    //     uint256 initialAccountDebt = perpsMarketProxy.debt(ACCOUNT_ID);
+    //     assertEq(initialAccountDebt, INITIAL_DEBT);
+
+    //     uint256 initialSUSD = sUSD.balanceOf(DEBT_ACTOR);
+
+    //     vm.startPrank(DEBT_ACTOR);
+
+    //     sUSD.approve(address(engine), amount);
+
+    //     engine.payDebt({_accountId: ACCOUNT_ID, _amount: amount});
+
+    //     vm.stopPrank();
+
+    //     uint256 finalAccountDebt = perpsMarketProxy.debt(ACCOUNT_ID);
+    //     uint256 finalSUSD = sUSD.balanceOf(DEBT_ACTOR);
+
+    //     if (amount > INITIAL_DEBT) {
+    //         // If amount is greater than the initial debt, the debt should be fully paid
+    //         // and excess sUSD should be sent back to the user
+    //         assertEq(finalAccountDebt, 0);
+    //         assertEq(finalSUSD, initialSUSD - INITIAL_DEBT);
+    //     } else {
+    //         // If amount is less or equal than the initial debt, only part of the debt is paid
+    //         assertEq(finalAccountDebt, INITIAL_DEBT - amount);
+    //         assertEq(finalSUSD, initialSUSD - amount);
+    //     }
+    // }
 }

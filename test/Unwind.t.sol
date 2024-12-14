@@ -20,20 +20,20 @@ contract UnwindTest is Bootstrap {
     address constant WETH_ADDR = 0x82aF49447D8a07e3bd95BD0d56f35241523fBab1;
 
     function setUp() public {
-        vm.rollFork(266_847_904);
+        vm.rollFork(BASE_BLOCK_NUMBER);
         initializeBase();
 
         synthMinter.mint_sUSD(DEBT_ACTOR, AMOUNT);
 
         /// @dev this is needed because MWS hardcodes the live Engine contract address
         /// therefore we cannot use our boostrap test state, we must fork
-        vm.startPrank(DEBT_ACTOR);
-        perpsMarketProxy.grantPermission({
-            accountId: ACCOUNT_ID,
-            permission: ADMIN_PERMISSION,
-            user: address(engine)
-        });
-        vm.stopPrank();
+        // vm.startPrank(DEBT_ACTOR);
+        // perpsMarketProxy.grantPermission({
+        //     accountId: ACCOUNT_ID,
+        //     permission: ADMIN_PERMISSION,
+        //     user: address(engine)
+        // });
+        // vm.stopPrank();
     }
 
     function test_unwindCollateral_UNAUTHORIZED() public {
@@ -43,11 +43,11 @@ contract UnwindTest is Bootstrap {
 
     function test_unwindCollateralETH_UNAUTHORIZED() public {
         vm.expectRevert(abi.encodeWithSelector(IEngine.Unauthorized.selector));
-        engine.unwindCollateral(accountId, 1, 1, address(0), 1, 1, 1, "");
+        engine.unwindCollateralETH(accountId, 1, address(0), 1, 1, 1, "");
     }
 
     function test_unwindCollateral_s() public {
-        /// @custom:todo OracleDataRequired
+        /// @custom:todo Get a debt position on Base to fork
         // uint256 initialAccountDebt = perpsMarketProxy.debt(ACCOUNT_ID);
         // assertEq(initialAccountDebt, INITIAL_DEBT);
 
