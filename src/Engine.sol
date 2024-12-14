@@ -517,8 +517,8 @@ contract Engine is
         uint256 balanceAfter = WETH.balanceOf(address(this));
         uint256 receivedAmount = balanceAfter - balanceBefore;
 
-        // Convert WETH to ETH and send to user
-        WETH.withdrawTo(msg.sender, receivedAmount);
+        WETH.approve(address(pay), receivedAmount);
+        pay.unwrapAndPay(receivedAmount, msg.sender);
     }
 
     /// @inheritdoc IEngine
