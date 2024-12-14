@@ -14,5 +14,12 @@
         "EngineProxy": "0xa5D8b733108D798d8faAf78eE1CaF9fE335cE233",
         "MulticallerWithSender": "0xabcA02D1B960399D7D65EBF4047E80391af5d6A2",
         "Zap": "0x64b6Ae998Fbba6d24dD7a2469842119A014835CD"
+    },
+    "Multi Collateral": {
+        "Zap": "0x84f531d85fAA7Be42f8a248B87e40f760e558F7C",
+        "Pay": "0x127Fb7602bF3De092d351f922791cF9a149A4837",
+        "EngineImplementation": "0xFb7747a95B23a1512E8b8dda828E48E91b790e56",
+        "EngineProxy": "0xC4d15a1726CF9B51E1591eac6D1576016064DCe0",
+        "MulticallerWithSender": "0x7E1cec3d06B45d84263d954A0E2bc6A8683E1351"
     }
 }
