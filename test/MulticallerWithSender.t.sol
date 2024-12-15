@@ -15,6 +15,7 @@ contract MulticallerWithSenderTest is Bootstrap {
     address payable constant DEPLOYED_MWS =
         payable(0x7E1cec3d06B45d84263d954A0E2bc6A8683E1351);
     uint256 constant BASE_BLOCK_NUMBER_AFTER_DEPLOYMENT = 23_712_358;
+    uint256 constant ETH_PRICE_AFTER_DEPLOYMENT = 3870;
 
     function setUp() public {
         vm.rollFork(BASE_BLOCK_NUMBER_AFTER_DEPLOYMENT);
@@ -62,10 +63,10 @@ contract MulticallerWithSenderEngine is MulticallerWithSenderTest {
         mws.aggregateWithSender{value: values[0] + values[1]}(data, values);
         vm.stopPrank();
 
-        // availableMargin =
-        //     uint256(perpsMarketProxy.getAvailableMargin(accountId));
-        // uint256 expectedMargin = 2 ether * ETH_PRICE;
-        // assertWithinTolerance(expectedMargin, availableMargin, 2);
+        availableMargin =
+            uint256(perpsMarketProxy.getAvailableMargin(accountId));
+        uint256 expectedMargin = 2 ether * ETH_PRICE_AFTER_DEPLOYMENT;
+        assertWithinTolerance(expectedMargin, availableMargin, 3);
     }
 
     function test_multicall_engine_fulfillOracleQuery_depositCollateralETH()
@@ -101,7 +102,7 @@ contract MulticallerWithSenderEngine is MulticallerWithSenderTest {
 
         availableMargin =
             uint256(perpsMarketProxy.getAvailableMargin(accountId));
-        uint256 expectedMargin = 1 ether * ETH_PRICE;
-        assertWithinTolerance(expectedMargin, availableMargin, 2);
+        uint256 expectedMargin = 1 ether * ETH_PRICE_AFTER_DEPLOYMENT;
+        assertWithinTolerance(expectedMargin, availableMargin, 3);
     }
 }
