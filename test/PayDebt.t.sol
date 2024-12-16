@@ -28,6 +28,16 @@ contract PayDebtTest is Bootstrap {
         engine.payDebt({_accountId: ACCOUNT_ID, _amount: INITIAL_DEBT});
     }
 
+    function test_payDebtWithUSDC_Unauthorized() public {
+        vm.startPrank(ACTOR);
+
+        sUSD.approve(address(engine), INITIAL_DEBT);
+
+        vm.expectRevert(abi.encodeWithSelector(IEngine.Unauthorized.selector));
+
+        engine.payDebtWithUSDC({_accountId: ACCOUNT_ID, _amount: INITIAL_DEBT, _zapMinAmountOut: 1});
+    }
+
     /// @custom:todo Get a debt position on Base to fork
     // function test_payDebt() public {
     //     /// @dev on this block (266_832_048), ACCOUNT_ID has a debt value of INITIAL_DEBT
