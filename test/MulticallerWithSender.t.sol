@@ -11,11 +11,11 @@ contract MulticallerWithSenderTest is Bootstrap {
     MWS mws;
     EIP7412Mock eip7412Mock;
     address constant DEPLOYED_ENGINE =
-        0xC4d15a1726CF9B51E1591eac6D1576016064DCe0;
+        0xB7743A30cE805BcA100e048324d3398530b4547c;
     address payable constant DEPLOYED_MWS =
-        payable(0x7E1cec3d06B45d84263d954A0E2bc6A8683E1351);
-    uint256 constant BASE_BLOCK_NUMBER_AFTER_DEPLOYMENT = 23_712_358;
-    uint256 constant ETH_PRICE_AFTER_DEPLOYMENT = 3870;
+        payable(0x138A347ae9607dbc119620b93aAf2c71fDeF6726);
+    uint256 constant BASE_BLOCK_NUMBER_AFTER_DEPLOYMENT = 23_799_829;
+    uint256 constant ETH_PRICE_AFTER_DEPLOYMENT = 4040;
 
     function setUp() public {
         vm.rollFork(BASE_BLOCK_NUMBER_AFTER_DEPLOYMENT);
