@@ -662,7 +662,8 @@ contract Engine is
         USDC.transferFrom(msg.sender, address(this), amountWithExcess);
 
         USDC.approve(address(zap), amountWithExcess);
-        uint256 usdxAmount = zap.zapIn(amountWithExcess, _zapMinAmountOut, address(this));
+        uint256 usdxAmount =
+            zap.zapIn(amountWithExcess, _zapMinAmountOut, address(this));
 
         SUSD.approve(address(zap), usdxAmount);
         uint256 remaining = zap.burn(usdxAmount, _accountId);
@@ -673,7 +674,9 @@ contract Engine is
         /// has to be above dust amount to avoid reverting
         /// because converting back to USDC will be < 0
         SUSD.approve(address(zap), remaining);
-        if (remaining > USDC_DUST_THRESHOLD) zap.zapOut(remaining, 1, msg.sender);
+        if (remaining > USDC_DUST_THRESHOLD) {
+            zap.zapOut(remaining, 1, msg.sender);
+        }
 
         emit Burned(_accountId, usdxAmount - remaining);
     }

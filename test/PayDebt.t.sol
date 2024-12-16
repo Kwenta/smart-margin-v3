@@ -11,7 +11,8 @@ contract PayDebtTest is Bootstrap {
         170_141_183_460_469_231_731_687_303_715_884_105_747;
     uint256 public constant INITIAL_DEBT = 1_415_390_413_007_519_465;
     uint256 public constant BASE_BLOCK_NUMBER_WITH_DEBT = 23_779_991;
-    uint256 public constant USDC_WRAPPER_MAX_AMOUNT = 100_000_000_000_000_000_000_000_000;
+    uint256 public constant USDC_WRAPPER_MAX_AMOUNT =
+        100_000_000_000_000_000_000_000_000;
 
     function setUp() public {
         vm.rollFork(BASE_BLOCK_NUMBER_WITH_DEBT);
@@ -38,7 +39,11 @@ contract PayDebtTest is Bootstrap {
 
         vm.expectRevert(abi.encodeWithSelector(IEngine.Unauthorized.selector));
 
-        engine.payDebtWithUSDC({_accountId: ACCOUNT_ID, _amount: INITIAL_DEBT, _zapMinAmountOut: 1});
+        engine.payDebtWithUSDC({
+            _accountId: ACCOUNT_ID,
+            _amount: INITIAL_DEBT,
+            _zapMinAmountOut: 1
+        });
     }
 
     function test_payDebt() public {
@@ -63,7 +68,7 @@ contract PayDebtTest is Bootstrap {
         assertEq(finalSUSD, initialSUSD - INITIAL_DEBT);
     }
 
-    /// @notice asserts that if amount passed is greater than debt, 
+    /// @notice asserts that if amount passed is greater than debt,
     /// @notice excess sUSD is sent back to the user after paying off the debt
     function test_payDebt_overpay() public {
         /// @dev on this block (BASE_BLOCK_NUMBER_WITH_DEBT)
@@ -143,7 +148,11 @@ contract PayDebtTest is Bootstrap {
         vm.startPrank(DEBT_ACTOR);
         /// @dev remember we need to approve the excess amount as well (+1)
         USDC.approve(address(engine), INITIAL_DEBT_IN_USDC + 1);
-        engine.payDebtWithUSDC({_accountId: ACCOUNT_ID, _amount: INITIAL_DEBT_IN_USDC, _zapMinAmountOut: INITIAL_DEBT_IN_USDC});
+        engine.payDebtWithUSDC({
+            _accountId: ACCOUNT_ID,
+            _amount: INITIAL_DEBT_IN_USDC,
+            _zapMinAmountOut: INITIAL_DEBT_IN_USDC
+        });
         vm.stopPrank();
 
         uint256 finalAccountDebt = perpsMarketProxy.debt(ACCOUNT_ID);
@@ -158,7 +167,7 @@ contract PayDebtTest is Bootstrap {
         assertEq(finalUSDC, initialUSDC - (INITIAL_DEBT_IN_USDC + 1));
     }
 
-    /// @notice asserts that if amount passed is greater than debt, 
+    /// @notice asserts that if amount passed is greater than debt,
     /// @notice excess USDC is sent back to the user after paying off the debt
     function test_payDebtWithUSDC_overpay() public {
         /// @dev INITIAL_DEBT is in sUSD (18 decimals)
@@ -241,7 +250,9 @@ contract PayDebtTest is Bootstrap {
             assertEq(finalUSDC, initialUSDC - (INITIAL_DEBT_IN_USDC + 1));
         } else {
             // If amount is less or equal than the initial debt, only part of the debt is paid
-            assertEq(finalAccountDebt, INITIAL_DEBT - ((amount + 1) * decimalsFactor));
+            assertEq(
+                finalAccountDebt, INITIAL_DEBT - ((amount + 1) * decimalsFactor)
+            );
             assertEq(finalUSDC, initialUSDC - (uint256(amount) + 1));
         }
         /// @dev the sUSD balance should stay the same because
