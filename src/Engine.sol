@@ -55,12 +55,12 @@ contract Engine is
     /// @notice "0" synthMarketId represents $sUSD in Synthetix v3
     uint128 internal constant USD_SYNTH_ID = 0;
 
+    /// @notice "6" synthMarketId represents $WETH in Synthetix v3
+    uint128 internal constant WETH_SYNTH_MARKET_ID = 6;
+
     /// @notice max number of conditions that can be defined
     /// for a conditional order
     uint256 internal constant MAX_CONDITIONS = 8;
-
-    /// @notice "6" synthMarketId represents $WETH in Synthetix v3
-    uint128 public constant WETH_SYNTH_MARKET_ID = 6;
 
     /// @notice dust threshold for converting $sUSD to $USDC
     uint256 internal constant USDC_DUST_THRESHOLD = 1_000_000_000_000;
@@ -665,7 +665,7 @@ contract Engine is
 
         SUSD.approve(address(zap), usdxAmount);
         uint256 remaining = zap.burn(usdxAmount, _accountId);
-        
+
         // zap $sUSD -> $USDC
         /// @dev this sends back any overpaid amount to the user
         /// (if the amount is less than the dust amount)
