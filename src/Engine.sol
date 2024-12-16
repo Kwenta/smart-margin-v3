@@ -62,6 +62,9 @@ contract Engine is
     /// @notice "6" synthMarketId represents $WETH in Synthetix v3
     uint128 public constant WETH_SYNTH_MARKET_ID = 6;
 
+    /// @notice dust threshold for converting $sUSD to $USDC
+    uint256 internal constant USDC_DUST_THRESHOLD = 1_000_000_000_000;
+
     /*//////////////////////////////////////////////////////////////
                                IMMUTABLES
     //////////////////////////////////////////////////////////////*/
@@ -650,15 +653,26 @@ contract Engine is
     ) external payable override {
         if (!isAccountOwner(_accountId, msg.sender)) revert Unauthorized();
 
-        USDC.transferFrom(msg.sender, address(this), _amount);
+        /// @dev when converting to sUSD from USDC, precision is lost
+        /// thus we add 1 to the amount to ensure enough is sent to
+        /// pay the debt (excess is returned to the user)
+        uint256 amountWithExcess = _amount + 1;
 
-        USDC.approve(address(zap), _amount);
-        uint256 usdxAmount = zap.zapIn(_amount, _zapMinAmountOut, address(this));
+        USDC.transferFrom(msg.sender, address(this), amountWithExcess);
+
+        USDC.approve(address(zap), amountWithExcess);
+        uint256 usdxAmount = zap.zapIn(amountWithExcess, _zapMinAmountOut, address(this));
 
         SUSD.approve(address(zap), usdxAmount);
         uint256 remaining = zap.burn(usdxAmount, _accountId);
-
-        if (remaining > 0) SUSD.transfer(msg.sender, remaining);
+        
+        // zap $sUSD -> $USDC
+        /// @dev this sends back any overpaid amount to the user
+        /// (if the amount is less than the dust amount)
+        /// has to be above dust amount to avoid reverting
+        /// because converting back to USDC will be < 0
+        SUSD.approve(address(zap), remaining);
+        if (remaining > USDC_DUST_THRESHOLD) zap.zapOut(remaining, 1, msg.sender);
 
         emit Burned(_accountId, usdxAmount - remaining);
     }
