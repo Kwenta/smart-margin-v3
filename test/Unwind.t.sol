@@ -16,14 +16,13 @@ contract UnwindTest is Bootstrap {
         170_141_183_460_469_231_731_687_303_715_884_105_747;
     uint256 public constant INITIAL_DEBT = 2_983_003_117_413_866_988;
     uint256 public constant BASE_BLOCK_NUMBER_WITH_DEBT = 23_805_461;
-    uint256 public constant SWAP_AMOUNT = 1e18;
+    uint256 public constant SWAP_AMOUNT = 1_000_000_000_000_000;
 
     bytes swapPath;
     string pathId;
 
     function setUp() public {
-        //string memory BASE_RPC = vm.envString("BASE_RPC_URL");
-        string memory BASE_RPC = "https://base-mainnet.g.alchemy.com/v2/7-p_uxTY3ESx53BfHqRn4O1UROY4f9pG";
+        string memory BASE_RPC = vm.envString("BASE_RPC_URL");
         uint256 baseForkCurrentBlock = vm.createFork(BASE_RPC);
         vm.selectFork(baseForkCurrentBlock);
         initializeBase();
@@ -74,18 +73,15 @@ contract UnwindTest is Bootstrap {
             _collateralId: WETH_SYNTH_MARKET_ID,
             _collateralAmount: 1_100_000_000_000_000,
             _collateral: address(WETH),
-            // _zapMinAmountOut: 829_762_200_000_000_000,
-            // _unwrapMinAmountOut: 3_796_200_000_000_000,
-            // _swapAmountIn: 3_824_606_425_619_680,
             _zapMinAmountOut: 1,
             _unwrapMinAmountOut: 1,
             _swapAmountIn: SWAP_AMOUNT,
             _path: swapPath
         });
 
-        // vm.stopPrank();
+        vm.stopPrank();
 
-        // withdrawableMargin = perpsMarketProxy.getWithdrawableMargin(ACCOUNT_ID);
-        // assertGt(withdrawableMargin, 0);
+        withdrawableMargin = perpsMarketProxy.getWithdrawableMargin(ACCOUNT_ID);
+        assertGt(withdrawableMargin, 0);
     }
 }
