@@ -21,6 +21,7 @@ import {SafeERC20} from "./utils/SafeTransferERC20.sol";
 /// @author @barrasso
 /// @author @moss-eth
 contract Zap is Reentrancy, Errors, Flush(msg.sender) {
+
     /// @custom:circle
     address public immutable USDC;
 
@@ -98,7 +99,11 @@ contract Zap is Reentrancy, Errors, Flush(msg.sender) {
     /// @param _minAmountOut acceptable slippage for wrapping and selling
     /// @param _receiver address to receive USDx
     /// @return zapped amount of USDx received
-    function zapIn(uint256 _amount, uint256 _minAmountOut, address _receiver)
+    function zapIn(
+        uint256 _amount,
+        uint256 _minAmountOut,
+        address _receiver
+    )
         external
         returns (uint256 zapped)
     {
@@ -109,7 +114,10 @@ contract Zap is Reentrancy, Errors, Flush(msg.sender) {
 
     /// @dev allowance is assumed
     /// @dev following execution, this contract will hold the zapped USDx
-    function _zapIn(uint256 _amount, uint256 _minAmountOut)
+    function _zapIn(
+        uint256 _amount,
+        uint256 _minAmountOut
+    )
         internal
         returns (uint256 zapped)
     {
@@ -123,7 +131,11 @@ contract Zap is Reentrancy, Errors, Flush(msg.sender) {
     /// @param _minAmountOut acceptable slippage for buying and unwrapping
     /// @param _receiver address to receive USDC
     /// @return zapped amount of USDC received
-    function zapOut(uint256 _amount, uint256 _minAmountOut, address _receiver)
+    function zapOut(
+        uint256 _amount,
+        uint256 _minAmountOut,
+        address _receiver
+    )
         external
         returns (uint256 zapped)
     {
@@ -134,7 +146,10 @@ contract Zap is Reentrancy, Errors, Flush(msg.sender) {
 
     /// @dev allowance is assumed
     /// @dev following execution, this contract will hold the zapped USDC
-    function _zapOut(uint256 _amount, uint256 _minAmountOut)
+    function _zapOut(
+        uint256 _amount,
+        uint256 _minAmountOut
+    )
         internal
         returns (uint256 zapped)
     {
@@ -162,7 +177,10 @@ contract Zap is Reentrancy, Errors, Flush(msg.sender) {
         uint256 _amount,
         uint256 _minAmountOut,
         address _receiver
-    ) external returns (uint256 wrapped) {
+    )
+        external
+        returns (uint256 wrapped)
+    {
         _pull(_token, msg.sender, _amount);
         wrapped = _wrap(_token, _synthId, _amount, _minAmountOut);
         _push(ISpotMarket(SPOT_MARKET).getSynth(_synthId), _receiver, wrapped);
@@ -175,7 +193,10 @@ contract Zap is Reentrancy, Errors, Flush(msg.sender) {
         uint128 _synthId,
         uint256 _amount,
         uint256 _minAmountOut
-    ) internal returns (uint256 wrapped) {
+    )
+        internal
+        returns (uint256 wrapped)
+    {
         IERC20(_token).approve(SPOT_MARKET, _amount);
         (wrapped,) = ISpotMarket(SPOT_MARKET).wrap({
             marketId: _synthId,
@@ -200,7 +221,10 @@ contract Zap is Reentrancy, Errors, Flush(msg.sender) {
         uint256 _amount,
         uint256 _minAmountOut,
         address _receiver
-    ) external returns (uint256 unwrapped) {
+    )
+        external
+        returns (uint256 unwrapped)
+    {
         address synth = ISpotMarket(SPOT_MARKET).getSynth(_synthId);
         _pull(synth, msg.sender, _amount);
         unwrapped = _unwrap(_synthId, _amount, _minAmountOut);
@@ -209,7 +233,11 @@ contract Zap is Reentrancy, Errors, Flush(msg.sender) {
 
     /// @dev allowance is assumed
     /// @dev following execution, this contract will hold the unwrapped token
-    function _unwrap(uint128 _synthId, uint256 _amount, uint256 _minAmountOut)
+    function _unwrap(
+        uint128 _synthId,
+        uint256 _amount,
+        uint256 _minAmountOut
+    )
         private
         returns (uint256 unwrapped)
     {
@@ -238,7 +266,10 @@ contract Zap is Reentrancy, Errors, Flush(msg.sender) {
         uint256 _amount,
         uint256 _minAmountOut,
         address _receiver
-    ) external returns (uint256 received, address synth) {
+    )
+        external
+        returns (uint256 received, address synth)
+    {
         synth = ISpotMarket(SPOT_MARKET).getSynth(_synthId);
         _pull(USDX, msg.sender, _amount);
         received = _buy(_synthId, _amount, _minAmountOut);
@@ -247,7 +278,11 @@ contract Zap is Reentrancy, Errors, Flush(msg.sender) {
 
     /// @dev allowance is assumed
     /// @dev following execution, this contract will hold the bought synth
-    function _buy(uint128 _synthId, uint256 _amount, uint256 _minAmountOut)
+    function _buy(
+        uint128 _synthId,
+        uint256 _amount,
+        uint256 _minAmountOut
+    )
         internal
         returns (uint256 received)
     {
@@ -272,7 +307,10 @@ contract Zap is Reentrancy, Errors, Flush(msg.sender) {
         uint256 _amount,
         uint256 _minAmountOut,
         address _receiver
-    ) external returns (uint256 received) {
+    )
+        external
+        returns (uint256 received)
+    {
         address synth = ISpotMarket(SPOT_MARKET).getSynth(_synthId);
         _pull(synth, msg.sender, _amount);
         received = _sell(_synthId, _amount, _minAmountOut);
@@ -281,7 +319,11 @@ contract Zap is Reentrancy, Errors, Flush(msg.sender) {
 
     /// @dev allowance is assumed
     /// @dev following execution, this contract will hold the sold USDX
-    function _sell(uint128 _synthId, uint256 _amount, uint256 _minAmountOut)
+    function _sell(
+        uint128 _synthId,
+        uint256 _amount,
+        uint256 _minAmountOut
+    )
         internal
         returns (uint256 received)
     {
@@ -320,7 +362,11 @@ contract Zap is Reentrancy, Errors, Flush(msg.sender) {
         uint256 _unwrapMinAmountOut,
         uint256 _swapAmountIn,
         address _receiver
-    ) external isAuthorized(_accountId) requireStage(Stage.UNSET) {
+    )
+        external
+        isAuthorized(_accountId)
+        requireStage(Stage.UNSET)
+    {
         stage = Stage.LEVEL1;
 
         bytes memory params = abi.encode(
@@ -362,7 +408,12 @@ contract Zap is Reentrancy, Errors, Flush(msg.sender) {
         uint256 _premium,
         address,
         bytes calldata _params
-    ) external onlyAave requireStage(Stage.LEVEL1) returns (bool) {
+    )
+        external
+        onlyAave
+        requireStage(Stage.LEVEL1)
+        returns (bool)
+    {
         stage = Stage.LEVEL2;
 
         (,,, address _collateral,,,,, address _receiver) = abi.decode(
@@ -396,7 +447,11 @@ contract Zap is Reentrancy, Errors, Flush(msg.sender) {
         uint256 _flashloan,
         uint256 _premium,
         bytes calldata _params
-    ) internal requireStage(Stage.LEVEL2) returns (uint256 unwound) {
+    )
+        internal
+        requireStage(Stage.LEVEL2)
+        returns (uint256 unwound)
+    {
         (
             uint128 _accountId,
             uint128 _collateralId,
@@ -437,7 +492,7 @@ contract Zap is Reentrancy, Errors, Flush(msg.sender) {
         // i.e., # of sETH, # of sUSDe, # of sUSDC (...)
         _withdraw(_collateralId, _collateralAmount, _accountId);
 
-        if (_collateral == USDC) {
+        if (_collateral == USDC && _collateralId == USDX_ID) {
             unwound = _zapOut(_collateralAmount, _collateralAmount / 1e12);
         } else {
             // unwrap withdrawn synthetix perp position collateral;
@@ -511,7 +566,10 @@ contract Zap is Reentrancy, Errors, Flush(msg.sender) {
     /// @param _amount amount of USDx to burn
     /// @param _accountId synthetix perp market account id
     /// @return excess amount of USDx returned to the caller
-    function burn(uint256 _amount, uint128 _accountId)
+    function burn(
+        uint256 _amount,
+        uint128 _accountId
+    )
         external
         returns (uint256 excess)
     {
@@ -549,7 +607,10 @@ contract Zap is Reentrancy, Errors, Flush(msg.sender) {
         uint256 _amount,
         uint128 _accountId,
         address _receiver
-    ) external isAuthorized(_accountId) {
+    )
+        external
+        isAuthorized(_accountId)
+    {
         _withdraw(_synthId, _amount, _accountId);
         address synth = _synthId == USDX_ID
             ? USDX
@@ -560,7 +621,11 @@ contract Zap is Reentrancy, Errors, Flush(msg.sender) {
     /// @custom:synthetix RBAC permission required: "PERPS_MODIFY_COLLATERAL"
     /// @dev following execution, this contract will hold the withdrawn
     /// collateral
-    function _withdraw(uint128 _synthId, uint256 _amount, uint128 _accountId)
+    function _withdraw(
+        uint128 _synthId,
+        uint256 _amount,
+        uint128 _accountId
+    )
         internal
     {
         IPerpsMarket market = IPerpsMarket(PERPS_MARKET);
@@ -576,7 +641,7 @@ contract Zap is Reentrancy, Errors, Flush(msg.sender) {
                                 ODOS
     //////////////////////////////////////////////////////////////*/
 
-    /// @notice swap with the input amount of USDC
+    /// @notice swap the input amount of tokens for USDC using Odos
     /// @dev _path USDC is not enforced as the output token during the swap, but
     /// is expected in the call to push
     /// @dev caller must grant token allowance to this contract
@@ -590,10 +655,17 @@ contract Zap is Reentrancy, Errors, Flush(msg.sender) {
         bytes memory _path,
         uint256 _amountIn,
         address _receiver
-    ) external returns (uint256 amountOut) {
+    )
+        external
+        returns (uint256 amountOut)
+    {
         _pull(_from, msg.sender, _amountIn);
         amountOut = odosSwap(_from, _amountIn, _path);
         _push(USDC, _receiver, amountOut);
+
+        // refund if there is any amount of `_from` token left
+        uint256 amountLeft = IERC20(_from).balanceOf(address(this));
+        if (amountLeft > 0) _push(_from, msg.sender, amountLeft);
     }
 
     /// @dev following execution, this contract will hold the swapped USDC
@@ -605,7 +677,10 @@ contract Zap is Reentrancy, Errors, Flush(msg.sender) {
         address _tokenFrom,
         uint256 _amountIn,
         bytes memory _swapPath
-    ) internal returns (uint256 amountOut) {
+    )
+        internal
+        returns (uint256 amountOut)
+    {
         IERC20(_tokenFrom).approve(ROUTER, _amountIn);
 
         (bool success, bytes memory result) = ROUTER.call{value: 0}(_swapPath);
@@ -634,7 +709,11 @@ contract Zap is Reentrancy, Errors, Flush(msg.sender) {
     /// @param _token address of token to push
     /// @param _receiver address of receiver
     /// @param _amount amount of token to push
-    function _push(address _token, address _receiver, uint256 _amount)
+    function _push(
+        address _token,
+        address _receiver,
+        uint256 _amount
+    )
         internal
     {
         require(_receiver != address(0), PushFailed("Zero Address"));
@@ -643,4 +722,5 @@ contract Zap is Reentrancy, Errors, Flush(msg.sender) {
 
         SafeERC20.safeTransfer(token, _receiver, _amount);
     }
+
 }
