@@ -67,7 +67,7 @@ contract UnwindTest is Bootstrap {
         );
 
         swapPath = getAssemblePath(pathId);
-    
+
         engine.unwindCollateral({
             _accountId: ACCOUNT_ID,
             _collateralId: WETH_SYNTH_MARKET_ID,

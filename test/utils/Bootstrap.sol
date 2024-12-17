@@ -48,6 +48,7 @@ contract Bootstrap is
     // ODOS
     using Surl for *;
     using stdJson for string;
+
     struct Transaction {
         uint256 chainId;
         bytes data;
@@ -58,6 +59,7 @@ contract Bootstrap is
         address to;
         uint256 value;
     }
+
     string[] headers;
 
     // pDAO address
@@ -141,7 +143,7 @@ contract Bootstrap is
         headers.push("Content-Type: application/json");
     }
 
-    // ODOS 
+    // ODOS
     function getOdosQuoteParams(
         uint256 chainId,
         address tokenIn,
@@ -215,11 +217,7 @@ contract Bootstrap is
         returns (string memory)
     {
         return string.concat(
-            '{"userAddr": "',
-            vm.toString(zap),
-            '", "pathId": "',
-            pathId,
-            '"}'
+            '{"userAddr": "', vm.toString(zap), '", "pathId": "', pathId, '"}'
         );
     }
 
