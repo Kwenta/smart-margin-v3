@@ -5,7 +5,7 @@ pragma solidity 0.8.27;
 /// @author JaredBorders (jaredborders@pm.me)
 contract Constants {
     /// @dev Dec-13-2024 07:33:47 PM +UTC
-    uint256 public constant BASE_BLOCK_NUMBER = 23_664_540;
+    uint256 public constant BASE_BLOCK_NUMBER = 23_805_461;
 
     address internal constant OWNER = address(0x01);
 
@@ -62,8 +62,8 @@ contract Constants {
 
     uint128 constant WSTETH_SYNTH_MARKET_ID = 7;
 
-    /// @dev this is the ETH price in USD at the block number 23_664_540
-    uint256 internal constant ETH_PRICE = 3918;
+    /// @dev this is the ETH price in USD at the block number 23_805_461
+    uint256 internal constant ETH_PRICE = 4000;
 
     uint256 internal constant BTC_PRICE = 101_000;
 
