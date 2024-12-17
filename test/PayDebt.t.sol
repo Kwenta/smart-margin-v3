@@ -9,8 +9,8 @@ contract PayDebtTest is Bootstrap {
         address(0x325cd6b3CD80EDB102ac78848f5B127eB6DB13f3);
     uint128 public constant ACCOUNT_ID =
         170_141_183_460_469_231_731_687_303_715_884_105_747;
-    uint256 public constant INITIAL_DEBT = 1_415_390_413_007_519_465;
-    uint256 public constant BASE_BLOCK_NUMBER_WITH_DEBT = 23_779_991;
+    uint256 public constant INITIAL_DEBT = 2_983_003_117_413_866_988;
+    uint256 public constant BASE_BLOCK_NUMBER_WITH_DEBT = 23_805_461;
     uint256 public constant USDC_WRAPPER_MAX_AMOUNT =
         100_000_000_000_000_000_000_000_000;
 
@@ -41,7 +41,7 @@ contract PayDebtTest is Bootstrap {
         /// (for the input _amount)
         uint256 decimalsFactor = 10 ** (18 - USDC.decimals());
         uint256 INITIAL_DEBT_IN_USDC = INITIAL_DEBT / decimalsFactor;
-        assertEq(INITIAL_DEBT_IN_USDC, 1_415_390);
+        assertEq(INITIAL_DEBT_IN_USDC, 2_983_003);
 
         /// @dev on this block (BASE_BLOCK_NUMBER_WITH_DEBT)
         /// ACCOUNT_ID has a debt value of INITIAL_DEBT
@@ -81,7 +81,7 @@ contract PayDebtTest is Bootstrap {
         /// (for the input _amount)
         uint256 decimalsFactor = 10 ** (18 - USDC.decimals());
         uint256 INITIAL_DEBT_IN_USDC = INITIAL_DEBT / decimalsFactor;
-        assertEq(INITIAL_DEBT_IN_USDC, 1_415_390);
+        assertEq(INITIAL_DEBT_IN_USDC, 2_983_003);
 
         /// @dev on this block (BASE_BLOCK_NUMBER_WITH_DEBT)
         /// @dev ACCOUNT_ID has a debt value of INITIAL_DEBT
@@ -125,7 +125,7 @@ contract PayDebtTest is Bootstrap {
         /// (for the input _amount)
         uint256 decimalsFactor = 10 ** (18 - USDC.decimals());
         uint256 INITIAL_DEBT_IN_USDC = INITIAL_DEBT / decimalsFactor;
-        assertEq(INITIAL_DEBT_IN_USDC, 1_415_390);
+        assertEq(INITIAL_DEBT_IN_USDC, 2_983_003);
 
         /// @dev on this block (BASE_BLOCK_NUMBER_WITH_DEBT)
         /// @dev ACCOUNT_ID has a debt value of INITIAL_DEBT
