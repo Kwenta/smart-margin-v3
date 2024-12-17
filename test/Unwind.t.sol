@@ -22,7 +22,8 @@ contract UnwindTest is Bootstrap {
     string pathId;
 
     function setUp() public {
-        string memory BASE_RPC = vm.envString("BASE_RPC_URL");
+        //string memory BASE_RPC = vm.envString("BASE_RPC_URL");
+        string memory BASE_RPC = "https://base-mainnet.g.alchemy.com/v2/7-p_uxTY3ESx53BfHqRn4O1UROY4f9pG";
         uint256 baseForkCurrentBlock = vm.createFork(BASE_RPC);
         vm.selectFork(baseForkCurrentBlock);
         initializeBase();
