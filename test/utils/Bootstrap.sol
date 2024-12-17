@@ -136,6 +136,9 @@ contract Bootstrap is
 
         /// @dev this cures OracleDataRequired errors
         vm.etch(address(0x1234123412341234123412341234123412341234), "FORK");
+
+        /// @dev ODOS
+        headers.push("Content-Type: application/json");
     }
 
     // ODOS 

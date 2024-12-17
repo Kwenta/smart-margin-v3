@@ -16,14 +16,13 @@ contract UnwindTest is Bootstrap {
         170_141_183_460_469_231_731_687_303_715_884_105_747;
     uint256 public constant INITIAL_DEBT = 2_983_003_117_413_866_988;
     uint256 public constant BASE_BLOCK_NUMBER_WITH_DEBT = 23_805_461;
-    uint256 public constant SWAP_AMOUNT = 1_352_346_556_314_334;
+    uint256 public constant SWAP_AMOUNT = 1e18;
 
     bytes swapPath;
     string pathId;
 
     function setUp() public {
-        //vm.rollFork(BASE_BLOCK_NUMBER_WITH_DEBT);
-        string memory BASE_RPC = vm.envString(BASE_RPC_URL);
+        string memory BASE_RPC = vm.envString("BASE_RPC_URL");
         uint256 baseForkCurrentBlock = vm.createFork(BASE_RPC);
         vm.selectFork(baseForkCurrentBlock);
         initializeBase();
@@ -67,21 +66,21 @@ contract UnwindTest is Bootstrap {
             BASE_CHAIN_ID, address(WETH), SWAP_AMOUNT, address(USDC)
         );
 
-        // swapPath = getAssemblePath(pathId);
+        swapPath = getAssemblePath(pathId);
     
-        // engine.unwindCollateral({
-        //     _accountId: ACCOUNT_ID,
-        //     _collateralId: WETH_SYNTH_MARKET_ID,
-        //     _collateralAmount: 1_100_000_000_000_000,
-        //     _collateral: address(WETH),
-        //     // _zapMinAmountOut: 829_762_200_000_000_000,
-        //     // _unwrapMinAmountOut: 3_796_200_000_000_000,
-        //     // _swapAmountIn: 3_824_606_425_619_680,
-        //     _zapMinAmountOut: 1,
-        //     _unwrapMinAmountOut: 1,
-        //     _swapAmountIn: SWAP_AMOUNT,
-        //     _path: swapPath
-        // });
+        engine.unwindCollateral({
+            _accountId: ACCOUNT_ID,
+            _collateralId: WETH_SYNTH_MARKET_ID,
+            _collateralAmount: 1_100_000_000_000_000,
+            _collateral: address(WETH),
+            // _zapMinAmountOut: 829_762_200_000_000_000,
+            // _unwrapMinAmountOut: 3_796_200_000_000_000,
+            // _swapAmountIn: 3_824_606_425_619_680,
+            _zapMinAmountOut: 1,
+            _unwrapMinAmountOut: 1,
+            _swapAmountIn: SWAP_AMOUNT,
+            _path: swapPath
+        });
 
         // vm.stopPrank();
 
