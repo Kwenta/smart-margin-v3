@@ -65,11 +65,11 @@ contract Constants {
     /// @dev this is the ETH price in USD at the block number 23_805_461
     uint256 internal constant ETH_PRICE = 4000;
 
-    uint256 internal constant BTC_PRICE = 101_000;
+    uint256 internal constant BTC_PRICE = 106_000;
 
-    uint256 internal constant CBETH_PRICE = 4200;
+    uint256 internal constant CBETH_PRICE = 4351;
 
-    uint256 internal constant WSTETH_PRICE = 4600;
+    uint256 internal constant WSTETH_PRICE = 4735;
 
     uint256 internal constant AMOUNT = 10_000 ether;
 
