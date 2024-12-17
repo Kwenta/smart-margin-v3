@@ -14,6 +14,8 @@ import {ISpotMarketProxy} from "src/interfaces/synthetix/ISpotMarketProxy.sol";
 import {SynthMinter} from "test/utils/SynthMinter.sol";
 import {BaseParameters} from "script/utils/parameters/BaseParameters.sol";
 import {TestHelpers} from "test/utils/TestHelpers.sol";
+import {stdJson} from "forge-std/StdJson.sol";
+import {Surl} from "surl/src/Surl.sol";
 
 /// @title Contract for bootstrapping the SMv3 system for testing purposes
 /// @dev it deploys the SMv3 Engine and EngineExposed, and defines
@@ -42,6 +44,21 @@ contract Bootstrap is
     // lets any test contract that inherits from this contract
     // use the console.log()
     using console2 for *;
+
+    // ODOS
+    using Surl for *;
+    using stdJson for string;
+    struct Transaction {
+        uint256 chainId;
+        bytes data;
+        address from;
+        uint256 gas;
+        uint256 gasPrice;
+        uint256 nonce;
+        address to;
+        uint256 value;
+    }
+    string[] headers;
 
     // pDAO address
     address public pDAO;
@@ -119,6 +136,110 @@ contract Bootstrap is
 
         /// @dev this cures OracleDataRequired errors
         vm.etch(address(0x1234123412341234123412341234123412341234), "FORK");
+    }
+
+    // ODOS 
+    function getOdosQuoteParams(
+        uint256 chainId,
+        address tokenIn,
+        uint256 amountIn,
+        address tokenOut,
+        uint256 proportionOut,
+        uint256 slippageLimitPct,
+        address userAddress
+    ) internal returns (string memory) {
+        return string.concat(
+            '{"chainId": ',
+            vm.toString(chainId),
+            ', "inputTokens": [{"tokenAddress": "',
+            vm.toString(tokenIn),
+            '", "amount": "',
+            vm.toString(amountIn),
+            '"}],"outputTokens": [{"tokenAddress": "',
+            vm.toString(tokenOut),
+            '", "proportion": ',
+            vm.toString(proportionOut),
+            '}], "slippageLimitPercent": ',
+            vm.toString(slippageLimitPct),
+            ', "userAddr": "',
+            vm.toString(userAddress),
+            '"}'
+        );
+    }
+
+    function getOdosQuote(
+        uint256 chainId,
+        address tokenIn,
+        uint256 amountIn,
+        address tokenOut,
+        uint256 proportionOut,
+        uint256 slippageLimitPct,
+        address userAddress
+    ) internal returns (uint256 status, bytes memory data) {
+        string memory params = getOdosQuoteParams(
+            chainId,
+            tokenIn,
+            amountIn,
+            tokenOut,
+            proportionOut,
+            slippageLimitPct,
+            userAddress
+        );
+
+        (status, data) = ODOS_QUOTE_URL.post(headers, params);
+    }
+
+    function getOdosQuotePathId(
+        uint256 chainId,
+        address tokenIn,
+        uint256 amountIn,
+        address tokenOut
+    ) internal returns (string memory pathId) {
+        (, bytes memory data) = getOdosQuote(
+            chainId,
+            tokenIn,
+            amountIn,
+            tokenOut,
+            DEFAULT_PROPORTION,
+            DEFAULT_SLIPPAGE,
+            zap
+        );
+        pathId = abi.decode(vm.parseJson(string(data), ".pathId"), (string));
+    }
+
+    function getOdosAssembleParams(string memory pathId)
+        internal
+        returns (string memory)
+    {
+        return string.concat(
+            '{"userAddr": "',
+            vm.toString(zap),
+            '", "pathId": "',
+            pathId,
+            '"}'
+        );
+    }
+
+    function odosAssemble(string memory pathId)
+        internal
+        returns (uint256 status, bytes memory data)
+    {
+        string memory params = getOdosAssembleParams(pathId);
+
+        (status, data) = ODOS_ASSEMBLE_URL.post(headers, params);
+    }
+
+    function getAssemblePath(string memory pathId)
+        internal
+        returns (bytes memory swapPath)
+    {
+        bytes memory assembleData;
+        {
+            (, assembleData) = odosAssemble(pathId);
+        }
+        bytes memory transaction = string(assembleData).parseRaw(".transaction");
+        Transaction memory rawTxDetail = abi.decode(transaction, (Transaction));
+        return rawTxDetail.data;
     }
 }
 
