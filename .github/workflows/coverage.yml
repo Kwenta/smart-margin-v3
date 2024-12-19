@@ -3,7 +3,7 @@ name: coverage
 on: [push]
 
 env:
-    FOUNDRY_PROFILE: ci
+    FOUNDRY_PROFILE: default
 
 jobs:
     check:
@@ -23,10 +23,12 @@ jobs:
 
             - name: Report Coverage
               run: |
-                forge coverage --fork-url ${{ secrets.BASE_RPC_URL }} --report lcov
+                forge coverage --fork-url ${{ secrets.BASE_RPC_URL }} --etherscan-api-key ${{ secrets.BASESCAN_API_KEY }} --report lcov --ir-minimum
 
             - name: Upload Coverage Report
               uses: codecov/codecov-action@v3
+              env:
+                  CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
               with:
                   files: ./lcov.info
                   name: codecov-unit

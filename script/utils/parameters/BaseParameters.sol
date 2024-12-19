@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-pragma solidity 0.8.20;
+pragma solidity 0.8.27;
 
 contract BaseParameters {
-    // https://app.safe.global/home?safe=base:0x2f4004Bc32cc5D18a62fE26E35A0881d5397c549
+    // Deployer base
     address public constant PDAO = 0x2f4004Bc32cc5D18a62fE26E35A0881d5397c549;
 
     address public constant PERPS_MARKET_PROXY = address(0);
@@ -26,6 +26,19 @@ contract BaseParameters {
     // https://basescan.org/token/0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913
     address public constant USDC = 0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913;
 
+    address public constant WETH = 0x4200000000000000000000000000000000000006;
+
     // https://usecannon.com/packages/synthetix-spot-market/3.3.5/84531-andromeda
     uint128 public constant SUSDC_SPOT_MARKET_ID = 1;
+
+    address public constant ZAP = 0x41AE8b823850D96088419992c9538198b72cA230;
+
+    address payable public constant PAY =
+        payable(0x067e8C201Cc9CF33e556f8A0d75b91276c9af3D6);
+
+    address public constant CBBTC = 0xcbB7C0000aB88B473b1f5aFd9ef808440eed33Bf;
+
+    address public constant CBETH = 0x2Ae3F1Ec7F1F5012CFEab0185bfc7aa3cf0DEc22;
+
+    address public constant WSTETH = 0xc1CBa3fCea344f92D9239c08C0568f6F2F0ee452;
 }

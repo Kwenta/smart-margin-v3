@@ -3,7 +3,7 @@ name: test
 on: [push]
 
 env:
-    FOUNDRY_PROFILE: ci
+    FOUNDRY_PROFILE: default
 
 jobs:
     check:
@@ -24,38 +24,10 @@ jobs:
             - name: Build Project
               run: |
                   forge --version
-                  forge build --sizes
+                  forge build
               id: build
 
             - name: Test Project
               run: |
                 forge test --fork-url ${{ secrets.BASE_RPC_URL }} --etherscan-api-key ${{ secrets.BASESCAN_API_KEY }} -vvv
               id: test
-
-    hardhat_test:
-      runs-on: ubuntu-latest
-      steps:
-        - uses: actions/checkout@v3
-          with:
-              submodules: recursive
-
-        - name: Check out repository code
-          uses: actions/checkout@v2
-
-        - name: Building on Node.js
-          uses: actions/setup-node@v2
-          with:
-            node-version: '18.12.0'
-
-        - name: Update NPM
-          run: npm install -g npm@8.19.2
-        - uses: actions/cache@v2
-          with:
-            path: '**/node_modules'
-            key: ${{ runner.os }}-modules-${{ hashFiles('**/package-lock.json') }}
-
-        - name: Install dependencies
-          run: npm i --no-audit
-
-        - name: Execute contract tests
-          run: npx hardhat test

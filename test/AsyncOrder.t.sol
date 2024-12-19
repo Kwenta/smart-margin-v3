@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-pragma solidity 0.8.20;
+pragma solidity 0.8.27;
 
 import {Bootstrap} from "test/utils/Bootstrap.sol";
 import {IEngine} from "src/interfaces/IEngine.sol";
@@ -40,7 +40,6 @@ contract CommitOrder is AsyncOrderTest {
             _referrer: REFERRER
         });
 
-        // retOrder
         assertTrue(retOrder.settlementTime != 0);
         assertTrue(retOrder.request.marketId == SETH_PERPS_MARKET_ID);
         assertTrue(retOrder.request.accountId == accountId);
@@ -52,7 +51,6 @@ contract CommitOrder is AsyncOrderTest {
         assertTrue(retOrder.request.trackingCode == TRACKING_CODE);
         assertTrue(retOrder.request.referrer == REFERRER);
 
-        // fees
         assertTrue(fees != 0);
     }
 
@@ -82,7 +80,7 @@ contract CommitOrder is AsyncOrderTest {
         try engine.commitOrder({
             _perpsMarketId: SETH_PERPS_MARKET_ID,
             _accountId: accountId,
-            _sizeDelta: SIZE_DELTA * SIZE_DELTA, // huge value that obviously exceeds the margin requirement
+            _sizeDelta: SIZE_DELTA * SIZE_DELTA,
             _settlementStrategyId: SETTLEMENT_STRATEGY_ID,
             _acceptablePrice: ACCEPTABLE_PRICE_LONG,
             _trackingCode: TRACKING_CODE,

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-pragma solidity 0.8.20;
+pragma solidity 0.8.27;
 
 /// @title Consolidated functions from Synthetix v3 Perps Market contracts
 /// @dev Used for testing purposes but not used in the src/* contracts
@@ -102,4 +102,11 @@ interface IPerpsMarketProxy {
             uint256 requiredMaintenanceMargin,
             uint256 maxLiquidationReward
         );
+
+    function payDebt(uint128 accountId, uint256 amount) external;
+
+    function debt(uint128 accountId)
+        external
+        view
+        returns (uint256 accountDebt);
 }

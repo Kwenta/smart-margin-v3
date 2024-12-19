@@ -1,16 +1,22 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-pragma solidity 0.8.20;
+pragma solidity 0.8.27;
 
 import {ConditionalOrderHashLib} from
     "src/libraries/ConditionalOrderHashLib.sol";
 import {EIP712} from "src/utils/EIP712.sol";
 import {EIP7412} from "src/utils/EIP7412.sol";
-import {IEngine, IPerpsMarketProxy} from "src/interfaces/IEngine.sol";
+import {
+    IEngine,
+    IPerpsMarketProxy,
+    ISpotMarketProxy
+} from "src/interfaces/IEngine.sol";
 import {IERC20} from "src/interfaces/tokens/IERC20.sol";
+import {IWETH} from "src/interfaces/tokens/IWETH.sol";
 import {MathLib} from "src/libraries/MathLib.sol";
 import {MulticallablePayable} from "src/utils/MulticallablePayable.sol";
+import {Pay} from "src/utils/Pay.sol";
 import {SignatureCheckerLib} from "src/libraries/SignatureCheckerLib.sol";
-import {Zap} from "lib/zap/src/Zap.sol";
+import {Zap} from "src/utils/zap/Zap.sol";
 
 /// @custom:upgradability
 import {UUPSUpgradeable} from
@@ -20,12 +26,12 @@ import {UUPSUpgradeable} from
 /// @notice Responsible for interacting with Synthetix v3 perps markets
 /// @author JaredBorders (jaredborders@pm.me)
 /// @author Flocqst (florian@kwenta.io)
+/// @author AndrewChiaramonte (andrewc@kwenta.io)
 contract Engine is
     IEngine,
     EIP712,
     EIP7412,
     MulticallablePayable,
-    Zap,
     UUPSUpgradeable
 {
     using MathLib for int128;
@@ -43,12 +49,22 @@ contract Engine is
     bytes32 internal constant PERPS_COMMIT_ASYNC_ORDER_PERMISSION =
         "PERPS_COMMIT_ASYNC_ORDER";
 
+    /// @notice the permission required to modify collateral
+    bytes32 internal constant PERPS_MODIFY_COLLATERAL_PERMISSION =
+        "PERPS_MODIFY_COLLATERAL";
+
     /// @notice "0" synthMarketId represents $sUSD in Synthetix v3
     uint128 internal constant USD_SYNTH_ID = 0;
+
+    /// @notice "6" synthMarketId represents $WETH in Synthetix v3
+    uint128 internal constant WETH_SYNTH_MARKET_ID = 6;
 
     /// @notice max number of conditions that can be defined
     /// for a conditional order
     uint256 internal constant MAX_CONDITIONS = 8;
+
+    /// @notice dust threshold for converting $sUSD to $USDC
+    uint256 internal constant USDC_DUST_THRESHOLD = 1_000_000_000_000;
 
     /*//////////////////////////////////////////////////////////////
                                IMMUTABLES
@@ -64,6 +80,24 @@ contract Engine is
 
     /// @notice Synthetix v3 perps market proxy contract
     IPerpsMarketProxy internal immutable PERPS_MARKET_PROXY;
+
+    /// @notice Synthetix v3 Spot Market Proxy contract address
+    ISpotMarketProxy internal immutable SPOT_MARKET_PROXY;
+
+    /// @notice $sUSD token/synth contract address
+    IERC20 internal immutable SUSD;
+
+    /// @notice Zap contract
+    Zap internal immutable zap;
+
+    /// @notice Pay contract
+    Pay internal immutable pay;
+
+    /// @notice WETH contract
+    IWETH public immutable WETH;
+
+    /// @notice USDC contract
+    IERC20 public immutable USDC;
 
     /*//////////////////////////////////////////////////////////////
                                  STATE
@@ -90,7 +124,7 @@ contract Engine is
     //////////////////////////////////////////////////////////////*/
 
     /// @notice Constructs the Engine contract
-    /// @dev Zap constructor will revert if any of the
+    /// @dev constructor will revert if any of the
     /// addresses are zero
     /// @param _perpsMarketProxy Synthetix v3 perps
     /// market proxy contract
@@ -99,20 +133,34 @@ contract Engine is
     /// @param _sUSDProxy Synthetix v3 $sUSD contract
     /// @param _pDAO Kwenta owned/operated multisig address
     /// that can authorize upgrades
+    /// @param _zap Zap contract address
     /// @param _usdc $USDC token contract address
-    /// @param _sUSDCId Synthetix v3 Spot Market ID for $sUSDC
+    /// @param _weth $WETH token contract address
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor(
         address _perpsMarketProxy,
         address _spotMarketProxy,
         address _sUSDProxy,
         address _pDAO,
+        address _zap,
+        address payable _pay,
         address _usdc,
-        uint128 _sUSDCId
-    ) Zap(_usdc, _sUSDProxy, _spotMarketProxy, _sUSDCId) {
-        if (_perpsMarketProxy == address(0)) revert ZeroAddress();
+        address _weth
+    ) {
+        if (
+            _perpsMarketProxy == address(0) || _spotMarketProxy == address(0)
+                || _sUSDProxy == address(0) || _zap == address(0)
+                || _pay == address(0) || _usdc == address(0) || _weth == address(0)
+        ) revert ZeroAddress();
 
         PERPS_MARKET_PROXY = IPerpsMarketProxy(_perpsMarketProxy);
+        SPOT_MARKET_PROXY = ISpotMarketProxy(_spotMarketProxy);
+
+        SUSD = IERC20(_sUSDProxy);
+        zap = Zap(_zap);
+        pay = Pay(_pay);
+        USDC = IERC20(_usdc);
+        WETH = IWETH(_weth);
 
         /// @dev pDAO address can be the zero address to
         /// make the Engine non-upgradeable
@@ -324,18 +372,21 @@ contract Engine is
     }
 
     /// @inheritdoc IEngine
-    function modifyCollateralZap(uint128 _accountId, int256 _amount)
-        external
-        payable
-        override
-    {
+    function modifyCollateralZap(
+        uint128 _accountId,
+        int256 _amount,
+        uint256 _zapMinAmountOut
+    ) external payable override {
         if (_amount > 0) {
-            // zap $USDC -> $sUSD
-            /// @dev given the amount is positive,
-            /// simply casting (int -> uint) is safe
-            uint256 susdAmount = _zapIn(uint256(_amount));
+            USDC.transferFrom(msg.sender, address(this), uint256(_amount));
 
-            _SUSD.approve(address(PERPS_MARKET_PROXY), susdAmount);
+            USDC.approve(address(zap), _amount.abs256());
+
+            // zap $USDC -> $sUSD
+            uint256 susdAmount =
+                zap.zapIn(_amount.abs256(), _zapMinAmountOut, address(this));
+
+            SUSD.approve(address(PERPS_MARKET_PROXY), susdAmount);
 
             PERPS_MARKET_PROXY.modifyCollateral(
                 _accountId, USD_SYNTH_ID, susdAmount.toInt256()
@@ -350,11 +401,186 @@ contract Engine is
             // zap $sUSD -> $USDC
             /// @dev given the amount is negative,
             /// simply casting (int -> uint) is unsafe, thus we use .abs()
-            uint256 usdcAmount = _zapOut(_amount.abs256());
-
-            /// @dev transfer return value can be safely ignored
-            _USDC.transfer(msg.sender, usdcAmount);
+            SUSD.approve(address(zap), _amount.abs256());
+            zap.zapOut(_amount.abs256(), _zapMinAmountOut, msg.sender);
         }
+    }
+
+    /// @inheritdoc IEngine
+    function modifyCollateralWrap(
+        uint128 _accountId,
+        int256 _amount,
+        uint256 _tolerance,
+        IERC20 _collateral,
+        uint128 _synthMarketId
+    ) public payable override {
+        if (_amount > 0) {
+            _collateral.transferFrom(
+                msg.sender, address(this), uint256(_amount)
+            );
+            _collateral.approve(address(zap), uint256(_amount));
+
+            uint256 wrapped = zap.wrap(
+                address(_collateral),
+                _synthMarketId,
+                uint256(_amount),
+                _tolerance,
+                address(this)
+            );
+
+            IERC20 synth = IERC20(SPOT_MARKET_PROXY.getSynth(_synthMarketId));
+
+            synth.approve(address(PERPS_MARKET_PROXY), wrapped);
+
+            PERPS_MARKET_PROXY.modifyCollateral(
+                _accountId, _synthMarketId, int256(wrapped)
+            );
+        } else {
+            if (!isAccountOwner(_accountId, msg.sender)) revert Unauthorized();
+
+            PERPS_MARKET_PROXY.modifyCollateral(
+                _accountId, _synthMarketId, _amount
+            );
+
+            IERC20 synth = IERC20(SPOT_MARKET_PROXY.getSynth(_synthMarketId));
+
+            synth.approve(address(zap), _amount.abs256());
+
+            zap.unwrap(
+                address(_collateral),
+                _synthMarketId,
+                _amount.abs256(),
+                _tolerance,
+                msg.sender
+            );
+        }
+    }
+
+    /// @inheritdoc IEngine
+    function unwindCollateral(
+        uint128 _accountId,
+        uint128 _collateralId,
+        uint256 _collateralAmount,
+        address _collateral,
+        uint256 _zapMinAmountOut,
+        uint256 _unwrapMinAmountOut,
+        uint256 _swapAmountIn,
+        bytes memory _path
+    ) external payable override {
+        if (!isAccountOwner(_accountId, msg.sender)) revert Unauthorized();
+
+        /// @dev "PERPS_MODIFY_COLLATERAL" permission will be revoked after unwinding through zap
+        PERPS_MARKET_PROXY.grantPermission(
+            _accountId, PERPS_MODIFY_COLLATERAL_PERMISSION, address(zap)
+        );
+
+        zap.unwind({
+            _accountId: _accountId,
+            _collateralId: _collateralId,
+            _collateralAmount: _collateralAmount,
+            _collateral: _collateral,
+            _path: _path,
+            _zapMinAmountOut: _zapMinAmountOut,
+            _unwrapMinAmountOut: _unwrapMinAmountOut,
+            _swapAmountIn: _swapAmountIn,
+            _receiver: msg.sender
+        });
+    }
+
+    /// @inheritdoc IEngine
+    function unwindCollateralETH(
+        uint128 _accountId,
+        uint256 _collateralAmount,
+        address _collateral,
+        uint256 _zapMinAmountOut,
+        uint256 _unwrapMinAmountOut,
+        uint256 _swapAmountIn,
+        bytes memory _path
+    ) external payable override {
+        if (!isAccountOwner(_accountId, msg.sender)) revert Unauthorized();
+
+        uint256 balanceBefore = WETH.balanceOf(address(this));
+
+        /// @dev "PERPS_MODIFY_COLLATERAL" permission will be revoked after unwinding through zap
+        PERPS_MARKET_PROXY.grantPermission(
+            _accountId, PERPS_MODIFY_COLLATERAL_PERMISSION, address(zap)
+        );
+
+        zap.unwind({
+            _accountId: _accountId,
+            _collateralId: WETH_SYNTH_MARKET_ID,
+            _collateralAmount: _collateralAmount,
+            _collateral: _collateral,
+            _path: _path,
+            _zapMinAmountOut: _zapMinAmountOut,
+            _unwrapMinAmountOut: _unwrapMinAmountOut,
+            _swapAmountIn: _swapAmountIn,
+            _receiver: address(this)
+        });
+
+        uint256 balanceAfter = WETH.balanceOf(address(this));
+        uint256 receivedAmount = balanceAfter - balanceBefore;
+
+        WETH.approve(address(pay), receivedAmount);
+        pay.unwrapAndPay(receivedAmount, msg.sender);
+    }
+
+    /// @inheritdoc IEngine
+    function depositCollateralETH(
+        uint128 _accountId,
+        uint256 _amount,
+        uint256 _tolerance
+    ) external payable override {
+        if (_amount > msg.value) {
+            revert InsufficientETHDeposit(msg.value, _amount);
+        }
+
+        WETH.deposit{value: _amount}();
+
+        WETH.approve(address(zap), _amount);
+
+        uint256 wrapped = zap.wrap(
+            address(WETH),
+            WETH_SYNTH_MARKET_ID,
+            _amount,
+            _tolerance,
+            address(this)
+        );
+
+        IERC20 synth = IERC20(SPOT_MARKET_PROXY.getSynth(WETH_SYNTH_MARKET_ID));
+        synth.approve(address(PERPS_MARKET_PROXY), wrapped);
+
+        PERPS_MARKET_PROXY.modifyCollateral(
+            _accountId, WETH_SYNTH_MARKET_ID, int256(wrapped)
+        );
+    }
+
+    /// @inheritdoc IEngine
+    function withdrawCollateralETH(
+        uint128 _accountId,
+        int256 _amount,
+        uint256 _tolerance
+    ) external payable override {
+        if (_amount <= 0) revert InvalidWithdrawalAmount();
+        if (!isAccountOwner(_accountId, msg.sender)) revert Unauthorized();
+
+        PERPS_MARKET_PROXY.modifyCollateral(
+            _accountId, WETH_SYNTH_MARKET_ID, -_amount
+        );
+
+        IERC20 synth = IERC20(SPOT_MARKET_PROXY.getSynth(WETH_SYNTH_MARKET_ID));
+        synth.approve(address(zap), uint256(_amount));
+
+        uint256 unwrappedWETH = zap.unwrap(
+            address(WETH),
+            WETH_SYNTH_MARKET_ID,
+            uint256(_amount),
+            _tolerance,
+            address(this)
+        );
+
+        WETH.approve(address(pay), unwrappedWETH);
+        pay.unwrapAndPay(unwrappedWETH, msg.sender);
     }
 
     function _depositCollateral(
@@ -398,8 +624,43 @@ contract Engine is
         returns (address synthAddress)
     {
         synthAddress = _synthMarketId == USD_SYNTH_ID
-            ? address(_SUSD)
-            : _SPOT_MARKET_PROXY.getSynth(_synthMarketId);
+            ? address(SUSD)
+            : SPOT_MARKET_PROXY.getSynth(_synthMarketId);
+    }
+
+    /// @inheritdoc IEngine
+    function payDebtWithUSDC(
+        uint128 _accountId,
+        uint256 _amount,
+        uint256 _zapMinAmountOut
+    ) external payable override {
+        if (!isAccountOwner(_accountId, msg.sender)) revert Unauthorized();
+
+        /// @dev when converting to sUSD from USDC, precision is lost
+        /// thus we add 1 to the amount to ensure enough is sent to
+        /// pay the debt (excess is returned to the user)
+        uint256 amountWithExcess = _amount + 1;
+
+        USDC.transferFrom(msg.sender, address(this), amountWithExcess);
+
+        USDC.approve(address(zap), amountWithExcess);
+        uint256 usdxAmount =
+            zap.zapIn(amountWithExcess, _zapMinAmountOut, address(this));
+
+        SUSD.approve(address(zap), usdxAmount);
+        uint256 remaining = zap.burn(usdxAmount, _accountId);
+
+        // zap $sUSD -> $USDC
+        /// @dev this sends back any overpaid amount to the user
+        /// (if the amount is less than the dust amount)
+        /// has to be above dust amount to avoid reverting
+        /// because converting back to USDC will be < 0
+        SUSD.approve(address(zap), remaining);
+        if (remaining > USDC_DUST_THRESHOLD) {
+            zap.zapOut(remaining, 1, msg.sender);
+        }
+
+        emit Burned(_accountId, usdxAmount - remaining);
     }
 
     /*//////////////////////////////////////////////////////////////
@@ -473,19 +734,24 @@ contract Engine is
         credit[_accountId] += _amount;
 
         /// @dev $sUSD transfers that fail will revert
-        _SUSD.transferFrom(msg.sender, address(this), _amount);
+        SUSD.transferFrom(msg.sender, address(this), _amount);
 
         emit Credited(_accountId, _amount);
     }
 
     /// @inheritdoc IEngine
-    function creditAccountZap(uint128 _accountId, uint256 _amount)
-        external
-        payable
-        override
-    {
+    function creditAccountZap(
+        uint128 _accountId,
+        uint256 _amount,
+        uint256 _amountOutMinimum
+    ) external payable override {
+        USDC.transferFrom(msg.sender, address(this), _amount);
+
+        USDC.approve(address(zap), _amount);
+
         // zap $USDC -> $sUSD
-        uint256 susdAmount = _zapIn(_amount);
+        uint256 susdAmount =
+            zap.zapIn(_amount, _amountOutMinimum, address(this));
 
         credit[_accountId] += susdAmount;
 
@@ -506,11 +772,11 @@ contract Engine is
     }
 
     /// @inheritdoc IEngine
-    function debitAccountZap(uint128 _accountId, uint256 _amount)
-        external
-        payable
-        override
-    {
+    function debitAccountZap(
+        uint128 _accountId,
+        uint256 _amount,
+        uint256 _zapTolerance
+    ) external payable override {
         if (!isAccountOwner(_accountId, msg.sender)) revert Unauthorized();
 
         if (_amount > credit[_accountId]) revert InsufficientCredit();
@@ -518,13 +784,12 @@ contract Engine is
         // decrement account credit prior to transfer
         credit[_accountId] -= _amount;
 
+        SUSD.approve(address(zap), _amount);
+
         // zap $sUSD -> $USDC
-        uint256 usdcAmount = _zapOut(_amount);
+        uint256 usdcAmount = zap.zapOut(_amount, _zapTolerance, msg.sender);
 
-        /// @dev transfer return value can be safely ignored
-        _USDC.transfer(msg.sender, usdcAmount);
-
-        emit Debited(_accountId, _amount);
+        emit Debited(_accountId, usdcAmount);
     }
 
     function _debit(address _caller, uint128 _accountId, uint256 _amount)
@@ -536,7 +801,7 @@ contract Engine is
         credit[_accountId] -= _amount;
 
         /// @dev $sUSD transfers that fail will revert
-        _SUSD.transfer(_caller, _amount);
+        SUSD.transfer(_caller, _amount);
     }
 
     /*//////////////////////////////////////////////////////////////

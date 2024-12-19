@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-pragma solidity 0.8.20;
+pragma solidity 0.8.27;
 
 import {IEngine} from "src/interfaces/IEngine.sol";
 import {Bootstrap} from "test/utils/Bootstrap.sol";
@@ -70,7 +70,8 @@ contract Credit is CreditTest {
 
         engine.creditAccountZap({
             _accountId: accountId,
-            _amount: SMALLEST_AMOUNT
+            _amount: SMALLEST_AMOUNT,
+            _amountOutMinimum: SMALLEST_AMOUNT - 3
         });
 
         uint256 postActorUSDCBalance = USDC.balanceOf(ACTOR);
@@ -79,11 +80,14 @@ contract Credit is CreditTest {
         vm.stopPrank();
 
         assert(postActorUSDCBalance == preActorUSDCBalance - SMALLEST_AMOUNT);
-        assert(
-            postEngineSUSDBalance
-                == preEngineSUSDBalance + SMALLEST_AMOUNT * decimalsFactor
+        assertWithinTolerance(
+            preEngineSUSDBalance + SMALLEST_AMOUNT * decimalsFactor,
+            postEngineSUSDBalance,
+            3
         );
-        assert(engine.credit(accountId) == SMALLEST_AMOUNT * decimalsFactor);
+        assertWithinTolerance(
+            engine.credit(accountId), SMALLEST_AMOUNT * decimalsFactor, 3
+        );
     }
 
     function test_credit_event() public {
@@ -145,7 +149,10 @@ contract Debit is CreditTest {
     function test_debit_zap() public {
         uint256 decimalsFactor = 10 ** (18 - USDC.decimals());
 
-        deal(address(USDC), ACTOR, SMALLEST_AMOUNT);
+        // this is 100 USDC
+        uint256 amount = SMALLEST_AMOUNT * 10 ** 6;
+
+        deal(address(USDC), ACTOR, amount);
 
         vm.startPrank(ACTOR);
 
@@ -153,26 +160,30 @@ contract Debit is CreditTest {
 
         engine.creditAccountZap({
             _accountId: accountId,
-            _amount: SMALLEST_AMOUNT
+            _amount: amount,
+            _amountOutMinimum: amount * 97 / 100
         });
 
-        uint256 preActorUSDCBalance = USDC.balanceOf(ACTOR);
         uint256 preEngineSUSDBalance = sUSD.balanceOf(address(engine));
+        // this gets the SUSD value in USDC decimals
+        uint256 zapTolerance = preEngineSUSDBalance / decimalsFactor;
+        uint256 preActorUSDCBalance = USDC.balanceOf(ACTOR);
+        assertEq(preActorUSDCBalance, 0);
+        assertWithinTolerance(
+            engine.credit(accountId), amount * decimalsFactor, 3
+        );
 
         engine.debitAccountZap({
             _accountId: accountId,
-            _amount: SMALLEST_AMOUNT * decimalsFactor
+            _amount: preEngineSUSDBalance,
+            _zapTolerance: zapTolerance
         });
 
         uint256 postActorUSDCBalance = USDC.balanceOf(ACTOR);
         uint256 postEngineSUSDBalance = sUSD.balanceOf(address(engine));
-
-        vm.stopPrank();
-
-        assert(postActorUSDCBalance == preActorUSDCBalance + SMALLEST_AMOUNT);
-        assert(
-            postEngineSUSDBalance
-                == preEngineSUSDBalance - SMALLEST_AMOUNT * decimalsFactor
+        assertEq(postEngineSUSDBalance, 0);
+        assertWithinTolerance(
+            postActorUSDCBalance, preActorUSDCBalance + amount, 3
         );
         assert(engine.credit(accountId) == 0);
     }
@@ -190,7 +201,11 @@ contract Debit is CreditTest {
 
         vm.prank(BAD_ACTOR);
 
-        engine.debitAccountZap({_accountId: accountId, _amount: AMOUNT});
+        engine.debitAccountZap({
+            _accountId: accountId,
+            _amount: AMOUNT,
+            _zapTolerance: 1
+        });
     }
 
     function test_debit_Unauthorized() public {
@@ -251,7 +266,8 @@ contract Debit is CreditTest {
 
         engine.creditAccountZap({
             _accountId: accountId,
-            _amount: SMALLEST_AMOUNT
+            _amount: SMALLEST_AMOUNT,
+            _amountOutMinimum: SMALLEST_AMOUNT
         });
 
         vm.expectRevert(
@@ -260,7 +276,10 @@ contract Debit is CreditTest {
 
         engine.debitAccountZap({
             _accountId: accountId,
-            _amount: (SMALLEST_AMOUNT * decimalsFactor) + 1
+            // this is how much credit is available    100_000000000000
+            // this is how much we are trying to debit 100_000000000001
+            _amount: (SMALLEST_AMOUNT * decimalsFactor) + 1,
+            _zapTolerance: 1
         });
 
         vm.stopPrank();

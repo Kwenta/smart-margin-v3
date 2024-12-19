@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-pragma solidity 0.8.20;
+pragma solidity 0.8.27;
 
 import {Test} from "lib/forge-std/src/Test.sol";
 import {SignatureCheckerLib} from "src/libraries/SignatureCheckerLib.sol";

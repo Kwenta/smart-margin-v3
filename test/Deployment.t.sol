@@ -1,11 +1,10 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-pragma solidity 0.8.20;
+pragma solidity 0.8.27;
 
 import {Engine, Setup} from "script/Deploy.s.sol";
 import {IEngine} from "src/interfaces/IEngine.sol";
-import {IERC20} from "lib/zap/src/interfaces/IERC20.sol";
-import {ISpotMarketProxy} from "lib/zap/src/interfaces/ISpotMarketProxy.sol";
-import {ZapErrors} from "lib/zap/src/ZapErrors.sol";
+import {IERC20} from "src/utils/zap/interfaces/IERC20.sol";
+import {Errors} from "src/utils/zap/utils/Errors.sol";
 import {Test} from "lib/forge-std/src/Test.sol";
 
 contract DeploymentTest is Test, Setup {
@@ -18,6 +17,9 @@ contract DeploymentTest is Test, Setup {
     address internal usdc = address(0x5);
     uint128 internal sUSDCId = 1;
     address internal sUSDC = address(0x6);
+    address internal zap = address(0x7);
+    address internal weth = address(0x8);
+    address payable internal pay = payable(address(0x9));
 
     /// keccak256(abi.encodePacked("Synthetic USD Coin Spot Market"))
     bytes32 internal constant _HASHED_SUSDC_NAME =
@@ -32,18 +34,6 @@ contract DeploymentTest is Test, Setup {
             abi.encodeWithSelector(IERC20.decimals.selector),
             abi.encode(8)
         );
-
-        // mock calls to Synthetix v3 Spot Market Proxy that occurs in Zap constructor
-        vm.mockCall(
-            spotMarketProxy,
-            abi.encodeWithSelector(ISpotMarketProxy.name.selector, sUSDCId),
-            abi.encode(abi.encodePacked("Synthetic USD Coin Spot Market"))
-        );
-        vm.mockCall(
-            spotMarketProxy,
-            abi.encodeWithSelector(ISpotMarketProxy.getSynth.selector, sUSDCId),
-            abi.encode(sUSDC)
-        );
     }
 
     function test_deploy() public {
@@ -52,8 +42,10 @@ contract DeploymentTest is Test, Setup {
             spotMarketProxy: spotMarketProxy,
             sUSDProxy: sUSDProxy,
             pDAO: pDAO,
+            zap: zap,
+            pay: pay,
             usdc: usdc,
-            sUSDCId: sUSDCId
+            weth: weth
         });
 
         assertTrue(address(engine) != address(0x0));
@@ -65,8 +57,10 @@ contract DeploymentTest is Test, Setup {
             spotMarketProxy: spotMarketProxy,
             sUSDProxy: sUSDProxy,
             pDAO: pDAO,
+            zap: zap,
+            pay: pay,
             usdc: usdc,
-            sUSDCId: sUSDCId
+            weth: weth
         }) {} catch (bytes memory reason) {
             assertEq(bytes4(reason), IEngine.ZeroAddress.selector);
         }
@@ -78,10 +72,12 @@ contract DeploymentTest is Test, Setup {
             spotMarketProxy: address(0),
             sUSDProxy: sUSDProxy,
             pDAO: pDAO,
+            zap: zap,
+            pay: pay,
             usdc: usdc,
-            sUSDCId: sUSDCId
+            weth: weth
         }) {} catch (bytes memory reason) {
-            assertEq(bytes4(reason), ZapErrors.SpotMarketZeroAddress.selector);
+            assertEq(bytes4(reason), IEngine.ZeroAddress.selector);
         }
     }
 
@@ -91,10 +87,72 @@ contract DeploymentTest is Test, Setup {
             spotMarketProxy: spotMarketProxy,
             sUSDProxy: address(0),
             pDAO: pDAO,
+            zap: zap,
+            pay: pay,
             usdc: usdc,
-            sUSDCId: sUSDCId
+            weth: weth
         }) {} catch (bytes memory reason) {
-            assertEq(bytes4(reason), ZapErrors.SUSDZeroAddress.selector);
+            assertEq(bytes4(reason), IEngine.ZeroAddress.selector);
+        }
+    }
+
+    function test_deploy_zap_zero_address() public {
+        try setup.deploySystem({
+            perpsMarketProxy: perpsMarketProxy,
+            spotMarketProxy: spotMarketProxy,
+            sUSDProxy: sUSDProxy,
+            pDAO: pDAO,
+            zap: address(0),
+            pay: pay,
+            usdc: usdc,
+            weth: weth
+        }) {} catch (bytes memory reason) {
+            assertEq(bytes4(reason), IEngine.ZeroAddress.selector);
+        }
+    }
+
+    function test_deploy_pay_zero_address() public {
+        try setup.deploySystem({
+            perpsMarketProxy: perpsMarketProxy,
+            spotMarketProxy: spotMarketProxy,
+            sUSDProxy: sUSDProxy,
+            pDAO: pDAO,
+            zap: zap,
+            pay: payable(address(0)),
+            usdc: usdc,
+            weth: weth
+        }) {} catch (bytes memory reason) {
+            assertEq(bytes4(reason), IEngine.ZeroAddress.selector);
+        }
+    }
+
+    function test_deploy_usdc_zero_address() public {
+        try setup.deploySystem({
+            perpsMarketProxy: perpsMarketProxy,
+            spotMarketProxy: spotMarketProxy,
+            sUSDProxy: sUSDProxy,
+            pDAO: pDAO,
+            zap: zap,
+            pay: pay,
+            usdc: address(0),
+            weth: weth
+        }) {} catch (bytes memory reason) {
+            assertEq(bytes4(reason), IEngine.ZeroAddress.selector);
+        }
+    }
+
+    function test_deploy_weth_zero_address() public {
+        try setup.deploySystem({
+            perpsMarketProxy: perpsMarketProxy,
+            spotMarketProxy: spotMarketProxy,
+            sUSDProxy: sUSDProxy,
+            pDAO: pDAO,
+            zap: zap,
+            pay: pay,
+            usdc: usdc,
+            weth: address(0)
+        }) {} catch (bytes memory reason) {
+            assertEq(bytes4(reason), IEngine.ZeroAddress.selector);
         }
     }
 }

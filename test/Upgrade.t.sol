@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-pragma solidity 0.8.20;
+pragma solidity 0.8.27;
 
 import {Bootstrap, Engine} from "test/utils/Bootstrap.sol";
 import {IEngine} from "src/interfaces/IEngine.sol";
@@ -40,8 +40,10 @@ contract MockUpgrade is UpgradeTest {
             address(spotMarketProxy),
             address(sUSD),
             address(pDAO),
+            address(zap),
+            payable(address(pay)),
             address(USDC),
-            sUSDCId
+            address(WETH)
         );
     }
 
@@ -156,8 +158,10 @@ contract RemoveUpgradability is UpgradeTest {
             address(spotMarketProxy),
             address(sUSD),
             address(0), // set pDAO to zero address to effectively remove upgradability
+            address(zap),
+            payable(address(pay)),
             address(USDC),
-            sUSDCId
+            address(WETH)
         );
 
         vm.prank(pDAO);
