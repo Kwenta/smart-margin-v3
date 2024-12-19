@@ -3,7 +3,7 @@ pragma solidity 0.8.27;
 
 contract BaseParameters {
     // Deployer base
-    address public constant PDAO = 0x88d40a3f2870e835005A3F1CFd28D94b12aD5483;
+    address public constant PDAO = 0x2f4004Bc32cc5D18a62fE26E35A0881d5397c549;
 
     address public constant PERPS_MARKET_PROXY = address(0);
 
@@ -34,7 +34,7 @@ contract BaseParameters {
     address public constant ZAP = 0x41AE8b823850D96088419992c9538198b72cA230;
 
     address payable public constant PAY =
-        payable(0x127Fb7602bF3De092d351f922791cF9a149A4837);
+        payable(0x067e8C201Cc9CF33e556f8A0d75b91276c9af3D6);
 
     address public constant CBBTC = 0xcbB7C0000aB88B473b1f5aFd9ef808440eed33Bf;
 
